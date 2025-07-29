@@ -1,0 +1,5 @@
+module CFluidSynth [system] {
+    header "/usr/include/fluidsynth.h"
+    link "fluidsynth"
+    export *
+}

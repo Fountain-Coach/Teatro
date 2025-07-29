@@ -1,0 +1,5 @@
+module CCsound [system] {
+    header "/usr/include/csound/csound.h"
+    link "csound64"
+    export *
+}
