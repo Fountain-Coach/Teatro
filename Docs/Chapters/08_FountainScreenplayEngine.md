@@ -145,9 +145,6 @@ Here the `LOC.` prefix is recognised as a scene heading while the note is treate
 - Embed semantic cues for lighting, props, and character arcs via `TeatroIcon` and `CodexPreviewer`
 
 
-
-
-
 `````text
 ©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
 `````

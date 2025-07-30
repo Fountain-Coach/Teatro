@@ -1,4 +1,4 @@
-## 14. TeatroPlayerView Usage
+## 11. TeatroPlayerView Usage
 
 _Real-time playback bridging MIDI and views._
 

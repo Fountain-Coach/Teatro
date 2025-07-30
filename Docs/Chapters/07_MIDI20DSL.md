@@ -99,13 +99,6 @@ let packets = melody.notes.flatMap { UMPEncoder.encode($0) }
 - Drives `TeatroPlayerView` animations when provided alongside a `Storyboard`
 
 
-```
-© 2025 Contexter alias Benedikt Eickhoff, https://fountain.coach. All rights reserved.
-Unauthorized copying or distribution is strictly prohibited.
-```
-
-
-
 `````text
 ©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
 `````

@@ -89,13 +89,6 @@ Overlay comments from the storyboard appear on top of each frame during
 playback.
 
 
-```
-© 2025 Contexter alias Benedikt Eickhoff, https://fountain.coach. All rights reserved.
-Unauthorized copying or distribution is strictly prohibited.
-```
-
-
-
 ``````text
 ©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
 ``````
