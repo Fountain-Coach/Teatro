@@ -1,4 +1,5 @@
 ## 3. Rendering Backends
+_Translating views into HTML, SVG, and more._
 
 The Teatro View Engine supports multiple rendering targets, each implemented as a standalone `Renderer` struct. All accept a `Renderable` view and return a format-specific string or file output.
 

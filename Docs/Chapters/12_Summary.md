@@ -1,4 +1,5 @@
-## 9. Summary
+## 12. Summary
+_Capabilities overview and best practices._
 
 The **Teatro View Engine** is a modular, fully declarative view system written in Swift 6 for Linux environments. It enables Codex-based orchestration of semantic user interfaces, narrative compositions, animations, and musical structures.
 

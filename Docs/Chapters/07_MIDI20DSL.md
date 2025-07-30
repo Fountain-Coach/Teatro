@@ -1,6 +1,8 @@
 ## 7. MIDI 2.0 DSL
+_Expressive MIDI 2.0 sequencing at the core._
 
 The Teatro View Engine includes a declarative Swift DSL for composing MIDI sequences. It enables Codex and GPT agents to structure musical timelines with precise note control.
+The DSL centers on MIDI 2.0; MIDI 1.0 translation is available only for backward compatibility.
 `MIDISequence` can now drive visual animations when paired with
 `TeatroPlayerView`. Each `MIDI2Note.duration` determines how long the matching
 frame stays on screen during playback and can be rendered as Universal MIDI Packets.

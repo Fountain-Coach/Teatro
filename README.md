@@ -2,43 +2,39 @@
 
 ![Swift](https://img.shields.io/badge/Swift-6.1-orange) ![SwiftPM](https://img.shields.io/badge/SwiftPM-compatible-brightgreen)
 *A Declarative, Codex-Controllable Rendering Framework in Swift*
-This repository contains the specification for Teatro, a modular Swift 6 view engine. The original long-form documentation has been split into separate files under the `Docs` directory.
+
+Teatro is centered on **MIDI 2.0** for sequencing and timing. MIDI 1.0 is supported only as a fallback for legacy export.
+
+The long-form documentation lives under `Docs/Chapters`. Start with the timeline and progress through each chapter.
+
 ## Documentation
+- [0. Timeline](Docs/Chapters/00_Timeline.md) – project history
+- [1. Core Protocols](Docs/Chapters/01_CoreProtocols.md) – foundation for all views
+- [2. View Types](Docs/Chapters/02_ViewTypes.md) – building blocks for scenes
+- [3. Rendering Backends](Docs/Chapters/03_RenderingBackends.md) – HTML, SVG and more
+- [4. CLI Integration](Docs/Chapters/04_CLIIntegration.md) – scripted rendering
+- [5. Animation System](Docs/Chapters/05_AnimationSystem.md) – frame-based timelines
+- [6. LilyPond Music Rendering](Docs/Chapters/06_LilyPondMusicRendering.md) – sheet music export
+- [7. MIDI 2.0 DSL](Docs/Chapters/07_MIDI20DSL.md) – expressive sequencing
+- [8. Fountain Screenplay Engine](Docs/Chapters/08_FountainScreenplayEngine.md) – parse scripts
+- [9. Fountain Parser Plan](Docs/Chapters/09_FountainParserImplementationPlan.md) – historical notes
+- [10. View Implementation Plan](Docs/Chapters/10_ViewImplementationPlan.md) – archived plan
+- [11. Storyboard DSL](Docs/Chapters/11_StoryboardDSL.md) – declarative scenes
+- [12. Summary](Docs/Chapters/12_Summary.md) – overview and advice
+- [13. Addendum](Docs/Chapters/13_Addendum.md) – Apple platform notes
+- [14. TeatroPlayerView Usage](Docs/Chapters/14_TeatroPlayer.md) – realtime playback
+- [15. TeatroSampler](Docs/Chapters/15_TeatroSampler.md) – MIDI 2 sampler
+- [16. Glossary](Docs/Chapters/16_Glossary.md) – quick reference
+
+Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
 
 ## Installation
-
-Add the package to your Package.swift dependencies:
-
+Add the package to your `Package.swift` dependencies:
 ```swift
 .package(url: "https://github.com/fountain-coach/teatro.git", branch: "main")
 ```
-
 Then include `Teatro` as a dependency in your target.
 
-- [Core Protocols](Docs/CoreProtocols/README.md)
-- [View Types](Docs/ViewTypes/README.md)
-- [Rendering Backends](Docs/RenderingBackends/README.md)
-- [CLI Integration](Docs/CLIIntegration/README.md)
-- [Animation System](Docs/AnimationSystem/README.md)
-- [LilyPond Music Rendering](Docs/LilyPondMusicRendering/README.md)
-- [MIDI 2.0 DSL](Docs/MIDI20DSL/README.md)
-- [TeatroSampler](Docs/TeatroSampler/README.md)
-- [Fountain Screenplay Engine](Docs/FountainScreenplayEngine/README.md)
-- [Fountain Parser Implementation Plan](Docs/FountainScreenplayEngine/FountainParserImplementationPlan.md)
-- [View Implementation and Testing Plan](Docs/ViewImplementationPlan/README.md)
-- [Implementation Roadmap](Docs/ImplementationPlan/README.md)
-- [Proposals](Docs/Proposals)
-- [Storyboard DSL](Docs/StoryboardDSL/README.md)
-- [Summary](Docs/Summary/README.md)
-- [Addendum: Apple Platform Compatibility](Docs/Addendum/README.md)
-- [Mastering the Teatro Prompting Language for GUI Code Generation](https://chatgpt.com/share/68826ebf-64ac-8005-9b37-40d6e7187ea3)
-
-`TeatroSampler` provides cross-platform MIDI 2 playback for the animation player and bridges events to legacy formats when needed.
-
-The new **Storyboard DSL** allows you to script view states and animated transitions in Swift.  See the guide for an example of generating a textual storyboard preview that can be sent back to Codex.
-
-The `Sources/` directory follows the structure suggested in the documentation and contains placeholders for implementation. `Tests/` remains empty until concrete code is added.
-
 ````text
-©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
 ````

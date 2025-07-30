@@ -1,4 +1,5 @@
 ## 6. LilyPond Music Rendering
+_Typeset notation using LilyPond._
 
 The Teatro View Engine supports musical score composition and PDF rendering using the LilyPond typesetting system. This allows GPT or Codex agents to declaratively construct musical ideas and export them as print-ready sheet music.
 

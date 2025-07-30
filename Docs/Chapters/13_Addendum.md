@@ -1,4 +1,5 @@
-## 🧩 Addendum: Apple Platform Compatibility
+## 13. Addendum: Apple Platform Compatibility
+_Notes for running on macOS and iOS._
 
 ### Will Teatro View Engine support Apple platforms?
 

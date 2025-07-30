@@ -1,4 +1,5 @@
-## 11.7 Storyboard DSL
+## 11. Storyboard DSL
+_Define scenes and transitions declaratively._
 
 The Storyboard DSL describes sequences of `Scene` declarations separated by optional `Transition` steps.  Each `Scene` wraps a view tree representing a single app state.  A `Transition` specifies how to move from one scene to the next—via cross‑fades or tweens—and how many frames the animation spans.
 
