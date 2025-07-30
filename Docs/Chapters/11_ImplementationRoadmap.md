@@ -1,10 +1,8 @@
-## Implementation Roadmap
-
+## 11. Implementation Roadmap
 _Historical roadmap capturing past goals._
 
-**Historical Note:** This roadmap is kept for archive purposes only.
-
 This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It builds upon the existing [View Implementation and Testing Plan](../Chapters/10_ViewImplementationPlan.md).
+**Historical Note:** This roadmap captures past plans and is preserved for context.
 
 ## 11.1 Finalize Placeholder Features
 
@@ -12,8 +10,6 @@ This roadmap converts the critique and analysis of the Teatro View Engine into c
    - Introduce `MIDI2Note` and `UMPEncoder` to generate Universal MIDI Packets.
    - Provide a `CsoundScore` view type and `CsoundRenderer` for `.csd` output.
    - Extend `RenderCLI` with `csound` and `ump` targets and add tests for the generated files.
-   - Implement `TeatroSampler` for cross-platform MIDI 2 playback.
-   - Add `MIDICompatibilityBridge` to convert sampler events into `MIDINote`, `CsoundScore`, and `LilyScore`.
 2. **GIF Export**
    - Extend `Animator` with a helper for `.gif` generation using ImageMagick or a Swift wrapper.
    - Document required tools and provide a sample test that produces an animated gif from frame PNGs.
@@ -84,6 +80,8 @@ See [Storyboard DSL](../StoryboardDSL/README.md) for a step-by-step example of g
 This document should evolve alongside the codebase. **Maintain and update this roadmap** as new features land or priorities shift to keep development focused and transparent.
 
 
-````text
+
+
+`````text
 ©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-````
+`````

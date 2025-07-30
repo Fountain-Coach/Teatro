@@ -1,4 +1,5 @@
 ## 15. TeatroSampler
+
 _MIDI 2.0 sampler with fallback bridging._
 
 The **TeatroSampler** provides cross-platform MIDI 2 playback for the animation player. It routes `MIDI2Note` events to backend implementations and keeps audio and visuals in sync.
