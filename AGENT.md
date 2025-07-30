@@ -2,6 +2,14 @@
 
 This repository contains the **Teatro View Engine**, a declarative Swift 6 framework for rendering text, music, and screenplay artifacts. Documentation lives under the `Docs/` directory and is organized by feature area.
 
+## COPYRIGHT POLICY 🔐
+
+**Mandatory Action:** FountainCodex **MUST** ensure that the following footer appears at the end  of **every** file (source code, Markdown, config, logs, etc.) it creates or updates or maintains. If absent, append it (preceded by a newline and, for Markdown, an optional horizontal rule `---`)  and commit the change.
+
+```text
+©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+```
+
 ## Contributor Guidelines
 - Use the Swift 6.1 toolchain.
 - Run `swift build` and `swift test` before committing code.
