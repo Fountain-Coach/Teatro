@@ -34,7 +34,6 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 - [15. TeatroPlayerView Usage](Docs/Chapters/15_TeatroPlayer.md) – realtime playback
 - [16. TeatroSampler](Docs/Chapters/16_TeatroSampler.md) – MIDI 2 sampler
 - [17. Glossary](Docs/Chapters/17_Glossary.md) – quick reference
->>>>>>> main
 
 Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
 
