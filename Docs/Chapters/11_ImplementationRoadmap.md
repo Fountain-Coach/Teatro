@@ -1,6 +1,8 @@
-# 11. Implementation Roadmap
+## 11. Implementation Roadmap
+_Historical roadmap capturing past goals._
 
-This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It builds upon the existing [View Implementation and Testing Plan](../ViewImplementationPlan/README.md).
+This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It builds upon the existing [View Implementation and Testing Plan](../Chapters/10_ViewImplementationPlan.md).
+**Historical Note:** This roadmap captures past plans and is preserved for context.
 
 ## 11.1 Finalize Placeholder Features
 

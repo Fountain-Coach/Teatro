@@ -1,6 +1,8 @@
 ## 10. View Implementation and Testing Plan
+_Archived plan for early view modules._
 
 This document outlines how to implement the Teatro view system and how each view should be unit tested. The plan follows the structures defined in the existing documentation and assumes that the Swift package layout remains consistent with the **Summary** guide.
+**Historical Note:** This plan records initial goals and is no longer kept up to date.
 
 ### 10.1 Core Protocols
 Implement the protocols under `Sources/ViewCore`:

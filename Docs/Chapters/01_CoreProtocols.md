@@ -1,4 +1,5 @@
 ## 1. Core Protocols
+_A foundation for building every view type._
 
 ### 1.1 Renderable
 

@@ -1,6 +1,8 @@
-# Fountain Parser Implementation Plan
+## 9. Fountain Parser Implementation Plan
+_Historical notes on parser implementation._
 
 This guide documents the complete strategy for implementing a Fountain screenplay parser in Swift for the Teatro View engine. It mirrors the official specification available at [fountain.io/syntax](https://fountain.io/syntax/) and does **not** omit any feature. Every rule is represented in a deterministic state machine rather than through regular expressions so that it can be overridden or extended when integrating into Teatro.
+**Historical Note:** The parser is fully implemented; this plan remains for reference.
 
 **Status:** The parser described below is implemented in `Sources/ViewCore/FountainParser.swift` and tested under `TeatroTests`.
 
