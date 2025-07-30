@@ -1,4 +1,5 @@
 ## 2. View Types
+_Composable view building blocks._
 
 ### 2.1 Text
 

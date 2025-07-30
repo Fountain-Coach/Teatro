@@ -1,4 +1,5 @@
 ## 5. Animation System
+_Frame sequences for time-based storytelling._
 
 The Teatro View Engine supports timeline-based rendering by generating sequential frames of `Renderable` views. These frames can be used to create `.gif` animations or time-stepped outputs for screenplays, music, or visual reasoning steps.
 
