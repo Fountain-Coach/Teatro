@@ -33,7 +33,7 @@ public enum FountainElement: Renderable {
 ### 8.2 FountainParser
 
 `FountainParser` implements the full state machine described in the
-[implementation plan](FountainParserImplementationPlan.md). It recognises notes,
+[Fountain Parser](../Chapters/09_FountainParser.md). It recognises notes,
 boneyard, page breaks and all other token types without relying on regular
 expressions. Behaviour can be customised by passing a `RuleSet` on
 initialisation.

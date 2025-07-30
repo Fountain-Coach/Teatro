@@ -60,7 +60,7 @@ Environment variables allow you to tweak renderer dimensions. See [docs/environm
 
    - Use `swift build -c release` to compile a standalone binary.
    - Call the binary from build scripts to generate GUI artifacts.
-   - Combine with the `StoryboardDSL` and `SVGAnimator` to render animated scenes.
+   - Combine with the Storyboard DSL and `SVGAnimator` to render animated scenes.
 
 The CLI offers a quick entry point for experimenting with Teatro without a full GUI application. You can script view generation, generate assets for documentation, or pipe preview output directly into Codex for further processing.
 

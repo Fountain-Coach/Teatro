@@ -1,4 +1,5 @@
 ## 8. Fountain Screenplay Engine
+_Parsing and staging Fountain screenplays._
 
 Teatro supports parsing and rendering of screenplays written in the [Fountain](https://fountain.io) format — a Markdown-compatible syntax used by screenwriters. This enables GPT-based screenwriting, line-by-line rendering, Codex-based performance scripting, and visual orchestration of narrative structures.
 
@@ -32,8 +33,8 @@ public enum FountainElement: Renderable {
 
 ### 8.2 FountainParser
 
-`FountainParser` implements the full state machine described in the
-[implementation plan](FountainParserImplementationPlan.md). It recognises notes,
+`FountainParser` implements the full state machine described in
+[Fountain Parser](../Chapters/09_FountainParser.md). It recognises notes,
 boneyard, page breaks and all other token types without relying on regular
 expressions. Behaviour can be customised by passing a `RuleSet` on
 initialisation.

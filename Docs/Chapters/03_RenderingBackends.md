@@ -1,4 +1,5 @@
 ## 3. Rendering Backends
+_Translating views into HTML, SVG, and more._
 
 The Teatro View Engine supports multiple rendering targets, each implemented as a standalone `Renderer` struct. All accept a `Renderable` view and return a format-specific string or file output.
 
@@ -116,7 +117,7 @@ public struct MarkdownRenderer {
 
 `SVGAnimator` exposes `renderAnimatedSVG(storyboard:)` to produce a fully
 animated SVG timeline. Pass a `Storyboard` built with the
-[`StoryboardDSL`](../StoryboardDSL) and the method returns an SVG string
+Storyboard DSL and the method returns an SVG string
 containing `<animate>` tags for each transition.
 
 ```swift

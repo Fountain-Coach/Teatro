@@ -1,6 +1,8 @@
-# 11. Implementation Roadmap
+## Implementation Roadmap
+_Historical roadmap capturing past goals._
+**Historical Note:** This roadmap is kept for archive purposes only.
 
-This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It builds upon the existing [View Implementation and Testing Plan](../ViewImplementationPlan/README.md).
+This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It originally built upon an early "View Implementation and Testing Plan" which is now removed.
 
 ## 11.1 Finalize Placeholder Features
 
@@ -59,14 +61,13 @@ timelines, introduce a storyboard-like DSL within Teatro:
    easing functions and frame counts. **Implemented through `Transition`.**
 3. **Codex Integration** – Allow GPT agents to emit storyboard files that can be
    rendered frame-by-frame or previewed live on macOS. **Implemented via
-   `CodexStoryboardPreviewer` and the example in `Docs/StoryboardDSL`.**
+   `CodexStoryboardPreviewer`.**
 4. **Renderer Hooks** – Use existing `Animator` output on Linux and map to
    SwiftUI animations on Apple platforms. **Initial hooks provided through the
    `Storyboard.frames()` API.**
 5. **Testing** – Add unit tests for state parsing and ensure deterministic frame
    generation. **Covered in `StoryboardTests`.**
 
-See [Storyboard DSL](../StoryboardDSL/README.md) for a step-by-step example of generating a prompt for Codex using the DSL.
 
 ## 11.7 Packaging and Release
 

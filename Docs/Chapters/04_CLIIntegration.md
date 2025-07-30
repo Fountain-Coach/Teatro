@@ -1,4 +1,5 @@
 ## 4. CLI Integration
+_Command-line tools for scripted rendering._
 
 The Teatro View Engine includes a lightweight command-line interface (CLI) implementation for rendering any `Renderable` to a chosen output format. This enables scripting, automation, or integration with external developer tools.
 
