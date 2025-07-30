@@ -1,5 +1,7 @@
-## 11. Implementation Roadmap
+## Implementation Roadmap
+
 _Historical roadmap capturing past goals._
+
 **Historical Note:** This roadmap is kept for archive purposes only.
 
 This roadmap converts the critique and analysis of the Teatro View Engine into concrete development tasks. It builds upon the existing [View Implementation and Testing Plan](../Chapters/10_ViewImplementationPlan.md).

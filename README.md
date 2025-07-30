@@ -19,6 +19,14 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 - [8. Fountain Screenplay Engine](Docs/Chapters/08_FountainScreenplayEngine.md) – parse scripts
 - [9. Fountain Parser Plan](Docs/Chapters/09_FountainParserImplementationPlan.md) – historical notes
 - [10. View Implementation Plan](Docs/Chapters/10_ViewImplementationPlan.md) – archived plan
+<<<<<<< HEAD
+- [11. Storyboard DSL](Docs/Chapters/11_StoryboardDSL.md) – declarative scenes
+- [12. Summary](Docs/Chapters/12_Summary.md) – overview and advice
+- [13. Addendum](Docs/Chapters/13_Addendum.md) – Apple platform notes
+- [14. TeatroPlayerView Usage](Docs/Chapters/14_TeatroPlayer.md) – realtime playback
+- [15. TeatroSampler](Docs/Chapters/15_TeatroSampler.md) – MIDI 2 sampler
+- [16. Glossary](Docs/Chapters/16_Glossary.md) – quick reference
+=======
 - [11. Implementation Roadmap](Docs/Chapters/11_ImplementationRoadmap.md) – historical roadmap
 - [12. Storyboard DSL](Docs/Chapters/12_StoryboardDSL.md) – declarative scenes
 - [13. Summary](Docs/Chapters/13_Summary.md) – overview and advice
@@ -26,6 +34,7 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 - [15. TeatroPlayerView Usage](Docs/Chapters/15_TeatroPlayer.md) – realtime playback
 - [16. TeatroSampler](Docs/Chapters/16_TeatroSampler.md) – MIDI 2 sampler
 - [17. Glossary](Docs/Chapters/17_Glossary.md) – quick reference
+>>>>>>> main
 
 Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
 
