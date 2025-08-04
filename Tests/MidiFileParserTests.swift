@@ -320,6 +320,22 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testLyricMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0B,
+            0x00, 0xFF, 0x05, 0x03, 0x41, 0x42, 0x43,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let lyric = events[0] as? LyricEvent {
+            XCTAssertEqual(lyric.text, "ABC")
+        } else {
+            XCTFail("Expected LyricEvent")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
