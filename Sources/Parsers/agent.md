@@ -16,6 +16,8 @@ The CLI currently supports rendering from the following source formats:
 
 - Watch mode uses `DispatchSource` for file change notifications on supported platforms and falls back to polling on Linux.
 
+- Argument parser detects `.mid/.midi` and `.ump` files by signature even when extensions are absent.
+
 **Pending formats** (not yet implemented):
 
 - **.storyboard**
@@ -138,6 +140,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-10: Introduced unified MIDI event model and updated SMF/UMP parsers.
 - 2025-08-11: Added truncated packet error handling to UMPParser and tests.
 - 2025-08-12: Replaced CLI watch mode polling with DispatchSource-based file monitoring on supported platforms.
+- 2025-08-13: Added file signature detection for MIDI and UMP inputs in RenderCLI.
 
 ---
 

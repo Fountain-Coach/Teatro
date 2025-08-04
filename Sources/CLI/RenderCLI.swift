@@ -88,21 +88,36 @@ public struct RenderCLI: ParsableCommand {
     }
 
     private func loadInput(path: String) throws -> Renderable {
-        let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
-        let data = try String(contentsOfFile: path)
+        let url = URL(fileURLWithPath: path)
+        let ext = url.pathExtension.lowercased()
+        let fileData = try Data(contentsOf: url)
+        let signature = fileData.prefix(4)
         switch ext {
         case "fountain":
-            return FountainSceneView(fountainText: data)
+            let text = String(decoding: fileData, as: UTF8.self)
+            return FountainSceneView(fountainText: text)
         case "ly":
-            return LilyScore(data)
+            let text = String(decoding: fileData, as: UTF8.self)
+            return LilyScore(text)
         case "csd":
-            return CsoundScore(orchestra: "", score: data)
+            let text = String(decoding: fileData, as: UTF8.self)
+            return CsoundScore(orchestra: "", score: text)
         case "storyboard":
             throw ValidationError("Storyboard DSL parsing is not implemented")
-        case "mid", "midi", "ump", "session":
-            throw ValidationError("Parsing for .\(ext) files is not implemented")
+        case "mid", "midi":
+            throw ValidationError("Parsing for MIDI files is not implemented")
+        case "ump":
+            throw ValidationError("Parsing for UMP files is not implemented")
+        case "session":
+            throw ValidationError("Parsing for .session files is not implemented")
         default:
-            throw ValidationError("Unsupported input extension: .\(ext)")
+            if signature == Data([0x4d, 0x54, 0x68, 0x64]) { // "MThd"
+                throw ValidationError("Parsing for MIDI files is not implemented")
+            } else if fileData.count % 4 == 0 {
+                throw ValidationError("Parsing for UMP files is not implemented")
+            } else {
+                throw ValidationError("Unsupported input extension: .\(ext)")
+            }
         }
     }
 

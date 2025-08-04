@@ -2,7 +2,7 @@
 
 ## Status Quo
 
-- CLI handles `.fountain`, `.ly`, and `.csd` inputs; `.storyboard`, `.mid`/`.midi`, `.ump`, and `.session` inputs are unimplemented.
+- CLI handles `.fountain`, `.ly`, and `.csd` inputs; `.storyboard`, `.mid`/`.midi`, `.ump`, and `.session` inputs remain unimplemented, though MIDI and UMP files are now detected by signature.
 - UMP rendering target is listed but missing from dispatch.
 - Environment variables for width/height now apply even when flags are absent.
 - Watch mode uses `DispatchSource.makeFileSystemObjectSource` for file monitoring on supported platforms and falls back to polling on Linux.
