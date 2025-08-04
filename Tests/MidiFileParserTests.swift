@@ -218,6 +218,28 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testTimestampAccumulation() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x10,
+            0x00, 0x90, 0x3C, 0x40,
+            0x18, 0x80, 0x3C, 0x40,
+            0x0C, 0x90, 0x3E, 0x40,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 4)
+        if let first = events[0] as? ChannelVoiceEvent,
+           let second = events[1] as? ChannelVoiceEvent,
+           let third = events[2] as? ChannelVoiceEvent {
+            XCTAssertEqual(first.timestamp, 0)
+            XCTAssertEqual(second.timestamp, 24)
+            XCTAssertEqual(third.timestamp, 36)
+        } else {
+            XCTFail("Expected ChannelVoiceEvent note events")
+        }
+    }
+
     func testSysExEventDecoding() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
