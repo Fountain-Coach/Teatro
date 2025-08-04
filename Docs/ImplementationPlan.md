@@ -8,7 +8,7 @@
 - Watch mode uses a polling loop rather than `DispatchSource.makeFileSystemObjectSource`.
 - Tests cover help/version output, unknown flags, and SMF header/track parsing. Csound and FluidSynth headers are vendored for consistent builds.
 - `MidiFileParser` parses SMF header, track events, channel voice messages (Note On/Off, Control Change, Program Change, Pitch Bend), and meta events (track name, tempo, time signature); remaining message types remain pending.
-- `UMPParser` decodes system real-time/common messages and MIDI 1.0 channel voice messages; additional UMP message types remain pending.
+- `UMPParser` decodes utility, system real-time/common, and MIDI 1.0 channel voice messages; additional UMP message types remain pending.
 
 ## Action Plan
 

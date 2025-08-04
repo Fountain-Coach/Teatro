@@ -14,7 +14,7 @@ The CLI currently supports rendering from the following source formats:
 
 - **.storyboard**
 - **.mid / .midi** (Standard MIDI Files) – header, track parsing, tempo and time signature meta-events, Control Change, Program Change, and Pitch Bend events implemented
-- **.ump** (Universal MIDI Packet) – initial parser handles MIDI 1.0 channel voice messages
+- **.ump** (Universal MIDI Packet) – parser handles MIDI 1.0 channel voice, system real-time/common, and utility messages
 - **.session**
 
 > **Open Issues**:
@@ -128,6 +128,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-04: Added Control Change, Program Change, and Pitch Bend event decoding to MidiFileParser.
 - 2025-08-05: Added initial UMPParser with MIDI 1.0 channel voice message decoding.
 - 2025-08-06: Added system real-time/common message decoding to UMPParser and unit tests.
+- 2025-08-07: Added utility message decoding to UMPParser and unit tests.
 
 ---
 

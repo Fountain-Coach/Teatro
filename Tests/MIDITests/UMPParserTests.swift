@@ -2,6 +2,18 @@ import XCTest
 @testable import Teatro
 
 final class UMPParserTests: XCTestCase {
+    func testUtilityMessageDecoding() throws {
+        let bytes: [UInt8] = [0x02, 0x7F, 0xAA, 0xBB]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard case let .utilityMessage(group, status, data1, data2) = events.first else {
+            return XCTFail("Expected utilityMessage event")
+        }
+        XCTAssertEqual(group, 2)
+        XCTAssertEqual(status, 0x7F)
+        XCTAssertEqual(data1, 0xAA)
+        XCTAssertEqual(data2, 0xBB)
+    }
+
     func testMIDI1ChannelVoiceDecoding() throws {
         let bytes: [UInt8] = [0x20, 0x90, 0x3C, 0x40]
         let events = try UMPParser.parse(data: Data(bytes))
