@@ -13,7 +13,7 @@ The CLI currently supports rendering from the following source formats:
 **Pending formats** (not yet implemented):
 
 - **.storyboard**
-- **.mid / .midi** (Standard MIDI Files)
+- **.mid / .midi** (Standard MIDI Files) – header parsing implemented
 - **.ump** (Universal MIDI Packet)
 - **.session**
 
@@ -134,3 +134,7 @@ The CLI currently supports rendering from the following source formats:
 > _Maintaining clear documentation and comprehensive logging ensures long‑term reliability and ease of maintenance for the Teatro parsing subsystem._
 
 
+
+---
+
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

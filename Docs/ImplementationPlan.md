@@ -7,10 +7,11 @@
 - Environment variable precedence for width/height only applies when flags are set; no fallback to existing variables.
 - Watch mode uses a polling loop rather than `DispatchSource.makeFileSystemObjectSource`.
 - Tests only cover help/version output and unknown flags. `swift test` fails to compile without Csound headers.
+- Initial `MidiFileParser` parses SMF header; full track parsing remains pending.
 
 ## Action Plan
 
-1. Implement parsers and renderers for `.storyboard`, `.mid`/`.midi`, `.ump`, and `.session` files.
+1. Implement parsers and renderers for `.storyboard`, `.mid`/`.midi`, `.ump`, and `.session` files (SMF header parser implemented).
 2. Add `ump` output target in the render dispatcher and ensure all formats are documented.
 3. Apply environment variable fallback when width/height flags are absent and add tests for precedence.
 4. Replace polling watch mode with `DispatchSource.makeFileSystemObjectSource`.
