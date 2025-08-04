@@ -124,6 +124,42 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testProgramChangeDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x07,
+            0x00, 0xC0, 0x05,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let program = events[0] as? ChannelVoiceEvent {
+            XCTAssertEqual(program.type, .programChange)
+            XCTAssertEqual(program.channel, 0)
+            XCTAssertEqual(program.controllerValue, 0x05)
+        } else {
+            XCTFail("Expected ChannelVoiceEvent programChange")
+        }
+    }
+
+    func testPitchBendDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x08,
+            0x00, 0xE0, 0x00, 0x40,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let bend = events[0] as? ChannelVoiceEvent {
+            XCTAssertEqual(bend.type, .pitchBend)
+            XCTAssertEqual(bend.channel, 0)
+            XCTAssertEqual(bend.controllerValue, 0x2000)
+        } else {
+            XCTFail("Expected ChannelVoiceEvent pitchBend")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
