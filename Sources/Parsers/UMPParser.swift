@@ -7,13 +7,14 @@ enum UMPParserError: Error {
 
 /// Basic event representation for Universal MIDI Packets.
 enum UMPEvent {
+    case systemMessage(group: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
     case midi1ChannelVoice(group: UInt8, channel: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
     case unknown(group: UInt8, rawWords: [UInt32])
 }
 
 /// Parser for Universal MIDI Packet (UMP) files. This initial implementation
-/// supports decoding MIDI 1.0 channel voice messages and preserves all other
-/// packet types as opaque data.
+/// supports decoding system real-time/common messages and MIDI 1.0 channel voice
+/// messages while preserving all other packet types as opaque data.
 struct UMPParser {
     /// Parses a UMP-formatted data stream.
     /// - Parameter data: Raw bytes of the UMP file.
@@ -56,9 +57,15 @@ struct UMPParser {
     /// Decodes a packet into a `UMPEvent`.
     private static func decode(messageType: UInt8, group: UInt8, words: [UInt32]) -> UMPEvent {
         switch messageType {
+        case 0x1: // System Real-Time and System Common Messages
+            let word = words[0]
+            let status = UInt8((word >> 16) & 0xFF)
+            let data1 = UInt8((word >> 8) & 0xFF)
+            let data2 = UInt8(word & 0xFF)
+            return .systemMessage(group: group, status: status, data1: data1, data2: data2)
         case 0x2: // MIDI 1.0 Channel Voice Messages
             let word = words[0]
-            let status = UInt8((word >> 20) & 0xF0)
+            let status = UInt8(((word >> 20) & 0x0F) << 4)
             let channel = UInt8((word >> 16) & 0x0F)
             let data1 = UInt8((word >> 8) & 0x7F)
             let data2 = UInt8(word & 0x7F)
