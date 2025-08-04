@@ -3,6 +3,7 @@
 ## Status Quo
 
 - CLI handles `.fountain`, `.ly`, `.csd`, `.storyboard`, and `.session` inputs; `.mid`/`.midi` and `.ump` inputs remain unimplemented, though MIDI and UMP files are now detected by signature.
+- `CSDParser` extracts `<Orchestra>` and `<Score>` sections from `.csd` files and `CSDRenderer` writes complete `.csd` documents.
 - UMP rendering target encodes a placeholder UMP packet; full integration with parsers is pending.
 - Environment variables for width/height now apply even when flags are absent.
 - Watch mode uses `DispatchSource.makeFileSystemObjectSource` for file monitoring on supported platforms and falls back to polling on Linux.
