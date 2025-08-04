@@ -320,6 +320,22 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testInstrumentNameMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0D,
+            0x00, 0xFF, 0x04, 0x05, 0x50, 0x69, 0x61, 0x6E, 0x6F,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let instrument = events[0] as? InstrumentNameEvent {
+            XCTAssertEqual(instrument.name, "Piano")
+        } else {
+            XCTFail("Expected InstrumentNameEvent")
+        }
+    }
+
     func testLyricMetaEventDecoding() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
@@ -349,6 +365,22 @@ final class MidiFileParserTests: XCTestCase {
             XCTAssertEqual(marker.name, "Mark")
         } else {
             XCTFail("Expected MarkerEvent")
+        }
+    }
+
+    func testCuePointMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0B,
+            0x00, 0xFF, 0x07, 0x03, 0x43, 0x75, 0x65,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let cue = events[0] as? CuePointEvent {
+            XCTAssertEqual(cue.text, "Cue")
+        } else {
+            XCTFail("Expected CuePointEvent")
         }
     }
 
