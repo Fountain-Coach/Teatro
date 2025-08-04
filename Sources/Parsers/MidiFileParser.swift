@@ -35,6 +35,9 @@ struct MidiFileParser {
     enum MidiEvent {
         case noteOn(deltaTime: UInt32, channel: UInt8, note: UInt8, velocity: UInt8)
         case noteOff(deltaTime: UInt32, channel: UInt8, note: UInt8, velocity: UInt8)
+        case controlChange(deltaTime: UInt32, channel: UInt8, controller: UInt8, value: UInt8)
+        case programChange(deltaTime: UInt32, channel: UInt8, program: UInt8)
+        case pitchBend(deltaTime: UInt32, channel: UInt8, value: UInt16)
         case trackName(deltaTime: UInt32, name: String)
         case tempo(deltaTime: UInt32, microsecondsPerQuarter: UInt32)
         case timeSignature(deltaTime: UInt32, numerator: UInt8, denominator: UInt8, metronome: UInt8, thirtySeconds: UInt8)
@@ -80,9 +83,27 @@ struct MidiFileParser {
                 let velocity = data[index + 1]
                 events.append(.noteOn(deltaTime: delta, channel: channel, note: note, velocity: velocity))
                 index += 2
-            case 0xA0, 0xB0, 0xE0: // Two data bytes, skip
+            case 0xB0: // Control Change
+                guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
+                let controller = data[index]
+                let value = data[index + 1]
+                events.append(.controlChange(deltaTime: delta, channel: channel, controller: controller, value: value))
                 index += 2
-            case 0xC0, 0xD0: // One data byte, skip
+            case 0xC0: // Program Change
+                guard index < end else { throw MidiFileParserError.invalidEvent }
+                let program = data[index]
+                events.append(.programChange(deltaTime: delta, channel: channel, program: program))
+                index += 1
+            case 0xE0: // Pitch Bend
+                guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
+                let lsb = UInt16(data[index])
+                let msb = UInt16(data[index + 1])
+                let value = (msb << 7) | lsb
+                events.append(.pitchBend(deltaTime: delta, channel: channel, value: value))
+                index += 2
+            case 0xA0: // Polyphonic Key Pressure - ignore contents
+                index += 2
+            case 0xD0: // Channel Pressure - ignore contents
                 index += 1
             case 0xF0:
                 if status == 0xFF { // Meta event
