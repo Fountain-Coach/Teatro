@@ -6,8 +6,8 @@
 - UMP rendering target is listed but missing from dispatch.
 - Environment variable precedence for width/height only applies when flags are set; no fallback to existing variables.
 - Watch mode uses a polling loop rather than `DispatchSource.makeFileSystemObjectSource`.
-- Tests only cover help/version output and unknown flags. `swift test` fails to compile without Csound headers.
-- Initial `MidiFileParser` parses SMF header; full track parsing remains pending.
+- Tests cover help/version output, unknown flags, and SMF header/track parsing. `swift test` fails to compile without Csound headers.
+- `MidiFileParser` parses SMF header and basic track events; additional message types remain pending.
 
 ## Action Plan
 

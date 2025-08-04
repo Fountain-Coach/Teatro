@@ -13,7 +13,7 @@ The CLI currently supports rendering from the following source formats:
 **Pending formats** (not yet implemented):
 
 - **.storyboard**
-- **.mid / .midi** (Standard MIDI Files) – header parsing implemented
+ - **.mid / .midi** (Standard MIDI Files) – header and basic track parsing implemented
 - **.ump** (Universal MIDI Packet)
 - **.session**
 
@@ -21,7 +21,7 @@ The CLI currently supports rendering from the following source formats:
 > - The `ump` output target is listed in the dispatcher but has no implementation.
 > - Width/height environment variables only take effect when corresponding CLI flags are provided; no fallback behavior.
 > - Watch mode relies on a polling loop instead of using `DispatchSource.makeFileSystemObjectSource`.
-> - Tests cover only help/version output and unknown flags; `swift test` fails without Csound headers.
+> - Tests cover help/version output, unknown flags, and SMF header/track parsing; `swift test` fails without Csound headers.
 
 ---
 
@@ -116,10 +116,14 @@ The CLI currently supports rendering from the following source formats:
 ### - **Regular Status Updates**  
   - After each milestone, update the **Status Quo** section and **ImplementationPlan.md**.  
   - Report supported formats, pending work, and any caveats.
-### - **Implementation Log**  
+### - **Implementation Log**
   - Append dated entries detailing decisions, issues, resolutions, and spec references.
-### - **Issue Tracking**  
+### - **Issue Tracking**
   - Document unimplemented MIDI 2.0 messages or spec changes as TODOs in the repo and here.
+
+### Implementation Log
+
+- 2025-08-04: Added basic SMF track parsing and tests.
 
 ---
 
