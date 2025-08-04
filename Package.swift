@@ -12,6 +12,9 @@ let package = Package(
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0")
+    ],
     targets: [
         .target(
             name: "Teatro",
@@ -21,7 +24,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "RenderCLI",
-            dependencies: ["Teatro"],
+            dependencies: [
+                "Teatro",
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ],
             path: "Sources/CLI"
         ),
         .executableTarget(
@@ -37,7 +43,7 @@ let package = Package(
             name: "TeatroTests",
             dependencies: ["Teatro"],
             path: "Tests",
-            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests"]
+            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI"]
         ),
         .testTarget(
             name: "StoryboardDSLTests",
@@ -59,6 +65,11 @@ let package = Package(
             dependencies: ["Teatro"],
             path: "Tests/SamplerTests"
         ),
+        .testTarget(
+            name: "CLITests",
+            dependencies: ["RenderCLI"],
+            path: "Tests/CLI"
+        ),
         .systemLibrary(
             name: "CCsound",
             path: "Sources/CCsound"
@@ -69,3 +80,6 @@ let package = Package(
         )
     ]
 )
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+

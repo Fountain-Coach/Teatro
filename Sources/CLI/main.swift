@@ -1,4 +1,4 @@
-import Foundation
-import Teatro
+RenderCLI.main()
 
-RenderCLI.main(args: Array(CommandLine.arguments.dropFirst()))
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+
