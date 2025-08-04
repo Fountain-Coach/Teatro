@@ -8,13 +8,14 @@ The Teatro view engine exposes an ArgumentParser-powered command-line interface 
 - `--input <file>` or positional file argument
 - `--format <target>` where target ∈ {html, svg, png, markdown, codex, svgAnimated, csound, ump}
 - `--output <path>` to override the destination filename
+- `--force-format` to override output extension mismatches
 - `--watch` to re-render on file changes
 - `--width` / `--height` to override canvas dimensions
 - `--help` / `--version`
 
 ### Defaults
 
-- Omitting `--format` selects `codex` when writing to stdout and `png` when writing to a file.
+- When `--output` is present but `--format` is omitted, the extension of the output path selects the format; otherwise `codex` (stdout) or `png` (file) is used.
 - When `--output` is absent, defaults such as `output.png`, `output.svg`, or `output.csd` are used.
 - Size flags take precedence over environment variables `TEATRO_SVG_WIDTH`, `TEATRO_SVG_HEIGHT`, `TEATRO_IMAGE_WIDTH`, and `TEATRO_IMAGE_HEIGHT`.
 

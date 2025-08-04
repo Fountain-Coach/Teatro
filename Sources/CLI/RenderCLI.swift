@@ -33,6 +33,9 @@ public struct RenderCLI: ParsableCommand {
     @Flag(name: [.short, .long], help: "Watch the input file for changes")
     public var watch: Bool = false
 
+    @Flag(name: .long, help: "Ignore mismatched output extension and format")
+    public var forceFormat: Bool = false
+
     @Option(name: [.customShort("W"), .long], help: "Override output width")
     public var width: Int?
 
@@ -70,11 +73,47 @@ public struct RenderCLI: ParsableCommand {
             setenv("TEATRO_IMAGE_HEIGHT", String(h), 1)
         }
 
-        let target = format ?? (output == nil ? .codex : .png)
+        let target = try determineTarget()
         try render(view: view, target: target, outputPath: output)
 
         if watch, let path = inputPath {
             watchFile(path: path, target: target, outputPath: output)
+        }
+    }
+
+    private func determineTarget() throws -> RenderTarget {
+        if let fmt = format {
+            if let out = output {
+                let ext = URL(fileURLWithPath: out).pathExtension.lowercased()
+                if !forceFormat,
+                   let inferred = Self.inferFormat(fromExtension: ext),
+                   inferred != fmt,
+                   !ext.isEmpty {
+                    throw ValidationError("Output extension .\(ext) does not match format \(fmt.rawValue). Use --force-format to override.")
+                }
+            }
+            return fmt
+        }
+        if let out = output {
+            let ext = URL(fileURLWithPath: out).pathExtension.lowercased()
+            if let inferred = Self.inferFormat(fromExtension: ext) {
+                return inferred
+            }
+            return .png
+        }
+        return .codex
+    }
+
+    private static func inferFormat(fromExtension ext: String) -> RenderTarget? {
+        switch ext {
+        case "html": return .html
+        case "svg": return .svg
+        case "png": return .png
+        case "md", "markdown": return .markdown
+        case "codex": return .codex
+        case "csd": return .csound
+        case "ump": return .ump
+        default: return nil
         }
     }
 

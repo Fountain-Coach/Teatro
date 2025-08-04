@@ -88,6 +88,26 @@ final class RenderCLITests: XCTestCase {
         XCTAssertEqual(data.count, 8)
     }
 
+    func testOutputExtensionMismatchThrows() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("mismatch.html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse(["--format", "png", "--output", url.path])
+        XCTAssertThrowsError(try cli.run()) { error in
+            guard error is ValidationError else {
+                XCTFail("Expected ValidationError")
+                return
+            }
+        }
+    }
+
+    func testForceFormatOverridesMismatch() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("forced.html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse(["--format", "png", "--output", url.path, "--force-format"])
+        XCTAssertNoThrow(try cli.run())
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+    }
+
     func testStoryboardInputRenders() throws {
         let text = """
         Scene: One
