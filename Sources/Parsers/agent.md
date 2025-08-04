@@ -23,6 +23,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 ## ✅ Current Coverage Snapshot
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ### 3.1 SMF Parser (`MidiFileParser`)
 
 #### - **Header Parsing**  
@@ -135,6 +136,8 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - 2025-09-05: Added MarkerEvent decoding to MidiFileParser and unit test.
 - 2025-09-06: Added InstrumentNameEvent and CuePointEvent decoding to MidiFileParser with unit tests.
 =======
+=======
+>>>>>>> Stashed changes
 | Input Format       | Status      | Parser | CLI Support | Tests |
 |--------------------|-------------|--------|-------------|-------|
 | `.fountain`        | ✅ Complete | ✓ `FountainParser` | ✓ | ✓ |
@@ -144,6 +147,9 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 | `.ump` (MIDI 2.0)  | ✅ Complete | ✓ `UMPParser` | ✓ | ✓ |
 | `.storyboard`      | ❌ Missing  | ❌ | ❌ | ❌ |
 | `.session`         | ❌ Missing  | ❌ | ❌ | ❌ |
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 ---
