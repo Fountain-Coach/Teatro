@@ -384,6 +384,26 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testSMPTEOffsetMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0D,
+            0x00, 0xFF, 0x54, 0x05, 0x10, 0x20, 0x30, 0x40, 0x50,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let smpte = events[0] as? SMPTEOffsetEvent {
+            XCTAssertEqual(smpte.hour, 0x10)
+            XCTAssertEqual(smpte.minute, 0x20)
+            XCTAssertEqual(smpte.second, 0x30)
+            XCTAssertEqual(smpte.frame, 0x40)
+            XCTAssertEqual(smpte.subframe, 0x50)
+        } else {
+            XCTFail("Expected SMPTEOffsetEvent")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,

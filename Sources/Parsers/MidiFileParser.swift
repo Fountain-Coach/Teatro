@@ -139,6 +139,14 @@ struct MidiFileParser {
                         value |= UInt32(metaSlice[start.advanced(by: 1)]) << 8
                         value |= UInt32(metaSlice[start.advanced(by: 2)])
                         events.append(TempoEvent(timestamp: currentTime, microsecondsPerQuarter: value))
+                    } else if metaType == 0x54 && length == 5 {
+                        let start = metaSlice.startIndex
+                        let hour = metaSlice[start]
+                        let minute = metaSlice[start.advanced(by: 1)]
+                        let second = metaSlice[start.advanced(by: 2)]
+                        let frame = metaSlice[start.advanced(by: 3)]
+                        let subframe = metaSlice[start.advanced(by: 4)]
+                        events.append(SMPTEOffsetEvent(timestamp: currentTime, hour: hour, minute: minute, second: second, frame: frame, subframe: subframe))
                     } else if metaType == 0x58 && length == 4 {
                         let start = metaSlice.startIndex
                         let numerator = metaSlice[start]
