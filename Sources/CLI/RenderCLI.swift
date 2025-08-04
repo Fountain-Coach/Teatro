@@ -110,7 +110,8 @@ public struct RenderCLI: ParsableCommand {
         case "ump":
             throw ValidationError("Parsing for UMP files is not implemented")
         case "session":
-            throw ValidationError("Parsing for .session files is not implemented")
+            let text = String(decoding: fileData, as: UTF8.self)
+            return SessionParser.parse(text)
         default:
             if signature == Data([0x4d, 0x54, 0x68, 0x64]) { // "MThd"
                 throw ValidationError("Parsing for MIDI files is not implemented")
