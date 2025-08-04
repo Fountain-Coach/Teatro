@@ -54,8 +54,12 @@ struct MidiFileParser {
                 guard let rs = runningStatus else { throw MidiFileParserError.invalidEvent }
                 status = rs
             } else {
-                runningStatus = status
                 index += 1
+                if status < 0xF0 {
+                    runningStatus = status
+                } else if status < 0xF8 {
+                    runningStatus = nil
+                }
             }
 
             let type = status & 0xF0
@@ -123,7 +127,24 @@ struct MidiFileParser {
                     events.append(SysExEvent(timestamp: currentTime, data: Data(sysExData)))
                     index += Int(length)
                 } else {
-                    // Other system messages ignored
+                    let length: Int
+                    switch status {
+                    case 0xF1, 0xF3:
+                        length = 1
+                    case 0xF2:
+                        length = 2
+                    case 0xF6, 0xF8, 0xFA, 0xFB, 0xFC, 0xFE:
+                        length = 0
+                    default:
+                        length = 0
+                    }
+                    guard index + length <= end else { throw MidiFileParserError.invalidEvent }
+                    var raw: [UInt8] = [status]
+                    for i in 0..<length {
+                        raw.append(data[index + i])
+                    }
+                    events.append(UnknownEvent(timestamp: currentTime, data: Data(raw)))
+                    index += length
                 }
             default:
                 throw MidiFileParserError.invalidEvent

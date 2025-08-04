@@ -179,6 +179,40 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testSystemMessageDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0F,
+            0x00, 0x90, 0x3C, 0x40,
+            0x00, 0xF3, 0x05,
+            0x00, 0x90, 0x3E, 0x40,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 4)
+        if let system = events[1] as? UnknownEvent {
+            XCTAssertEqual(system.rawData, Data([0xF3, 0x05]))
+        } else {
+            XCTFail("Expected UnknownEvent system message")
+        }
+    }
+
+    func testSystemMessageClearsRunningStatus() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0A,
+            0x00, 0x90, 0x3C, 0x40,
+            0x00, 0xF3, 0x05,
+            0x00, 0x3E, 0x40
+        ]
+        let data = Data(bytes)
+        XCTAssertThrowsError(try MidiFileParser.parseTrack(data: data)) { error in
+            guard case MidiFileParserError.invalidEvent = error else {
+                return XCTFail("Expected invalidEvent error")
+            }
+        }
+    }
+
     func testRunningStatusDecoding() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
