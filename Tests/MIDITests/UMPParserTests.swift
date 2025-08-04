@@ -47,6 +47,34 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.velocity, 0x7F)
     }
 
+    func testMIDI2ProgramChangeDecoding() throws {
+        let bytes: [UInt8] = [
+            0x40, 0xC0, 0x00, 0x00,
+            0x05, 0x00, 0x00, 0x00
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
+        }
+        XCTAssertEqual(event.type, .programChange)
+        XCTAssertEqual(event.channel, 0)
+        XCTAssertEqual(event.controllerValue, 0x05)
+    }
+
+    func testMIDI2PitchBendDecoding() throws {
+        let bytes: [UInt8] = [
+            0x40, 0xE0, 0x00, 0x00,
+            0x00, 0x01, 0x00, 0x00
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
+        }
+        XCTAssertEqual(event.type, .pitchBend)
+        XCTAssertEqual(event.channel, 0)
+        XCTAssertEqual(event.controllerValue, 0x00010000)
+    }
+
     func testChannelPressureDecoding() throws {
         let midi1: [UInt8] = [0x20, 0xD0, 0x40, 0x00]
         let midi2: [UInt8] = [
