@@ -22,9 +22,6 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 
 ## ✅ Current Coverage Snapshot
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 ### 3.1 SMF Parser (`MidiFileParser`)
 
 #### - **Header Parsing**  
