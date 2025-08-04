@@ -98,6 +98,8 @@ struct UMPParser {
             default:
                 return UnknownEvent(timestamp: 0, data: rawData(from: words))
             }
+        case 0x5, 0x6: // SysEx7 and SysEx8
+            return SysExEvent(timestamp: 0, data: rawData(from: words))
         default:
             return UnknownEvent(timestamp: 0, data: rawData(from: words))
         }

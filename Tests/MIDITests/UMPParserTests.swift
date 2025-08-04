@@ -47,6 +47,18 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.velocity, 0x7F)
     }
 
+    func testSysEx7Decoding() throws {
+        let bytes: [UInt8] = [
+            0x50, 0x00, 0x12, 0x34,
+            0x56, 0x78, 0x9A, 0xBC
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard let event = events.first as? SysExEvent else {
+            return XCTFail("Expected SysExEvent")
+        }
+        XCTAssertEqual(event.rawData, Data(bytes))
+    }
+
     func testGroupChannelMapping() throws {
         // Group 2, channel 10 should map to unified channel 42
         let bytes: [UInt8] = [0x22, 0x9A, 0x3C, 0x40]
@@ -59,8 +71,10 @@ final class UMPParserTests: XCTestCase {
 
     func testUnknownPacketPreserved() throws {
         let bytes: [UInt8] = [
-            0x50, 0x00, 0x00, 0x00,
-            0x01, 0x02, 0x03, 0x04
+            0x70, 0x00, 0x00, 0x00,
+            0x01, 0x02, 0x03, 0x04,
+            0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0A, 0x0B, 0x0C
         ]
         let events = try UMPParser.parse(data: Data(bytes))
         guard let event = events.first as? UnknownEvent else {
