@@ -1,6 +1,6 @@
 # 🧩 Teatro Parser Agent
 
-**Last Updated:** September 08, 2025
+**Last Updated:** September 09, 2025
 **Maintainer:** FountainAI / Codex Agents  
 **Directory:** `Sources/Parsers/agent.md`  
 **Mission:** Close the gap between declared input format support and verified parser coverage in the Teatro CLI.
@@ -30,7 +30,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 | `.mid` (SMF)       | ✅ Complete | ✓ `MidiFileParser` | ✓ | ✓ |
 | `.ump` (MIDI 2.0)  | ✅ Complete | ✓ `UMPParser` | ✓ | ✓ |
 | `.storyboard`      | ⚠️ Partial  | ✓ `StoryboardParser` | ✓ | ✓ |
-| `.session`         | ❌ Missing  | ❌ | ❌ | ❌ |
+| `.session`         | ⚠️ Basic  | ✓ `SessionParser` | ✓ | ✓ |
 
 ---
 
@@ -40,13 +40,13 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - [x] `MidiFileParser.swift` with full event decoding
 - [x] `UMPParser.swift` supporting UMP formats 1.0/2.0
 - [x] `StoryboardParser.swift` (Storyboard DSL)
-- [ ] `SessionParser.swift` (Teatro container format)
+- [x] `SessionParser.swift` (Teatro container format)
 - [ ] Canonical event unification (`MidiEventProtocol`)
 
 ### 2. CLI Integration
 - [x] Dispatch by file extension
 - [x] Add `.storyboard` to dispatcher
-- [ ] Add `.session` to dispatcher
+- [x] Add `.session` to dispatcher
 - [ ] `--force-format`, `--renderer`, `--dump-events` CLI flags
 - [ ] `--emit-ump` output mode
 
@@ -63,7 +63,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - [x] `MidiFileParserTests.swift`
 - [x] `UMPParserTests.swift`
 - [x] `Tests/StoryboardParserTests.swift`
-- [ ] `Tests/SessionParserTests.swift`
+- [x] `Tests/SessionParserTests.swift`
 - [ ] Fixture-based event normalization tests
 
 ---
@@ -197,6 +197,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - 2025-09-06: Added InstrumentNameEvent and CuePointEvent decoding to MidiFileParser with unit tests.
 - 2025-09-07: Added SMPTE offset meta event decoding to MidiFileParser and unit test.
 - 2025-09-08: Added basic StoryboardParser with CLI integration and unit test.
+- 2025-09-09: Added basic SessionParser with CLI dispatch and unit test.
 
 
 All implementations must be verifiable via `swift test` and conform to:
