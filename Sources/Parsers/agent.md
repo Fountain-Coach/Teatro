@@ -26,7 +26,7 @@ The CLI currently supports rendering from the following source formats:
 - **.session**
 
 > **Open Issues**:
-> - The `ump` output target is listed in the dispatcher but has no implementation.
+> - The `ump` output target now emits a placeholder UMP packet; full renderer integration is pending.
 > - Tests cover help/version output, unknown flags, and SMF header/track parsing; Csound and FluidSynth headers are optional via conditional compilation.
 
 ---
@@ -141,6 +141,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-11: Added truncated packet error handling to UMPParser and tests.
 - 2025-08-12: Replaced CLI watch mode polling with DispatchSource-based file monitoring on supported platforms.
 - 2025-08-13: Added file signature detection for MIDI and UMP inputs in RenderCLI.
+- 2025-08-14: Added placeholder UMP rendering output target in RenderCLI.
 
 ---
 
