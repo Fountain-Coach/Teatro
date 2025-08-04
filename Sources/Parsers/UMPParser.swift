@@ -58,67 +58,67 @@ struct UMPParser {
         case 0x2: // MIDI 1.0 Channel Voice Messages
             let word = words[0]
             let status = UInt8(((word >> 20) & 0x0F) << 4)
-            let channel = UInt8((group << 4) | UInt8((word >> 16) & 0x0F))
+            let channel = UInt8((word >> 16) & 0x0F)
             let data1 = UInt8((word >> 8) & 0x7F)
             let data2 = UInt8(word & 0x7F)
             switch status {
             case 0x80:
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0x90:
                 let eventType: MidiEventType = data2 == 0 ? .noteOff : .noteOn
-                return ChannelVoiceEvent(timestamp: 0, type: eventType, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0xA0:
-                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0xB0:
-                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
+                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, group: group, channel: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
             case 0xC0:
-                return ChannelVoiceEvent(timestamp: 0, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
+                return ChannelVoiceEvent(timestamp: 0, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
             case 0xE0:
                 let value = UInt32((UInt16(data2) << 7) | UInt16(data1))
-                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: value)
+                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: value)
             case 0xD0:
-                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
+                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
             default:
-                return UnknownEvent(timestamp: 0, data: rawData(from: words))
+                return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
             }
         case 0x4: // MIDI 2.0 Channel Voice Messages
             let word1 = words[0]
             let status = UInt8(((word1 >> 20) & 0x0F) << 4)
-            let channel = UInt8((group << 4) | UInt8((word1 >> 16) & 0x0F))
+            let channel = UInt8((word1 >> 16) & 0x0F)
             let data1 = UInt16(word1 & 0xFFFF)
             let data2 = words.count > 1 ? words[1] : 0
             switch status {
             case 0x80:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
             case 0x90:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
                 let eventType: MidiEventType = vel == 0 ? .noteOff : .noteOn
-                return ChannelVoiceEvent(timestamp: 0, type: eventType, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
             case 0xA0:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let pressure = ChannelVoiceEvent.normalizeController(data2)
-                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: note, velocity: pressure, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: note, velocity: pressure, controllerValue: nil)
             case 0xB0:
                 let controller = UInt8((data1 >> 8) & 0xFF)
                 let value = ChannelVoiceEvent.normalizeController(data2)
-                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value))
+                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, group: group, channel: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value))
             case 0xC0:
                 let program = UInt8((data2 >> 24) & 0x7F)
-                return ChannelVoiceEvent(timestamp: 0, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program))
+                return ChannelVoiceEvent(timestamp: 0, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program))
             case 0xD0:
-                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0xE0:
-                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             default:
-                return UnknownEvent(timestamp: 0, data: rawData(from: words))
+                return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
             }
         case 0x5, 0x6: // SysEx7 and SysEx8
-            return SysExEvent(timestamp: 0, data: rawData(from: words))
+            return SysExEvent(timestamp: 0, data: rawData(from: words), group: group)
         default:
-            return UnknownEvent(timestamp: 0, data: rawData(from: words))
+            return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
         }
     }
 
