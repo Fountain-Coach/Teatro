@@ -28,7 +28,7 @@
 | Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `SessionFormat.md`                    | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⚠️ Partial | Need fixture MIDI           | tests, fixtures      |
 | Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⏳ TODO | CLI outputs not verified    | tests, cli           |
-| Coverage tracking      | `COVERAGE.md`                                                           | Add          | ⚠️ Partial | Needs coverage metrics      | coverage, report     |
+| Coverage tracking      | `COVERAGE.md`                                                           | Add          | ✅ Done  | —                          | coverage, report     |
 
 ---
 
