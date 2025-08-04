@@ -35,6 +35,9 @@ struct MidiFileParser {
     enum MidiEvent {
         case noteOn(deltaTime: UInt32, channel: UInt8, note: UInt8, velocity: UInt8)
         case noteOff(deltaTime: UInt32, channel: UInt8, note: UInt8, velocity: UInt8)
+        case trackName(deltaTime: UInt32, name: String)
+        case tempo(deltaTime: UInt32, microsecondsPerQuarter: UInt32)
+        case timeSignature(deltaTime: UInt32, numerator: UInt8, denominator: UInt8, metronome: UInt8, thirtySeconds: UInt8)
         case meta(deltaTime: UInt32, type: UInt8, data: Data)
     }
 
@@ -89,8 +92,32 @@ struct MidiFileParser {
                     let length = try readVariableLengthQuantity(data, index: &index)
                     guard index + Int(length) <= end else { throw MidiFileParserError.invalidEvent }
                     let metaData = data[index..<index + Int(length)]
-                    events.append(.meta(deltaTime: delta, type: metaType, data: metaData))
-                    index += Int(length)
+                    defer { index += Int(length) }
+
+                    switch metaType {
+                    case 0x03: // Track name
+                        let name = String(data: metaData, encoding: .ascii) ?? ""
+                        events.append(.trackName(deltaTime: delta, name: name))
+                    case 0x51: // Tempo
+                        guard length == 3 else { throw MidiFileParserError.invalidEvent }
+                        let value = metaData.withUnsafeBytes { ptr -> UInt32 in
+                            var tmp: UInt32 = 0
+                            tmp |= UInt32(ptr[0]) << 16
+                            tmp |= UInt32(ptr[1]) << 8
+                            tmp |= UInt32(ptr[2])
+                            return tmp
+                        }
+                        events.append(.tempo(deltaTime: delta, microsecondsPerQuarter: value))
+                    case 0x58: // Time signature
+                        guard length == 4 else { throw MidiFileParserError.invalidEvent }
+                        let num = metaData[metaData.startIndex]
+                        let denom = metaData[metaData.startIndex.advanced(by: 1)]
+                        let metro = metaData[metaData.startIndex.advanced(by: 2)]
+                        let thirty = metaData[metaData.startIndex.advanced(by: 3)]
+                        events.append(.timeSignature(deltaTime: delta, numerator: num, denominator: denom, metronome: metro, thirtySeconds: thirty))
+                    default:
+                        events.append(.meta(deltaTime: delta, type: metaType, data: metaData))
+                    }
                     if metaType == 0x2F { break } // End of track
                 } else if status == 0xF0 || status == 0xF7 { // SysEx
                     let length = try readVariableLengthQuantity(data, index: &index)
@@ -119,5 +146,4 @@ struct MidiFileParser {
         return value
     }
 }
-
-© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

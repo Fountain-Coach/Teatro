@@ -20,7 +20,7 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth"],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "Parsers/agent.md"]
+            exclude: ["CLI", "TeatroSamplerDemo", "Parsers/agent.md", "CCsound", "CFluidSynth"]
         ),
         .executableTarget(
             name: "RenderCLI",
@@ -70,13 +70,15 @@ let package = Package(
             dependencies: ["RenderCLI"],
             path: "Tests/CLI"
         ),
-        .systemLibrary(
+        .target(
             name: "CCsound",
-            path: "Sources/CCsound"
+            path: "Sources/CCsound",
+            publicHeadersPath: "."
         ),
-        .systemLibrary(
+        .target(
             name: "CFluidSynth",
-            path: "Sources/CFluidSynth"
+            path: "Sources/CFluidSynth",
+            publicHeadersPath: "."
         )
     ]
 )

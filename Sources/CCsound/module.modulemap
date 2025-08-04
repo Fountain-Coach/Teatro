@@ -1,5 +1,6 @@
-module CCsound [system] {
-    header "/usr/include/csound/csound.h"
-    link "csound64"
+module CCsound {
+    header "csound.h"
     export *
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
