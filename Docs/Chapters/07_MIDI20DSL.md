@@ -68,9 +68,16 @@ Encodes each `MIDI2Note` into raw Universal MIDI Packet words for playback or fi
 
 ```swift
 public struct UMPEncoder {
-    public static func encode(_ note: MIDI2Note) -> [UInt32] {
-        // Placeholder encoding
-        [0]
+    public static func encode(_ note: MIDI2Note, group: UInt8 = 0) -> [UInt32] {
+        let messageType: UInt32 = 0x4 << 28
+        let groupBits = UInt32(group & 0xF) << 24
+        let status: UInt32 = 0x9 << 20
+        let channelBits = UInt32(note.channel & 0xF) << 16
+        let noteBits = UInt32(note.note & 0x7F) << 8
+        let word1 = messageType | groupBits | status | channelBits | noteBits
+        let velocity = UInt32(max(0, min(0xFFFF, Int((note.velocity * 65535.0).rounded()))))
+        let word2 = velocity << 16
+        return [word1, word2]
     }
 }
 ```

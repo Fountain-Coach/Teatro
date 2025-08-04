@@ -4,7 +4,7 @@
 
 - CLI handles `.fountain`, `.ly`, `.csd`, `.storyboard`, and `.session` inputs; `.mid`/`.midi` and `.ump` inputs remain unimplemented, though MIDI and UMP files are now detected by signature.
 - `CSDParser` extracts `<Orchestra>` and `<Score>` sections from `.csd` files and `CSDRenderer` writes complete `.csd` documents.
-- UMP rendering target encodes a placeholder UMP packet; full integration with parsers is pending.
+- UMP rendering target encodes MIDI 2.0 Note On packets via `UMPEncoder`; full integration with parsers is pending.
 - Environment variables for width/height now apply even when flags are absent.
 - Watch mode uses `DispatchSource.makeFileSystemObjectSource` for file monitoring on supported platforms and falls back to polling on Linux.
 - Tests cover help/version output, unknown flags, SMF header/track parsing (including running status, Control Change, Program Change, Pitch Bend decoding, timestamp accumulation, meta events such as track/instrument name, lyrics, markers, cue points, and error handling for invalid headers, tracks, and events), and UMP parsing for SysEx7/SysEx8, group/channel mapping, and error cases. Csound and FluidSynth headers are vendored for consistent builds, and the `FluidSynthSampler` backend enables real-time SoundFont playback.

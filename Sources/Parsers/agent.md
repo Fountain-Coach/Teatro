@@ -21,7 +21,7 @@
 | CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
 | CLI flags              | `RenderCLI.swift`                                                       | Add          | ⏳ TODO | `--force-format`, etc.      | cli, flags           |
 | Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
-| UMP encoder            | `UMPEncoder.swift`                                                      | Implement    | ⏳ TODO | None                        | encoder, ump         |
+| UMP encoder            | `UMPEncoder.swift`                                                      | ✅ Complete   | ✅ Done  | —                          | encoder, ump         |
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | ✅ Complete   | ✅ Done  | —                          | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | Refactor     | ⏳ TODO | Cross-parser normalization  | core, protocol       |

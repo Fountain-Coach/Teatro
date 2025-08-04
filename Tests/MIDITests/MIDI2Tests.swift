@@ -5,7 +5,7 @@ final class MIDI2Tests: XCTestCase {
     func testUMPEncoderProducesWords() {
         let note = MIDI2Note(channel: 0, note: 60, velocity: 0.5, duration: 0.1)
         let packets = UMPEncoder.encode(note)
-        XCTAssertEqual(packets.count, 2)
+        XCTAssertEqual(packets, [0x40903C00, 0x80000000])
     }
 
     func testCSDRendererWritesFile() throws {
