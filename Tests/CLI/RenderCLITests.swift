@@ -1,6 +1,11 @@
 import XCTest
 import ArgumentParser
 @testable import RenderCLI
+#if os(Linux)
+import Glibc
+#else
+import Darwin
+#endif
 
 func XCTAssertHelp<C: ParsableCommand>(_ command: C.Type, expected: String, file: StaticString = #filePath, line: UInt = #line) {
     let help = command.helpMessage()
@@ -26,6 +31,25 @@ final class RenderCLITests: XCTestCase {
 
     func testUnknownFlag() {
         XCTAssertExit { try RenderCLI.parse(["--unknown"]) }
+    }
+
+    func testEnvironmentFallback() throws {
+        setenv("TEATRO_WIDTH", "800", 1)
+        setenv("TEATRO_HEIGHT", "600", 1)
+        defer {
+            unsetenv("TEATRO_WIDTH")
+            unsetenv("TEATRO_HEIGHT")
+            unsetenv("TEATRO_SVG_WIDTH")
+            unsetenv("TEATRO_IMAGE_WIDTH")
+            unsetenv("TEATRO_SVG_HEIGHT")
+            unsetenv("TEATRO_IMAGE_HEIGHT")
+        }
+        let cli = try RenderCLI.parse([])
+        try cli.run()
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_WIDTH")), "800")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_WIDTH")), "800")
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_HEIGHT")), "600")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "600")
     }
 }
 

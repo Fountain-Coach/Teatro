@@ -46,11 +46,24 @@ public struct RenderCLI: ParsableCommand {
             view = try loadInput(path: path)
         }
 
-        if let w = width {
+        var effectiveWidth = width
+        if effectiveWidth == nil,
+           let env = ProcessInfo.processInfo.environment["TEATRO_WIDTH"],
+           let value = Int(env) {
+            effectiveWidth = value
+        }
+        if let w = effectiveWidth {
             setenv("TEATRO_SVG_WIDTH", String(w), 1)
             setenv("TEATRO_IMAGE_WIDTH", String(w), 1)
         }
-        if let h = height {
+
+        var effectiveHeight = height
+        if effectiveHeight == nil,
+           let env = ProcessInfo.processInfo.environment["TEATRO_HEIGHT"],
+           let value = Int(env) {
+            effectiveHeight = value
+        }
+        if let h = effectiveHeight {
             setenv("TEATRO_SVG_HEIGHT", String(h), 1)
             setenv("TEATRO_IMAGE_HEIGHT", String(h), 1)
         }

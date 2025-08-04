@@ -130,6 +130,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-06: Added system real-time/common message decoding to UMPParser and unit tests.
 - 2025-08-07: Added utility message decoding to UMPParser and unit tests.
 - 2025-08-08: Added MIDI 2.0 channel voice message decoding to UMPParser and unit tests.
+- 2025-08-09: Added width/height environment variable fallback in RenderCLI.
 
 ---
 
