@@ -86,5 +86,23 @@ final class MidiFileParserTests: XCTestCase {
             XCTFail("Expected ChannelVoiceEvent noteOff")
         }
     }
+
+    func testChannelPressureDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x07,
+            0x00, 0xD0, 0x40,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let pressure = events[0] as? ChannelVoiceEvent {
+            XCTAssertEqual(pressure.type, .channelPressure)
+            XCTAssertEqual(pressure.channel, 0)
+            XCTAssertEqual(pressure.controllerValue, 0x40)
+        } else {
+            XCTFail("Expected ChannelVoiceEvent channelPressure")
+        }
+    }
 }
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
