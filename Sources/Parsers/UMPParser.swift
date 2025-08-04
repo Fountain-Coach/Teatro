@@ -66,6 +66,8 @@ struct UMPParser {
                 return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0x90:
                 return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+            case 0xA0:
+                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0xB0:
                 return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
             case 0xC0:
@@ -93,6 +95,10 @@ struct UMPParser {
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
                 return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+            case 0xA0:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let pressure = ChannelVoiceEvent.normalizeController(data2)
+                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: note, velocity: pressure, controllerValue: nil)
             case 0xB0:
                 let controller = UInt8((data1 >> 8) & 0xFF)
                 let value = ChannelVoiceEvent.normalizeController(data2)

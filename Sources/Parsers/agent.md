@@ -144,6 +144,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-14: Added placeholder UMP rendering output target in RenderCLI.
 - 2025-08-15: Added SysEx7 and SysEx8 message decoding to UMPParser and unit tests.
 - 2025-08-16: Added channel pressure decoding to MidiFileParser and UMPParser.
+- 2025-08-17: Added polyphonic key pressure decoding to MidiFileParser and UMPParser.
 
 ---
 

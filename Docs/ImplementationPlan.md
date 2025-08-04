@@ -7,8 +7,8 @@
 - Environment variables for width/height now apply even when flags are absent.
 - Watch mode uses `DispatchSource.makeFileSystemObjectSource` for file monitoring on supported platforms and falls back to polling on Linux.
 - Tests cover help/version output, unknown flags, and SMF header/track parsing. Csound and FluidSynth headers are vendored for consistent builds.
- - `MidiFileParser` parses SMF header, track events, channel voice messages (Note On/Off, Control Change, Program Change, Pitch Bend, Channel Pressure), and meta events (track name, tempo, time signature); remaining message types remain pending.
- - `UMPParser` decodes utility, system real-time/common, SysEx7 and SysEx8, MIDI 1.0 and MIDI 2.0 channel voice messages (including Channel Pressure), maps group/channel pairs into unified channel numbers, and validates misaligned or truncated packets; additional UMP message types remain pending.
+ - `MidiFileParser` parses SMF header, track events, channel voice messages (Note On/Off, Control Change, Program Change, Pitch Bend, Channel Pressure, Polyphonic Key Pressure), and meta events (track name, tempo, time signature); remaining message types remain pending.
+ - `UMPParser` decodes utility, system real-time/common, SysEx7 and SysEx8, MIDI 1.0 and MIDI 2.0 channel voice messages (including Channel Pressure and Polyphonic Key Pressure), maps group/channel pairs into unified channel numbers, and validates misaligned or truncated packets; additional UMP message types remain pending.
 - Unified MIDI event model introduced; `MidiFileParser` and `UMPParser` emit protocol-based events.
 
 ## Action Plan
