@@ -38,12 +38,11 @@ final class MidiFileParserTests: XCTestCase {
         let data = Data(bytes)
         let events = try MidiFileParser.parseTrack(data: data)
         XCTAssertEqual(events.count, 6)
-        if let meta = events[0] as? MetaEvent, let data = meta.rawData {
-            XCTAssertEqual(meta.timestamp, 0)
-            XCTAssertEqual(meta.metaType, 0x03)
-            XCTAssertEqual(String(data: data, encoding: .ascii), "Test")
+        if let trackName = events[0] as? TrackNameEvent {
+            XCTAssertEqual(trackName.timestamp, 0)
+            XCTAssertEqual(trackName.name, "Test")
         } else {
-            XCTFail("Expected MetaEvent track name")
+            XCTFail("Expected TrackNameEvent")
         }
         if let tempo = events[1] as? TempoEvent {
             XCTAssertEqual(tempo.timestamp, 0)
