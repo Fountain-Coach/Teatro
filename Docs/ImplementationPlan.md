@@ -9,6 +9,7 @@
 - Tests cover help/version output, unknown flags, and SMF header/track parsing. Csound and FluidSynth headers are vendored for consistent builds.
 - `MidiFileParser` parses SMF header, track events, channel voice messages (Note On/Off, Control Change, Program Change, Pitch Bend), and meta events (track name, tempo, time signature); remaining message types remain pending.
 - `UMPParser` decodes utility, system real-time/common, MIDI 1.0 channel voice, and MIDI 2.0 channel voice messages; additional UMP message types remain pending.
+- Unified MIDI event model introduced; `MidiFileParser` and `UMPParser` emit protocol-based events.
 
 ## Action Plan
 

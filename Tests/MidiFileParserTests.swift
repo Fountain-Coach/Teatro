@@ -38,42 +38,52 @@ final class MidiFileParserTests: XCTestCase {
         let data = Data(bytes)
         let events = try MidiFileParser.parseTrack(data: data)
         XCTAssertEqual(events.count, 6)
-        if case let .trackName(delta, name) = events[0] {
-            XCTAssertEqual(delta, 0)
-            XCTAssertEqual(name, "Test")
+        if let meta = events[0] as? MetaEvent, let data = meta.rawData {
+            XCTAssertEqual(meta.timestamp, 0)
+            XCTAssertEqual(meta.metaType, 0x03)
+            XCTAssertEqual(String(data: data, encoding: .ascii), "Test")
         } else {
-            XCTFail("Expected trackName event")
+            XCTFail("Expected MetaEvent track name")
         }
-        if case let .tempo(delta, microseconds) = events[1] {
-            XCTAssertEqual(delta, 0)
-            XCTAssertEqual(microseconds, 500_000)
+        if let meta = events[1] as? MetaEvent, let data = meta.rawData {
+            XCTAssertEqual(meta.timestamp, 0)
+            XCTAssertEqual(meta.metaType, 0x51)
+            let value = data.withUnsafeBytes { ptr -> UInt32 in
+                var tmp: UInt32 = 0
+                tmp |= UInt32(ptr[0]) << 16
+                tmp |= UInt32(ptr[1]) << 8
+                tmp |= UInt32(ptr[2])
+                return tmp
+            }
+            XCTAssertEqual(value, 500_000)
         } else {
-            XCTFail("Expected tempo event")
+            XCTFail("Expected MetaEvent tempo")
         }
-        if case let .timeSignature(delta, num, denom, metro, thirty) = events[2] {
-            XCTAssertEqual(delta, 0)
-            XCTAssertEqual(num, 4)
-            XCTAssertEqual(denom, 2)
-            XCTAssertEqual(metro, 0x18)
-            XCTAssertEqual(thirty, 0x08)
+        if let meta = events[2] as? MetaEvent, let data = meta.rawData {
+            XCTAssertEqual(meta.timestamp, 0)
+            XCTAssertEqual(meta.metaType, 0x58)
+            XCTAssertEqual(data[data.startIndex], 4)
+            XCTAssertEqual(data[data.startIndex.advanced(by: 1)], 2)
+            XCTAssertEqual(data[data.startIndex.advanced(by: 2)], 0x18)
+            XCTAssertEqual(data[data.startIndex.advanced(by: 3)], 0x08)
         } else {
-            XCTFail("Expected timeSignature event")
+            XCTFail("Expected MetaEvent time signature")
         }
-        if case let .noteOn(delta, channel, note, velocity) = events[3] {
-            XCTAssertEqual(delta, 0)
-            XCTAssertEqual(channel, 0)
-            XCTAssertEqual(note, 0x3C)
-            XCTAssertEqual(velocity, 0x40)
+        if let noteOn = events[3] as? ChannelVoiceEvent {
+            XCTAssertEqual(noteOn.timestamp, 0)
+            XCTAssertEqual(noteOn.channel, 0)
+            XCTAssertEqual(noteOn.noteNumber, 0x3C)
+            XCTAssertEqual(noteOn.velocity, 0x40)
         } else {
-            XCTFail("Expected noteOn event")
+            XCTFail("Expected ChannelVoiceEvent noteOn")
         }
-        if case let .noteOff(delta, channel, note, velocity) = events[4] {
-            XCTAssertEqual(delta, 480)
-            XCTAssertEqual(channel, 0)
-            XCTAssertEqual(note, 0x3C)
-            XCTAssertEqual(velocity, 0x40)
+        if let noteOff = events[4] as? ChannelVoiceEvent {
+            XCTAssertEqual(noteOff.timestamp, 480)
+            XCTAssertEqual(noteOff.channel, 0)
+            XCTAssertEqual(noteOff.noteNumber, 0x3C)
+            XCTAssertEqual(noteOff.velocity, 0x40)
         } else {
-            XCTFail("Expected noteOff event")
+            XCTFail("Expected ChannelVoiceEvent noteOff")
         }
     }
 }
