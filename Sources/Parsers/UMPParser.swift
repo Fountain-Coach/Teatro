@@ -10,12 +10,14 @@ enum UMPEvent {
     case utilityMessage(group: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
     case systemMessage(group: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
     case midi1ChannelVoice(group: UInt8, channel: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
+    case midi2ChannelVoice(group: UInt8, channel: UInt8, status: UInt8, data1: UInt16, data2: UInt32)
     case unknown(group: UInt8, rawWords: [UInt32])
 }
 
-/// Parser for Universal MIDI Packet (UMP) files. This initial implementation
-/// supports decoding system real-time/common messages and MIDI 1.0 channel voice
-/// messages while preserving all other packet types as opaque data.
+/// Parser for Universal MIDI Packet (UMP) files. This implementation supports
+/// decoding utility, system real-time/common, MIDI 1.0 channel voice, and MIDI
+/// 2.0 channel voice messages while preserving all other packet types as opaque
+/// data.
 struct UMPParser {
     /// Parses a UMP-formatted data stream.
     /// - Parameter data: Raw bytes of the UMP file.
@@ -77,6 +79,13 @@ struct UMPParser {
             let data1 = UInt8((word >> 8) & 0x7F)
             let data2 = UInt8(word & 0x7F)
             return .midi1ChannelVoice(group: group, channel: channel, status: status, data1: data1, data2: data2)
+        case 0x4: // MIDI 2.0 Channel Voice Messages
+            let word1 = words[0]
+            let status = UInt8(((word1 >> 20) & 0x0F) << 4)
+            let channel = UInt8((word1 >> 16) & 0x0F)
+            let data1 = UInt16(word1 & 0xFFFF)
+            let data2 = words.count > 1 ? words[1] : 0
+            return .midi2ChannelVoice(group: group, channel: channel, status: status, data1: data1, data2: data2)
         default:
             return .unknown(group: group, rawWords: words)
         }
