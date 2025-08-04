@@ -16,8 +16,8 @@
 | `.csd` (Csound)        | `CSDParser.swift`, CLI                                                 | ✅ Complete   | ✅ Done  | —                           | parser, csound      |
 | `.mid` parser (SMF)    | `MidiFileParser.swift`, tests                                           | ✅ Complete   | ✅ Done  | —                           | parser, tested       |
 | `.ump` parser          | `UMPParser.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                           | parser, tested       |
-| `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | Implement    | ⏳ TODO | DSL grammar missing         | parser, dsl, cli     |
-| `.session` support     | `SessionParser.swift`, CLI, test, doc                                   | Implement    | ⏳ TODO | Container spec undefined    | parser, container    |
+| `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | ✅ Complete   | ✅ Done  | —                          | parser, dsl, cli     |
+| `.session` support     | `SessionParser.swift`, CLI, tests, `Docs/Chapters/13_SessionFormat.md`  | ✅ Complete   | ✅ Done  | —                          | parser, container    |
 | CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
 | CLI flags              | `RenderCLI.swift`                                                       | Add          | ⏳ TODO | `--force-format`, etc.      | cli, flags           |
 | Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
@@ -25,7 +25,7 @@
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | Implement    | ⏳ TODO | Playback integration        | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | Refactor     | ⏳ TODO | Cross-parser normalization  | core, protocol       |
-| Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `SessionFormat.md`                    | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |
+| Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md`   | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⚠️ Partial | Need fixture MIDI           | tests, fixtures      |
 | Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⏳ TODO | CLI outputs not verified    | tests, cli           |
 | Coverage tracking      | `COVERAGE.md`                                                           | Add          | ✅ Done  | —                          | coverage, report     |
