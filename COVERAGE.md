@@ -18,7 +18,11 @@ llvm-cov show .build/debug/TeatroPackageTests.xctest/Contents/MacOS/TeatroPackag
 
 ## Current Summary
 
-Coverage metrics have not yet been collected. Integrate coverage generation into CI to populate this section.
+As of 2025-08-04 the test suite reports:
+
+- **Regions:** 47.24% (4204 total, 2218 missed)
+- **Functions:** 56.07% (2044 total, 898 missed)
+- **Lines:** 44.16% (12011 total, 6707 missed)
 
 ---
 © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
