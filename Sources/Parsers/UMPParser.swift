@@ -5,15 +5,6 @@ enum UMPParserError: Error {
     case misaligned
 }
 
-/// Basic event representation for Universal MIDI Packets.
-enum UMPEvent {
-    case utilityMessage(group: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
-    case systemMessage(group: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
-    case midi1ChannelVoice(group: UInt8, channel: UInt8, status: UInt8, data1: UInt8, data2: UInt8)
-    case midi2ChannelVoice(group: UInt8, channel: UInt8, status: UInt8, data1: UInt16, data2: UInt32)
-    case unknown(group: UInt8, rawWords: [UInt32])
-}
-
 /// Parser for Universal MIDI Packet (UMP) files. This implementation supports
 /// decoding utility, system real-time/common, MIDI 1.0 channel voice, and MIDI
 /// 2.0 channel voice messages while preserving all other packet types as opaque
@@ -21,14 +12,14 @@ enum UMPEvent {
 struct UMPParser {
     /// Parses a UMP-formatted data stream.
     /// - Parameter data: Raw bytes of the UMP file.
-    /// - Returns: Array of decoded `UMPEvent` values.
-    static func parse(data: Data) throws -> [UMPEvent] {
+    /// - Returns: Array of decoded `MidiEventProtocol` values.
+    static func parse(data: Data) throws -> [any MidiEventProtocol] {
         guard data.count % 4 == 0 else { throw UMPParserError.misaligned }
-        var events: [UMPEvent] = []
+        var events: [any MidiEventProtocol] = []
         var index = 0
         while index < data.count {
             let word = data[index..<(index + 4)].withUnsafeBytes { ptr -> UInt32 in
-                return UInt32(bigEndian: ptr.load(as: UInt32.self))
+                UInt32(bigEndian: ptr.load(as: UInt32.self))
             }
             let messageType = UInt8((word >> 28) & 0xF)
             let group = UInt8((word >> 24) & 0xF)
@@ -36,7 +27,7 @@ struct UMPParser {
             var words = [word]
             for i in 1..<wordCount {
                 let w = data[(index + 4 * i)..<(index + 4 * (i + 1))].withUnsafeBytes { ptr -> UInt32 in
-                    return UInt32(bigEndian: ptr.load(as: UInt32.self))
+                    UInt32(bigEndian: ptr.load(as: UInt32.self))
                 }
                 words.append(w)
             }
@@ -57,38 +48,68 @@ struct UMPParser {
         }
     }
 
-    /// Decodes a packet into a `UMPEvent`.
-    private static func decode(messageType: UInt8, group: UInt8, words: [UInt32]) -> UMPEvent {
+    /// Decodes a packet into a `MidiEventProtocol`.
+    private static func decode(messageType: UInt8, group: UInt8, words: [UInt32]) -> any MidiEventProtocol {
         switch messageType {
-        case 0x0: // Utility Messages
-            let word = words[0]
-            let status = UInt8((word >> 16) & 0xFF)
-            let data1 = UInt8((word >> 8) & 0xFF)
-            let data2 = UInt8(word & 0xFF)
-            return .utilityMessage(group: group, status: status, data1: data1, data2: data2)
-        case 0x1: // System Real-Time and System Common Messages
-            let word = words[0]
-            let status = UInt8((word >> 16) & 0xFF)
-            let data1 = UInt8((word >> 8) & 0xFF)
-            let data2 = UInt8(word & 0xFF)
-            return .systemMessage(group: group, status: status, data1: data1, data2: data2)
         case 0x2: // MIDI 1.0 Channel Voice Messages
             let word = words[0]
             let status = UInt8(((word >> 20) & 0x0F) << 4)
             let channel = UInt8((word >> 16) & 0x0F)
             let data1 = UInt8((word >> 8) & 0x7F)
             let data2 = UInt8(word & 0x7F)
-            return .midi1ChannelVoice(group: group, channel: channel, status: status, data1: data1, data2: data2)
+            switch status {
+            case 0x80:
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+            case 0x90:
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+            case 0xB0:
+                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
+            case 0xC0:
+                return ChannelVoiceEvent(timestamp: 0, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
+            case 0xE0:
+                let value = UInt32((UInt16(data2) << 7) | UInt16(data1))
+                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: value)
+            default:
+                return UnknownEvent(timestamp: 0, data: rawData(from: words))
+            }
         case 0x4: // MIDI 2.0 Channel Voice Messages
             let word1 = words[0]
             let status = UInt8(((word1 >> 20) & 0x0F) << 4)
             let channel = UInt8((word1 >> 16) & 0x0F)
             let data1 = UInt16(word1 & 0xFFFF)
             let data2 = words.count > 1 ? words[1] : 0
-            return .midi2ChannelVoice(group: group, channel: channel, status: status, data1: data1, data2: data2)
+            switch status {
+            case 0x80:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+            case 0x90:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
+                return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+            case 0xB0:
+                let controller = UInt8((data1 >> 8) & 0xFF)
+                let value = ChannelVoiceEvent.normalizeController(data2)
+                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value))
+            default:
+                return UnknownEvent(timestamp: 0, data: rawData(from: words))
+            }
         default:
-            return .unknown(group: group, rawWords: words)
+            return UnknownEvent(timestamp: 0, data: rawData(from: words))
         }
     }
+
+    /// Converts UMP words into raw data bytes.
+    private static func rawData(from words: [UInt32]) -> Data {
+        var bytes: [UInt8] = []
+        for word in words {
+            bytes.append(UInt8((word >> 24) & 0xFF))
+            bytes.append(UInt8((word >> 16) & 0xFF))
+            bytes.append(UInt8((word >> 8) & 0xFF))
+            bytes.append(UInt8(word & 0xFF))
+        }
+        return Data(bytes)
+    }
 }
+
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

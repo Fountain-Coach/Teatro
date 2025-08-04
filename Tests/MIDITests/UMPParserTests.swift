@@ -5,38 +5,31 @@ final class UMPParserTests: XCTestCase {
     func testUtilityMessageDecoding() throws {
         let bytes: [UInt8] = [0x02, 0x7F, 0xAA, 0xBB]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard case let .utilityMessage(group, status, data1, data2) = events.first else {
-            return XCTFail("Expected utilityMessage event")
+        guard let event = events.first as? UnknownEvent else {
+            return XCTFail("Expected UnknownEvent")
         }
-        XCTAssertEqual(group, 2)
-        XCTAssertEqual(status, 0x7F)
-        XCTAssertEqual(data1, 0xAA)
-        XCTAssertEqual(data2, 0xBB)
+        XCTAssertEqual(event.rawData, Data(bytes))
     }
 
     func testMIDI1ChannelVoiceDecoding() throws {
         let bytes: [UInt8] = [0x20, 0x90, 0x3C, 0x40]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard case let .midi1ChannelVoice(group, channel, status, data1, data2) = events.first else {
-            return XCTFail("Expected midi1ChannelVoice event")
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
         }
-        XCTAssertEqual(group, 0)
-        XCTAssertEqual(channel, 0)
-        XCTAssertEqual(status, 0x90)
-        XCTAssertEqual(data1, 0x3C)
-        XCTAssertEqual(data2, 0x40)
+        XCTAssertEqual(event.channel, 0)
+        XCTAssertEqual(event.type, .noteOn)
+        XCTAssertEqual(event.noteNumber, 0x3C)
+        XCTAssertEqual(event.velocity, 0x40)
     }
 
     func testSystemMessageDecoding() throws {
         let bytes: [UInt8] = [0x12, 0xF8, 0x00, 0x00]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard case let .systemMessage(group, status, data1, data2) = events.first else {
-            return XCTFail("Expected systemMessage event")
+        guard let event = events.first as? UnknownEvent else {
+            return XCTFail("Expected UnknownEvent")
         }
-        XCTAssertEqual(group, 2)
-        XCTAssertEqual(status, 0xF8)
-        XCTAssertEqual(data1, 0)
-        XCTAssertEqual(data2, 0)
+        XCTAssertEqual(event.rawData, Data(bytes))
     }
 
     func testMIDI2ChannelVoiceDecoding() throws {
@@ -45,14 +38,13 @@ final class UMPParserTests: XCTestCase {
             0x7F, 0x00, 0x00, 0x00
         ]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard case let .midi2ChannelVoice(group, channel, status, data1, data2) = events.first else {
-            return XCTFail("Expected midi2ChannelVoice event")
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
         }
-        XCTAssertEqual(group, 0)
-        XCTAssertEqual(channel, 0)
-        XCTAssertEqual(status, 0x90)
-        XCTAssertEqual(data1, 0x3C00)
-        XCTAssertEqual(data2, 0x7F000000)
+        XCTAssertEqual(event.channel, 0)
+        XCTAssertEqual(event.type, .noteOn)
+        XCTAssertEqual(event.noteNumber, 0x3C)
+        XCTAssertEqual(event.velocity, 0x7F)
     }
 
     func testUnknownPacketPreserved() throws {
@@ -61,13 +53,10 @@ final class UMPParserTests: XCTestCase {
             0x01, 0x02, 0x03, 0x04
         ]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard case let .unknown(group, rawWords) = events.first else {
-            return XCTFail("Expected unknown event")
+        guard let event = events.first as? UnknownEvent else {
+            return XCTFail("Expected UnknownEvent")
         }
-        XCTAssertEqual(group, 0)
-        XCTAssertEqual(rawWords.count, 2)
-        XCTAssertEqual(rawWords[0], 0x50000000)
-        XCTAssertEqual(rawWords[1], 0x01020304)
+        XCTAssertEqual(event.rawData, Data(bytes))
     }
 
     func testMisalignedDataThrows() {
