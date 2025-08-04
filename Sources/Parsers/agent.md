@@ -24,6 +24,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ### 3.1 SMF Parser (`MidiFileParser`)
 
 #### - **Header Parsing**  
@@ -138,6 +139,8 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 | Input Format       | Status      | Parser | CLI Support | Tests |
 |--------------------|-------------|--------|-------------|-------|
 | `.fountain`        | ✅ Complete | ✓ `FountainParser` | ✓ | ✓ |
@@ -148,6 +151,9 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 | `.storyboard`      | ❌ Missing  | ❌ | ❌ | ❌ |
 | `.session`         | ❌ Missing  | ❌ | ❌ | ❌ |
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
