@@ -28,7 +28,7 @@
 | Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `SessionFormat.md`                    | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⏳ TODO | Need fixture MIDI/session   | tests, fixtures      |
 | Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⏳ TODO | CLI outputs not verified    | tests, cli           |
-| Coverage tracking      | `COVERAGE.md`                                                           | Add          | ⏳ TODO | —                           | coverage, report     |
+| Coverage tracking      | `COVERAGE.md`                                                           | Add          | ⚠️ Partial | Needs coverage metrics      | coverage, report     |
 
 ---
 
@@ -49,3 +49,6 @@ Codex agents should consume this matrix **row-by-row or batch-by-tag** (e.g. `"p
   - `ImplementationPlan.md`
   - `RenderCLI.swift` support matrix
   - `Docs/Chapters/`
+
+---
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
