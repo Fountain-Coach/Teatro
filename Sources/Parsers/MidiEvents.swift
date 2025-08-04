@@ -18,6 +18,8 @@ enum MidiEventType {
 protocol MidiEventProtocol {
     var timestamp: UInt32 { get }
     var type: MidiEventType { get }
+    /// MIDI 2.0 group number if present.
+    var group: UInt8? { get }
     var channel: UInt8? { get }
     var noteNumber: UInt8? { get }
     var velocity: UInt8? { get }
@@ -29,6 +31,7 @@ protocol MidiEventProtocol {
 }
 
 extension MidiEventProtocol {
+    var group: UInt8? { nil }
     static func normalizeVelocity(_ value: UInt16) -> UInt8 {
         return UInt8(truncatingIfNeeded: value >> 8)
     }
@@ -42,12 +45,11 @@ extension MidiEventProtocol {
 struct ChannelVoiceEvent: MidiEventProtocol {
     let timestamp: UInt32
     let type: MidiEventType
-    let channelNumber: UInt8
+    let group: UInt8?
+    let channel: UInt8?
     let noteNumber: UInt8?
     let velocity: UInt8?
     let controllerValue: UInt32?
-
-    var channel: UInt8? { channelNumber }
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }
 }
@@ -222,6 +224,7 @@ struct SMPTEOffsetEvent: MidiEventProtocol {
 struct SysExEvent: MidiEventProtocol {
     let timestamp: UInt32
     let data: Data
+    let group: UInt8?
 
     var type: MidiEventType { .sysEx }
     var channel: UInt8? { nil }
@@ -236,6 +239,7 @@ struct SysExEvent: MidiEventProtocol {
 struct UnknownEvent: MidiEventProtocol {
     let timestamp: UInt32
     let data: Data
+    let group: UInt8?
 
     var type: MidiEventType { .unknown }
     var channel: UInt8? { nil }

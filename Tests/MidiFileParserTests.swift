@@ -64,6 +64,7 @@ final class MidiFileParserTests: XCTestCase {
             XCTAssertEqual(noteOn.channel, 0)
             XCTAssertEqual(noteOn.noteNumber, 0x3C)
             XCTAssertEqual(noteOn.velocity, 0x40)
+            XCTAssertNil(noteOn.group)
         } else {
             XCTFail("Expected ChannelVoiceEvent noteOn")
         }
@@ -72,6 +73,7 @@ final class MidiFileParserTests: XCTestCase {
             XCTAssertEqual(noteOff.channel, 0)
             XCTAssertEqual(noteOff.noteNumber, 0x3C)
             XCTAssertEqual(noteOff.velocity, 0x40)
+            XCTAssertNil(noteOff.group)
         } else {
             XCTFail("Expected ChannelVoiceEvent noteOff")
         }
