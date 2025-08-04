@@ -48,6 +48,21 @@ timeline:
 let svg = SVGAnimator.renderAnimatedSVG(storyboard: storyboard)
 ```
 
+### Grammar
+
+The parser also supports a plain‑text storyboard format with the following grammar:
+
+```ebnf
+storyboard  = { step , "\n" } ;
+step        = scene | transition ;
+scene       = "Scene:" , name , [ "\n" , "Text:" , content ] ;
+transition  = "Transition:" , style , [ frames ] ;
+style       = "crossfade" | "tween" ;
+frames      = integer ;
+```
+
+Keywords are case‑insensitive and lines are trimmed of surrounding whitespace.
+
 ### Runtime Use
 
 `Storyboard.frames()` can now be played back with `TeatroPlayerView`. Provide a

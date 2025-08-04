@@ -4,6 +4,18 @@ _Serialization for captured CLI interactions._
 
 A `.session` file records a sequence of terminal commands and their textual output.  The file is plain UTF-8 text with no additional markup or metadata.  Each line represents exactly what appeared in the terminal during a recording.  Empty lines are preserved to maintain the original spacing.
 
+### Grammar
+
+```ebnf
+session   = { line , "\n" } ;
+line      = command | output ;
+command   = "$" , " " , text ;
+output    = text ;
+text      = { character - "\n" } ;
+```
+
+Each line is interpreted literally; commands begin with a dollar sign and a space, while output lines may contain any text.
+
 ### Example
 ```
 $ teatro --format codex sample.storyboard

@@ -25,7 +25,7 @@
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | Implement    | ⏳ TODO | Playback integration        | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | Refactor     | ⏳ TODO | Cross-parser normalization  | core, protocol       |
-| Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md`   | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |
+| Grammar docs           | `Docs/Chapters/10_StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md` | ✅ Complete   | ✅ Done | —                         | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⚠️ Partial | Need fixture MIDI           | tests, fixtures      |
 | Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⏳ TODO | CLI outputs not verified    | tests, cli           |
 | Coverage tracking      | `COVERAGE.md`                                                           | Add          | ✅ Done  | —                          | coverage, report     |
