@@ -1,6 +1,6 @@
 # 🧩 Teatro Parser Agent
 
-**Last Updated:** September 09, 2025
+**Last Updated:** September 10, 2025
 **Maintainer:** FountainAI / Codex Agents  
 **Directory:** `Sources/Parsers/agent.md`  
 **Mission:** Close the gap between declared input format support and verified parser coverage in the Teatro CLI.
@@ -64,7 +64,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - [x] `UMPParserTests.swift`
 - [x] `Tests/StoryboardParserTests.swift`
 - [x] `Tests/SessionParserTests.swift`
-- [ ] Fixture-based event normalization tests
+- [x] Fixture-based event normalization tests
 
 ---
 
@@ -198,6 +198,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - 2025-09-07: Added SMPTE offset meta event decoding to MidiFileParser and unit test.
 - 2025-09-08: Added basic StoryboardParser with CLI integration and unit test.
 - 2025-09-09: Added basic SessionParser with CLI dispatch and unit test.
+- 2025-09-10: Added event normalization tests for UMPParser verifying 16-bit velocity and 32-bit controller normalization.
 
 
 All implementations must be verifiable via `swift test` and conform to:
