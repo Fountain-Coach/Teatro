@@ -67,6 +67,16 @@ final class UMPParserTests: XCTestCase {
             }
         }
     }
+
+    func testTruncatedPacketThrows() {
+        // Message type 0x4 requires two words but only one is provided
+        let bytes: [UInt8] = [0x40, 0x90, 0x3C, 0x00]
+        XCTAssertThrowsError(try UMPParser.parse(data: Data(bytes))) { error in
+            guard case UMPParserError.truncated = error else {
+                return XCTFail("Expected truncated error")
+            }
+        }
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
