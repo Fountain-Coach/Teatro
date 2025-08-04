@@ -117,7 +117,10 @@ struct MidiFileParser {
                     let metaSlice = data[index..<index + Int(length)]
                     defer { index += Int(length) }
 
-                    if metaType == 0x51 && length == 3 {
+                    if metaType == 0x03 {
+                        let name = String(data: metaSlice, encoding: .utf8) ?? ""
+                        events.append(TrackNameEvent(timestamp: currentTime, name: name))
+                    } else if metaType == 0x51 && length == 3 {
                         var value: UInt32 = 0
                         let start = metaSlice.startIndex
                         value |= UInt32(metaSlice[start]) << 16

@@ -113,6 +113,20 @@ struct TimeSignatureEvent: MidiEventProtocol {
     }
 }
 
+/// Represents track name meta events.
+struct TrackNameEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let name: String
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x03 }
+    var rawData: Data? { name.data(using: .utf8) }
+}
+
 /// Represents key signature meta events.
 struct KeySignatureEvent: MidiEventProtocol {
     let timestamp: UInt32
