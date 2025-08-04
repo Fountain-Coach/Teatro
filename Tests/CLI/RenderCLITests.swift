@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 import ArgumentParser
 @testable import RenderCLI
 #if os(Linux)
@@ -50,6 +51,32 @@ final class RenderCLITests: XCTestCase {
         XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_WIDTH")), "800")
         XCTAssertEqual(String(cString: getenv("TEATRO_SVG_HEIGHT")), "600")
         XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "600")
+    }
+
+    func testMidiSignatureRecognition() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("sigtest.bin")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data([0x4d, 0x54, 0x68, 0x64]).write(to: url) // "MThd"
+        let cli = try RenderCLI.parse([url.path])
+        XCTAssertThrowsError(try cli.run()) { error in
+            guard let val = error as? ValidationError, val.description.contains("MIDI") else {
+                XCTFail("Expected MIDI signature error")
+                return
+            }
+        }
+    }
+
+    func testUMPSignatureRecognition() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("umptest.bin")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data([0x20, 0x00, 0x00, 0x00]).write(to: url) // single UMP word
+        let cli = try RenderCLI.parse([url.path])
+        XCTAssertThrowsError(try cli.run()) { error in
+            guard let val = error as? ValidationError, val.description.contains("UMP") else {
+                XCTFail("Expected UMP signature error")
+                return
+            }
+        }
     }
 }
 
