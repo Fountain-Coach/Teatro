@@ -155,6 +155,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-25: Added SysEx8 decoding test to UMPParser.
 - 2025-08-26: Fixed MIDI 2.0 Note On velocity 0 handling in UMPParser and added corresponding test.
 - 2025-08-27: Added error handling tests for invalid SMF headers, tracks, and events in MidiFileParser.
+- 2025-08-28: Added track length bounds check to MidiFileParser and unit test.
 
 ---
 
