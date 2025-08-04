@@ -313,6 +313,23 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testKeySignatureMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0A,
+            0x00, 0xFF, 0x59, 0x02, 0x01, 0x01,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let keySig = events[0] as? KeySignatureEvent {
+            XCTAssertEqual(keySig.key, 1)
+            XCTAssertTrue(keySig.isMinor)
+        } else {
+            XCTFail("Expected KeySignatureEvent")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,

@@ -67,6 +67,23 @@ struct MetaEvent: MidiEventProtocol {
     var rawData: Data? { data }
 }
 
+/// Represents key signature meta events.
+struct KeySignatureEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    /// Number of sharps (positive) or flats (negative) in the key.
+    let key: Int8
+    /// `true` if the key is minor; `false` for major.
+    let isMinor: Bool
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x59 }
+    var rawData: Data? { Data([UInt8(bitPattern: key), isMinor ? 1 : 0]) }
+}
+
 /// Represents SysEx events.
 struct SysExEvent: MidiEventProtocol {
     let timestamp: UInt32
