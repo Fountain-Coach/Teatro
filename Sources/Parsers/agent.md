@@ -150,6 +150,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-20: Added Program Change and Pitch Bend decoding tests to MidiFileParser.
 - 2025-08-21: Treat Note On with velocity 0 as Note Off in MidiFileParser and UMPParser.
 - 2025-08-22: Added Control Change decoding tests for MidiFileParser and UMPParser.
+- 2025-08-23: Added running status decoding test to MidiFileParser.
 
 ---
 
