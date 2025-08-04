@@ -200,6 +200,24 @@ struct KeySignatureEvent: MidiEventProtocol {
     var rawData: Data? { Data([UInt8(bitPattern: key), isMinor ? 1 : 0]) }
 }
 
+/// Represents SMPTE offset meta events.
+struct SMPTEOffsetEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let hour: UInt8
+    let minute: UInt8
+    let second: UInt8
+    let frame: UInt8
+    let subframe: UInt8
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x54 }
+    var rawData: Data? { Data([hour, minute, second, frame, subframe]) }
+}
+
 /// Represents SysEx events.
 struct SysExEvent: MidiEventProtocol {
     let timestamp: UInt32

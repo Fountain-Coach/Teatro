@@ -165,6 +165,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-09-04: Added LyricEvent decoding to MidiFileParser and unit test.
 - 2025-09-05: Added MarkerEvent decoding to MidiFileParser and unit test.
 - 2025-09-06: Added InstrumentNameEvent and CuePointEvent decoding to MidiFileParser with unit tests.
+- 2025-09-07: Added SMPTE offset meta event decoding to MidiFileParser and unit test.
 
 ---
 
