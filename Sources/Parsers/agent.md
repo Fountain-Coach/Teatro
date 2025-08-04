@@ -13,7 +13,7 @@
 |------------------------|-------------------------------------------------------------------------|--------------|---------|-----------------------------|----------------------|
 | `.fountain` parser     | `FountainParser.swift`, CLI                                             | ✅ Complete   | ✅ Done  | —                           | parser, cli, tested  |
 | `.ly` (LilyPond)       | external tool                                                           | Delegate     | ✅ Done  | N/A                         | passthrough          |
-| `.csd` (Csound)        | CLI passthrough, future `CSDRenderer.swift`                             | Implement    | ⚠️ Partial | Csound note model unclear   | renderer, csound     |
+| `.csd` (Csound)        | `CSDParser.swift`, CLI                                                 | ✅ Complete   | ✅ Done  | —                           | parser, csound      |
 | `.mid` parser (SMF)    | `MidiFileParser.swift`, tests                                           | ✅ Complete   | ✅ Done  | —                           | parser, tested       |
 | `.ump` parser          | `UMPParser.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                           | parser, tested       |
 | `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | Implement    | ⏳ TODO | DSL grammar missing         | parser, dsl, cli     |
@@ -22,7 +22,7 @@
 | CLI flags              | `RenderCLI.swift`                                                       | Add          | ⏳ TODO | `--force-format`, etc.      | cli, flags           |
 | Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | Implement    | ⏳ TODO | None                        | encoder, ump         |
-| `.csd` renderer        | `CSDRenderer.swift`                                                     | Implement    | ⏳ TODO | Map note events to score    | renderer, csound     |
+| `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | Implement    | ⏳ TODO | Playback integration        | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | Refactor     | ⏳ TODO | Cross-parser normalization  | core, protocol       |
 | Grammar docs           | `Docs/Chapters/StoryboardDSL.md`, `SessionFormat.md`                    | Write        | ⏳ TODO | Define syntax/spec          | docs, spec           |

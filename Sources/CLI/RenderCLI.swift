@@ -101,7 +101,7 @@ public struct RenderCLI: ParsableCommand {
             return LilyScore(text)
         case "csd":
             let text = String(decoding: fileData, as: UTF8.self)
-            return CsoundScore(orchestra: "", score: text)
+            return try CSDParser.parse(text)
         case "storyboard":
             let text = String(decoding: fileData, as: UTF8.self)
             return StoryboardParser.parse(text)
@@ -150,7 +150,7 @@ public struct RenderCLI: ParsableCommand {
             guard let score = view as? CsoundScore else {
                 throw ValidationError("Csound output requires a Csound score input")
             }
-            CsoundRenderer.renderToFile(score, to: outputPath ?? "output.csd")
+            CSDRenderer.renderToFile(score, to: outputPath ?? "output.csd")
         case .ump:
             let note = MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0)
             let words = UMPEncoder.encode(note)
