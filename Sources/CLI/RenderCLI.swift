@@ -150,7 +150,14 @@ public struct RenderCLI: ParsableCommand {
             }
             CsoundRenderer.renderToFile(score, to: outputPath ?? "output.csd")
         case .ump:
-            throw ValidationError("UMP rendering not implemented")
+            let note = MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0)
+            let words = UMPEncoder.encode(note)
+            var data = Data()
+            for word in words {
+                var be = word.bigEndian
+                withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+            }
+            try writeData(data, to: outputPath ?? "output.ump", isStdout: isStdout)
         }
     }
 
@@ -159,6 +166,16 @@ public struct RenderCLI: ParsableCommand {
             print(string)
         } else {
             try string.write(toFile: path, atomically: true, encoding: .utf8)
+            print("Wrote \(path)")
+        }
+    }
+
+    private func writeData(_ data: Data, to path: String, isStdout: Bool) throws {
+        if isStdout {
+            let hex = data.map { String(format: "%02X", $0) }.joined()
+            print(hex)
+        } else {
+            try data.write(to: URL(fileURLWithPath: path))
             print("Wrote \(path)")
         }
     }

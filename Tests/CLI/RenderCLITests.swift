@@ -78,6 +78,15 @@ final class RenderCLITests: XCTestCase {
             }
         }
     }
+
+    func testUMPOutputWritesFile() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("out.ump")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse(["--format", "ump", "--output", url.path])
+        try cli.run()
+        let data = try Data(contentsOf: url)
+        XCTAssertEqual(data.count, 8)
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
