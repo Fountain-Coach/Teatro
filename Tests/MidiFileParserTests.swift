@@ -123,5 +123,22 @@ final class MidiFileParserTests: XCTestCase {
             XCTFail("Expected ChannelVoiceEvent polyphonicKeyPressure")
         }
     }
+
+    func testUnknownMetaEventPreserved() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x09,
+            0x00, 0xFF, 0x7F, 0x01, 0x42,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let meta = events[0] as? MetaEvent {
+            XCTAssertEqual(meta.metaType, 0x7F)
+            XCTAssertEqual(meta.rawData, Data([0x42]))
+        } else {
+            XCTFail("Expected MetaEvent with type 0x7F")
+        }
+    }
 }
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
