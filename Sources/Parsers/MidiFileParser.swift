@@ -64,11 +64,12 @@ struct MidiFileParser {
                 let velocity = data[index + 1]
                 events.append(ChannelVoiceEvent(timestamp: delta, type: .noteOff, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
-            case 0x90: // Note On
+            case 0x90: // Note On (velocity 0 treated as Note Off)
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
                 let velocity = data[index + 1]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .noteOn, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
+                let eventType: MidiEventType = velocity == 0 ? .noteOff : .noteOn
+                events.append(ChannelVoiceEvent(timestamp: delta, type: eventType, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
             case 0xB0: // Control Change
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
