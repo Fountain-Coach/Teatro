@@ -3,6 +3,7 @@ import Foundation
 /// Errors that can occur while parsing Universal MIDI Packet files.
 enum UMPParserError: Error {
     case misaligned
+    case truncated
 }
 
 /// Parser for Universal MIDI Packet (UMP) files. This implementation supports
@@ -24,6 +25,9 @@ struct UMPParser {
             let messageType = UInt8((word >> 28) & 0xF)
             let group = UInt8((word >> 24) & 0xF)
             let wordCount = packetLength(for: messageType)
+            guard index + wordCount * 4 <= data.count else {
+                throw UMPParserError.truncated
+            }
             var words = [word]
             for i in 1..<wordCount {
                 let w = data[(index + 4 * i)..<(index + 4 * (i + 1))].withUnsafeBytes { ptr -> UInt32 in
