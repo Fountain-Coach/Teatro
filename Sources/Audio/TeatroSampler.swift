@@ -48,3 +48,5 @@ public actor TeatroSampler: SampleSource {
         try await impl.loadInstrument(path)
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

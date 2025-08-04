@@ -23,7 +23,7 @@
 | Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | Implement    | ⏳ TODO | None                        | encoder, ump         |
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
-| FluidSynth backend     | `TeatroSampler.swift`                                                   | Implement    | ⏳ TODO | Playback integration        | audio, output        |
+| FluidSynth backend     | `TeatroSampler.swift`                                                   | ✅ Complete   | ✅ Done  | —                          | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | Refactor     | ⏳ TODO | Cross-parser normalization  | core, protocol       |
 | Grammar docs           | `Docs/Chapters/10_StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md` | ✅ Complete   | ✅ Done | —                         | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⚠️ Partial | Need fixture MIDI           | tests, fixtures      |
