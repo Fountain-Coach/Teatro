@@ -90,7 +90,10 @@ struct MidiFileParser {
                 index += 2
             case 0xA0: // Polyphonic Key Pressure - ignore contents
                 index += 2
-            case 0xD0: // Channel Pressure - ignore contents
+            case 0xD0: // Channel Pressure
+                guard index < end else { throw MidiFileParserError.invalidEvent }
+                let pressure = data[index]
+                events.append(ChannelVoiceEvent(timestamp: delta, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(pressure)))
                 index += 1
             case 0xF0:
                 if status == 0xFF { // Meta event
