@@ -43,7 +43,10 @@ let package = Package(
             name: "TeatroTests",
             dependencies: ["Teatro"],
             path: "Tests",
-            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI"]
+            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI"],
+            resources: [
+                .process("Fixtures")
+            ]
         ),
         .testTarget(
             name: "StoryboardDSLTests",
