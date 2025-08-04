@@ -1,59 +1,28 @@
-# Parser Agent Plan for Teatro /parsers
+# 🧩 Teatro Parser Agent
 
-> This document defines the responsibilities, objectives, and implementation roadmap for the Parser Agent in the Teatro project. The agent’s mission is to implement and maintain native parsers for new input formats—**Standard MIDI Files (SMF)** and **Universal MIDI Packet (UMP)**—while keeping the codebase free of external parsing dependencies. All updates and progress will be tracked here and in **Docs/ImplementationPlan.md**.
-
-## 🆔 Agent Identity
-
-This Parser Agent operates in an **analyst / act-upon** mode: it catalogues pending tasks, executes them when feasible, and records outcomes for ongoing maintenance.
-
-## 📋 1. Current Status (Status Quo)
-
-The CLI currently supports rendering from the following source formats:
-
-- **.fountain**
-- **.ly** (LilyPond)
-- **.csd** (Csound)
-
-- Watch mode uses `DispatchSource` for file change notifications on supported platforms and falls back to polling on Linux.
-
-- Argument parser detects `.mid/.midi` and `.ump` files by signature even when extensions are absent.
-
-**Pending formats** (not yet implemented):
-
-- **.storyboard**
-- **.mid / .midi** (Standard MIDI Files) – header, track parsing, tempo and time signature meta-events, Control Change, Program Change, and Pitch Bend events implemented
-- **.ump** (Universal MIDI Packet) – parser handles MIDI 1.0 channel voice, system real-time/common, and utility messages
-- **.session**
-
-> **Open Issues**:
-> - The `ump` output target now emits a placeholder UMP packet; full renderer integration is pending.
-> - Tests cover help/version output, unknown flags, and SMF header/track parsing; Csound and FluidSynth headers are optional via conditional compilation.
+**Last Updated:** August 04, 2025  
+**Maintainer:** FountainAI / Codex Agents  
+**Directory:** `Sources/Parsers/agent.md`  
+**Mission:** Close the gap between declared input format support and verified parser coverage in the Teatro CLI.
 
 ---
 
-## 🚀 2. Agent Objectives
+## 🎯 Agent Mission
 
-### 1. **Native MIDI Parsers**  
-   - Implement robust SMF (`.mid/.midi`) and UMP (`.ump`) parsers in **Swift 6.1** with zero third‑party dependencies.  
-   - Decode file structures, interpret MIDI 1.0 and 2.0 events, expose a unified event model for renderers.
+The Parser Agent is responsible for implementing and maintaining _native Swift 6.1+_ input parsers for the Teatro CLI. Its focus is on supporting:
 
-### 2. **CLI Extension**  
-   - Extend the argument parser to recognize new input formats by extension _and_ by file signature.  
-   - Add and wire up the `ump` output target in the render dispatcher.
+- MIDI formats: `.mid`, `.ump`
+- Declarative documents: `.fountain`, `.ly`, `.csd`
+- Embedded session containers: `.session`
+- Structured animation blueprints: `.storyboard`
 
-### 3. **Runtime Improvements**  
-   - ~~Replace file‑watch polling with `DispatchSource.makeFileSystemObjectSource` for real‑time responsiveness.~~
-   - ~~Implement fallback behavior: environment variables for width/height apply even when flags are omitted.~~
-   - Expand test coverage to include parsing logic and new features.
-
-### 4. **Status Tracking & Logging**  
-   - Maintain progress updates in this file and in **Docs/ImplementationPlan.md**.  
-   - Chronologically log key decisions, issues encountered, and solutions adopted.
+**Constraint:** No third-party parser dependencies allowed. All parsing logic must be fully inlined and testable in Swift.
 
 ---
 
-## 🛠️ 3. Implementation Tasks
+## ✅ Current Coverage Snapshot
 
+<<<<<<< Updated upstream
 ### 3.1 SMF Parser (`MidiFileParser`)
 
 #### - **Header Parsing**  
@@ -165,21 +134,79 @@ The CLI currently supports rendering from the following source formats:
 - 2025-09-04: Added LyricEvent decoding to MidiFileParser and unit test.
 - 2025-09-05: Added MarkerEvent decoding to MidiFileParser and unit test.
 - 2025-09-06: Added InstrumentNameEvent and CuePointEvent decoding to MidiFileParser with unit tests.
+=======
+| Input Format       | Status      | Parser | CLI Support | Tests |
+|--------------------|-------------|--------|-------------|-------|
+| `.fountain`        | ✅ Complete | ✓ `FountainParser` | ✓ | ✓ |
+| `.ly` (LilyPond)   | ✅ Complete | External | ✓ | - |
+| `.csd` (Csound)    | ⚠️ Partial  | ❌ raw load only | ✓ | ❌ |
+| `.mid` (SMF)       | ✅ Complete | ✓ `MidiFileParser` | ✓ | ✓ |
+| `.ump` (MIDI 2.0)  | ✅ Complete | ✓ `UMPParser` | ✓ | ✓ |
+| `.storyboard`      | ❌ Missing  | ❌ | ❌ | ❌ |
+| `.session`         | ❌ Missing  | ❌ | ❌ | ❌ |
+>>>>>>> Stashed changes
 
 ---
 
-## 🌱 5. Future Considerations
+## 🔨 Implementation Tasks
 
-### - **Additional Formats**: Define and implement parsers for **.session** and **.storyboard**.
-### - **Performance**: Explore streaming parsers, memory mapping, and Swift concurrency for large‑file support.
-### - **Versioning**: Track revisions in the MIDI 2.0 specification and gracefully handle unknown or reserved messages.
+### 1. Parsers
+- [x] `MidiFileParser.swift` with full event decoding
+- [x] `UMPParser.swift` supporting UMP formats 1.0/2.0
+- [ ] `StoryboardParser.swift` (Storyboard DSL)
+- [ ] `SessionParser.swift` (Teatro container format)
+- [ ] Canonical event unification (`MidiEventProtocol`)
+
+### 2. CLI Integration
+- [x] Dispatch by file extension
+- [ ] Add `.storyboard`, `.session` to dispatcher
+- [ ] `--force-format`, `--renderer`, `--dump-events` CLI flags
+- [ ] `--emit-ump` output mode
+
+### 3. Watch Mode
+- [ ] macOS `DispatchSource` file observer
+- [ ] Linux fallback loop (already implemented)
+
+### 4. Output Backends
+- [ ] `UMPEncoder.swift` for round-trip UMP
+- [ ] MIDI to `.csd` renderer
+- [ ] FluidSynth or mock audio playback
+
+### 5. Testing
+- [x] `MidiFileParserTests.swift`
+- [x] `UMPParserTests.swift`
+- [ ] `Tests/StoryboardParserTests.swift`
+- [ ] `Tests/SessionParserTests.swift`
+- [ ] Fixture-based event normalization tests
 
 ---
 
-> _Maintaining clear documentation and comprehensive logging ensures long‑term reliability and ease of maintenance for the Teatro parsing subsystem._
+## 📦 DSL Grammar Plans
 
+### `.storyboard`
+- Scene declaration
+- Frame timing
+- Layered directives
 
+### `.session`
+- Container index
+- Embedded files (MIDI, Fountain, etc.)
+- Corpus references
 
 ---
 
-© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+## 🧪 Ground Truth
+
+All implementations must be verifiable via `swift test` and conform to:
+
+- `MidiEventProtocol`
+- Unified timeline model
+- Deterministic output structure (JSON/Markdown for now)
+
+---
+
+## 🧠 Maintenance Duties
+
+- [ ] Track parser/CLI/test coverage parity
+- [ ] Sync with `ImplementationPlan.md`
+- [ ] Cross-check against Codex milestone table
