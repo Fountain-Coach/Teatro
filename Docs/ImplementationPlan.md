@@ -6,8 +6,8 @@
 - UMP rendering target is listed but missing from dispatch.
 - Environment variable precedence for width/height only applies when flags are set; no fallback to existing variables.
 - Watch mode uses a polling loop rather than `DispatchSource.makeFileSystemObjectSource`.
-- Tests cover help/version output, unknown flags, and SMF header/track parsing. `swift test` fails to compile without Csound headers.
-- `MidiFileParser` parses SMF header and basic track events; additional message types remain pending.
+- Tests cover help/version output, unknown flags, and SMF header/track parsing. Csound and FluidSynth headers are vendored for consistent builds.
+- `MidiFileParser` parses SMF header, track events, and meta events (track name, tempo, time signature); additional message types remain pending.
 
 ## Action Plan
 
@@ -16,7 +16,7 @@
 3. Apply environment variable fallback when width/height flags are absent and add tests for precedence.
 4. Replace polling watch mode with `DispatchSource.makeFileSystemObjectSource`.
 5. Expand test suite to cover argument parsing, watch/dispatch logic, output correctness, and environment variable precedence.
-6. Resolve Csound dependency for tests through conditional compilation or bundled headers.
+6. Document integrated audio backends and note that Csound/FluidSynth headers are bundled with the source.
 7. Update CLI help text and docs to reflect new inputs, outputs, and features.
 8. Maintain this file with up-to-date status and tasks as work progresses.
 

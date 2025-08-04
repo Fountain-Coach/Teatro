@@ -21,9 +21,13 @@ final class MidiFileParserTests: XCTestCase {
     func testTrackParsing() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B, // 'MTrk'
-            0x00, 0x00, 0x00, 0x15, // length 21
+            0x00, 0x00, 0x00, 0x24, // length 36
             // 0 delta, meta track name "Test"
             0x00, 0xFF, 0x03, 0x04, 0x54, 0x65, 0x73, 0x74,
+            // 0 delta, tempo 120 BPM (500000 microseconds per quarter)
+            0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20,
+            // 0 delta, time signature 4/4
+            0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08,
             // 0 delta, note on C4 velocity 64
             0x00, 0x90, 0x3C, 0x40,
             // 480 delta, note off
@@ -33,8 +37,29 @@ final class MidiFileParserTests: XCTestCase {
         ]
         let data = Data(bytes)
         let events = try MidiFileParser.parseTrack(data: data)
-        XCTAssertEqual(events.count, 4)
-        if case let .noteOn(delta, channel, note, velocity) = events[1] {
+        XCTAssertEqual(events.count, 6)
+        if case let .trackName(delta, name) = events[0] {
+            XCTAssertEqual(delta, 0)
+            XCTAssertEqual(name, "Test")
+        } else {
+            XCTFail("Expected trackName event")
+        }
+        if case let .tempo(delta, microseconds) = events[1] {
+            XCTAssertEqual(delta, 0)
+            XCTAssertEqual(microseconds, 500_000)
+        } else {
+            XCTFail("Expected tempo event")
+        }
+        if case let .timeSignature(delta, num, denom, metro, thirty) = events[2] {
+            XCTAssertEqual(delta, 0)
+            XCTAssertEqual(num, 4)
+            XCTAssertEqual(denom, 2)
+            XCTAssertEqual(metro, 0x18)
+            XCTAssertEqual(thirty, 0x08)
+        } else {
+            XCTFail("Expected timeSignature event")
+        }
+        if case let .noteOn(delta, channel, note, velocity) = events[3] {
             XCTAssertEqual(delta, 0)
             XCTAssertEqual(channel, 0)
             XCTAssertEqual(note, 0x3C)
@@ -42,7 +67,7 @@ final class MidiFileParserTests: XCTestCase {
         } else {
             XCTFail("Expected noteOn event")
         }
-        if case let .noteOff(delta, channel, note, velocity) = events[2] {
+        if case let .noteOff(delta, channel, note, velocity) = events[4] {
             XCTAssertEqual(delta, 480)
             XCTAssertEqual(channel, 0)
             XCTAssertEqual(note, 0x3C)
@@ -52,5 +77,4 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 }
-
-© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

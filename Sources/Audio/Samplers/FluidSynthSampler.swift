@@ -63,3 +63,5 @@ public actor FluidSynthSampler: SampleSource {
         if let set = settings { delete_fluid_settings(set); settings = nil }
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

@@ -1,5 +1,6 @@
-module CFluidSynth [system] {
-    header "/usr/include/fluidsynth.h"
-    link "fluidsynth"
+module CFluidSynth {
+    header "fluidsynth.h"
     export *
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
