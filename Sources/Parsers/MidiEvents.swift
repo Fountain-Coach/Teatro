@@ -67,6 +67,52 @@ struct MetaEvent: MidiEventProtocol {
     var rawData: Data? { data }
 }
 
+/// Represents tempo meta events.
+struct TempoEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    /// Microseconds per quarter note.
+    let microsecondsPerQuarter: UInt32
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x51 }
+    var rawData: Data? {
+        let b1 = UInt8((microsecondsPerQuarter >> 16) & 0xFF)
+        let b2 = UInt8((microsecondsPerQuarter >> 8) & 0xFF)
+        let b3 = UInt8(microsecondsPerQuarter & 0xFF)
+        return Data([b1, b2, b3])
+    }
+}
+
+/// Represents time signature meta events.
+struct TimeSignatureEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let numerator: UInt8
+    /// Denominator expressed as the actual value (e.g. 4 for 4/4).
+    let denominator: UInt8
+    let metronome: UInt8
+    let thirtySeconds: UInt8
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x58 }
+    var rawData: Data? {
+        var exp: UInt8 = 0
+        var denom = denominator
+        while denom > 1 {
+            denom >>= 1
+            exp += 1
+        }
+        return Data([numerator, exp, metronome, thirtySeconds])
+    }
+}
+
 /// Represents key signature meta events.
 struct KeySignatureEvent: MidiEventProtocol {
     let timestamp: UInt32

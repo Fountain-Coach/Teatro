@@ -117,7 +117,22 @@ struct MidiFileParser {
                     let metaSlice = data[index..<index + Int(length)]
                     defer { index += Int(length) }
 
-                    if metaType == 0x59 && length >= 2 {
+                    if metaType == 0x51 && length == 3 {
+                        var value: UInt32 = 0
+                        let start = metaSlice.startIndex
+                        value |= UInt32(metaSlice[start]) << 16
+                        value |= UInt32(metaSlice[start.advanced(by: 1)]) << 8
+                        value |= UInt32(metaSlice[start.advanced(by: 2)])
+                        events.append(TempoEvent(timestamp: currentTime, microsecondsPerQuarter: value))
+                    } else if metaType == 0x58 && length == 4 {
+                        let start = metaSlice.startIndex
+                        let numerator = metaSlice[start]
+                        let denomExp = metaSlice[start.advanced(by: 1)]
+                        let denominator = UInt8(1 << denomExp)
+                        let metronome = metaSlice[start.advanced(by: 2)]
+                        let thirtySeconds = metaSlice[start.advanced(by: 3)]
+                        events.append(TimeSignatureEvent(timestamp: currentTime, numerator: numerator, denominator: denominator, metronome: metronome, thirtySeconds: thirtySeconds))
+                    } else if metaType == 0x59 && length >= 2 {
                         let key = Int8(bitPattern: metaSlice[metaSlice.startIndex])
                         let isMinor = metaSlice[metaSlice.startIndex.advanced(by: 1)] == 1
                         events.append(KeySignatureEvent(timestamp: currentTime, key: key, isMinor: isMinor))
