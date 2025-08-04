@@ -18,7 +18,7 @@
 | `.ump` parser          | `UMPParser.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                           | parser, tested       |
 | `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | Implement    | ⏳ TODO | DSL grammar missing         | parser, dsl, cli     |
 | `.session` support     | `SessionParser.swift`, CLI, test, doc                                   | Implement    | ⏳ TODO | Container spec undefined    | parser, container    |
-| CLI dispatch           | `RenderCLI.swift`                                                       | Extend       | ⏳ TODO | Needs `.storyboard`, `.session` cases | cli         |
+| CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
 | CLI flags              | `RenderCLI.swift`                                                       | Add          | ⏳ TODO | `--force-format`, etc.      | cli, flags           |
 | Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | Implement    | ⏳ TODO | None                        | encoder, ump         |

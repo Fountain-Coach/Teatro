@@ -87,6 +87,27 @@ final class RenderCLITests: XCTestCase {
         let data = try Data(contentsOf: url)
         XCTAssertEqual(data.count, 8)
     }
+
+    func testStoryboardInputRenders() throws {
+        let text = """
+        Scene: One
+        Text: Hi
+        """
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("test.storyboard")
+        try text.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse([url.path])
+        XCTAssertNoThrow(try cli.run())
+    }
+
+    func testSessionInputRenders() throws {
+        let text = "session log"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("test.session")
+        try text.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse([url.path])
+        XCTAssertNoThrow(try cli.run())
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
