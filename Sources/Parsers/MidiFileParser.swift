@@ -43,9 +43,11 @@ struct MidiFileParser {
         guard end <= data.count else { throw MidiFileParserError.invalidTrack }
         var runningStatus: UInt8?
         var events: [any MidiEventProtocol] = []
+        var currentTime: UInt32 = 0
 
         while index < end {
             let delta = try readVariableLengthQuantity(data, index: &index)
+            currentTime += delta
             guard index < end else { throw MidiFileParserError.invalidEvent }
             var status = data[index]
             if status < 0x80 {
@@ -63,43 +65,43 @@ struct MidiFileParser {
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
                 let velocity = data[index + 1]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .noteOff, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .noteOff, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
             case 0x90: // Note On (velocity 0 treated as Note Off)
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
                 let velocity = data[index + 1]
                 let eventType: MidiEventType = velocity == 0 ? .noteOff : .noteOn
-                events.append(ChannelVoiceEvent(timestamp: delta, type: eventType, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: eventType, channelNumber: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
             case 0xB0: // Control Change
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let controller = data[index]
                 let value = data[index + 1]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .controlChange, channelNumber: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value)))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .controlChange, channelNumber: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value)))
                 index += 2
             case 0xC0: // Program Change
                 guard index < end else { throw MidiFileParserError.invalidEvent }
                 let program = data[index]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program)))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program)))
                 index += 1
             case 0xE0: // Pitch Bend
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let lsb = UInt16(data[index])
                 let msb = UInt16(data[index + 1])
                 let value = (msb << 7) | lsb
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(value)))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(value)))
                 index += 2
             case 0xA0: // Polyphonic Key Pressure
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
                 let pressure = data[index + 1]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: note, velocity: pressure, controllerValue: nil))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: note, velocity: pressure, controllerValue: nil))
                 index += 2
             case 0xD0: // Channel Pressure
                 guard index < end else { throw MidiFileParserError.invalidEvent }
                 let pressure = data[index]
-                events.append(ChannelVoiceEvent(timestamp: delta, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(pressure)))
+                events.append(ChannelVoiceEvent(timestamp: currentTime, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(pressure)))
                 index += 1
             case 0xF0:
                 if status == 0xFF { // Meta event
@@ -112,13 +114,13 @@ struct MidiFileParser {
                     defer { index += Int(length) }
 
                     let payload = Data(metaSlice)
-                    events.append(MetaEvent(timestamp: delta, meta: metaType, data: payload))
+                    events.append(MetaEvent(timestamp: currentTime, meta: metaType, data: payload))
                     if metaType == 0x2F { break } // End of track
                 } else if status == 0xF0 || status == 0xF7 { // SysEx
                     let length = try readVariableLengthQuantity(data, index: &index)
                     guard index + Int(length) <= end else { throw MidiFileParserError.invalidEvent }
                     let sysExData = data[index..<index + Int(length)]
-                    events.append(SysExEvent(timestamp: delta, data: Data(sysExData)))
+                    events.append(SysExEvent(timestamp: currentTime, data: Data(sysExData)))
                     index += Int(length)
                 } else {
                     // Other system messages ignored
