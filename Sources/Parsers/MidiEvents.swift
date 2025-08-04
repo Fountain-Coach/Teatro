@@ -141,6 +141,20 @@ struct LyricEvent: MidiEventProtocol {
     var rawData: Data? { text.data(using: .utf8) }
 }
 
+/// Represents marker meta events.
+struct MarkerEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let name: String
+
+    var type: MidiEventType { .meta }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { 0x06 }
+    var rawData: Data? { name.data(using: .utf8) }
+}
+
 /// Represents key signature meta events.
 struct KeySignatureEvent: MidiEventProtocol {
     let timestamp: UInt32

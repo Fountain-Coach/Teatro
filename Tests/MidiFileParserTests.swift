@@ -336,6 +336,22 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testMarkerMetaEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0C,
+            0x00, 0xFF, 0x06, 0x04, 0x4D, 0x61, 0x72, 0x6B,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let marker = events[0] as? MarkerEvent {
+            XCTAssertEqual(marker.name, "Mark")
+        } else {
+            XCTFail("Expected MarkerEvent")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,
