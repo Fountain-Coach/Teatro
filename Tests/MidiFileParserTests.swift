@@ -278,6 +278,20 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testTruncatedTrackLengthThrows() {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x08,
+            0x00
+        ]
+        let data = Data(bytes)
+        XCTAssertThrowsError(try MidiFileParser.parseTrack(data: data)) { error in
+            guard case MidiFileParserError.invalidTrack = error else {
+                return XCTFail("Expected invalidTrack error")
+            }
+        }
+    }
+
     func testInvalidEventThrows() {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,

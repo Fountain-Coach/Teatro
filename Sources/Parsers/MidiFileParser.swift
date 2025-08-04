@@ -40,6 +40,7 @@ struct MidiFileParser {
         let length = UInt32(bigEndian: data[4..<8].withUnsafeBytes { $0.load(as: UInt32.self) })
         var index = 8
         let end = index + Int(length)
+        guard end <= data.count else { throw MidiFileParserError.invalidTrack }
         var runningStatus: UInt8?
         var events: [any MidiEventProtocol] = []
 
