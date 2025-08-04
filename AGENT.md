@@ -302,7 +302,7 @@ paths:
 - Use the Swift 6.1 toolchain.
 - Run `swift build` and `swift test` before committing code.
 - Follow the directory conventions described in `Docs/Summary/README.md`.
-- Keep `Docs/ImplementationPlan` updated when priorities shift.
+- Maintain `Docs/ImplementationPlan.md` as the status quo and action planning record, updating it whenever priorities or implementation state change.
 
 ## Project Highlights
 - Modular `Renderable` protocol with multiple rendering backends.
