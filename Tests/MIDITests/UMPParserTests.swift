@@ -47,6 +47,16 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.velocity, 0x7F)
     }
 
+    func testGroupChannelMapping() throws {
+        // Group 2, channel 10 should map to unified channel 42
+        let bytes: [UInt8] = [0x22, 0x9A, 0x3C, 0x40]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
+        }
+        XCTAssertEqual(event.channel, 0x2A)
+    }
+
     func testUnknownPacketPreserved() throws {
         let bytes: [UInt8] = [
             0x50, 0x00, 0x00, 0x00,
