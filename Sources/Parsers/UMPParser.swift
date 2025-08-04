@@ -65,7 +65,8 @@ struct UMPParser {
             case 0x80:
                 return ChannelVoiceEvent(timestamp: 0, type: .noteOff, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0x90:
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
+                let eventType: MidiEventType = data2 == 0 ? .noteOff : .noteOn
+                return ChannelVoiceEvent(timestamp: 0, type: eventType, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0xA0:
                 return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: data1, velocity: data2, controllerValue: nil)
             case 0xB0:
