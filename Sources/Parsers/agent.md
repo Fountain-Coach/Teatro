@@ -1,6 +1,6 @@
 # 🧩 Teatro Parser Agent
 
-**Last Updated:** August 04, 2025  
+**Last Updated:** September 08, 2025
 **Maintainer:** FountainAI / Codex Agents  
 **Directory:** `Sources/Parsers/agent.md`  
 **Mission:** Close the gap between declared input format support and verified parser coverage in the Teatro CLI.
@@ -29,7 +29,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 | `.csd` (Csound)    | ⚠️ Partial  | ❌ raw load only | ✓ | ❌ |
 | `.mid` (SMF)       | ✅ Complete | ✓ `MidiFileParser` | ✓ | ✓ |
 | `.ump` (MIDI 2.0)  | ✅ Complete | ✓ `UMPParser` | ✓ | ✓ |
-| `.storyboard`      | ❌ Missing  | ❌ | ❌ | ❌ |
+| `.storyboard`      | ⚠️ Partial  | ✓ `StoryboardParser` | ✓ | ✓ |
 | `.session`         | ❌ Missing  | ❌ | ❌ | ❌ |
 
 ---
@@ -39,13 +39,14 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 ### 1. Parsers
 - [x] `MidiFileParser.swift` with full event decoding
 - [x] `UMPParser.swift` supporting UMP formats 1.0/2.0
-- [ ] `StoryboardParser.swift` (Storyboard DSL)
+- [x] `StoryboardParser.swift` (Storyboard DSL)
 - [ ] `SessionParser.swift` (Teatro container format)
 - [ ] Canonical event unification (`MidiEventProtocol`)
 
 ### 2. CLI Integration
 - [x] Dispatch by file extension
-- [ ] Add `.storyboard`, `.session` to dispatcher
+- [x] Add `.storyboard` to dispatcher
+- [ ] Add `.session` to dispatcher
 - [ ] `--force-format`, `--renderer`, `--dump-events` CLI flags
 - [ ] `--emit-ump` output mode
 
@@ -61,7 +62,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 ### 5. Testing
 - [x] `MidiFileParserTests.swift`
 - [x] `UMPParserTests.swift`
-- [ ] `Tests/StoryboardParserTests.swift`
+- [x] `Tests/StoryboardParserTests.swift`
 - [ ] `Tests/SessionParserTests.swift`
 - [ ] Fixture-based event normalization tests
 
@@ -195,6 +196,7 @@ The Parser Agent is responsible for implementing and maintaining _native Swift 6
 - 2025-09-05: Added MarkerEvent decoding to MidiFileParser and unit test.
 - 2025-09-06: Added InstrumentNameEvent and CuePointEvent decoding to MidiFileParser with unit tests.
 - 2025-09-07: Added SMPTE offset meta event decoding to MidiFileParser and unit test.
+- 2025-09-08: Added basic StoryboardParser with CLI integration and unit test.
 
 
 All implementations must be verifiable via `swift test` and conform to:
@@ -211,3 +213,6 @@ All implementations must be verifiable via `swift test` and conform to:
 - [ ] Sync with `ImplementationPlan.md`
 - [ ] Cross-check against Codex milestone table
 
+
+---
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

@@ -103,7 +103,8 @@ public struct RenderCLI: ParsableCommand {
             let text = String(decoding: fileData, as: UTF8.self)
             return CsoundScore(orchestra: "", score: text)
         case "storyboard":
-            throw ValidationError("Storyboard DSL parsing is not implemented")
+            let text = String(decoding: fileData, as: UTF8.self)
+            return StoryboardParser.parse(text)
         case "mid", "midi":
             throw ValidationError("Parsing for MIDI files is not implemented")
         case "ump":
