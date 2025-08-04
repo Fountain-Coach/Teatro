@@ -39,9 +39,25 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(data2, 0)
     }
 
+    func testMIDI2ChannelVoiceDecoding() throws {
+        let bytes: [UInt8] = [
+            0x40, 0x90, 0x3C, 0x00,
+            0x7F, 0x00, 0x00, 0x00
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard case let .midi2ChannelVoice(group, channel, status, data1, data2) = events.first else {
+            return XCTFail("Expected midi2ChannelVoice event")
+        }
+        XCTAssertEqual(group, 0)
+        XCTAssertEqual(channel, 0)
+        XCTAssertEqual(status, 0x90)
+        XCTAssertEqual(data1, 0x3C00)
+        XCTAssertEqual(data2, 0x7F000000)
+    }
+
     func testUnknownPacketPreserved() throws {
         let bytes: [UInt8] = [
-            0x40, 0x00, 0x00, 0x00,
+            0x50, 0x00, 0x00, 0x00,
             0x01, 0x02, 0x03, 0x04
         ]
         let events = try UMPParser.parse(data: Data(bytes))
@@ -50,7 +66,7 @@ final class UMPParserTests: XCTestCase {
         }
         XCTAssertEqual(group, 0)
         XCTAssertEqual(rawWords.count, 2)
-        XCTAssertEqual(rawWords[0], 0x40000000)
+        XCTAssertEqual(rawWords[0], 0x50000000)
         XCTAssertEqual(rawWords[1], 0x01020304)
     }
 

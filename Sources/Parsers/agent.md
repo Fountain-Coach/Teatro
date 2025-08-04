@@ -129,6 +129,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-05: Added initial UMPParser with MIDI 1.0 channel voice message decoding.
 - 2025-08-06: Added system real-time/common message decoding to UMPParser and unit tests.
 - 2025-08-07: Added utility message decoding to UMPParser and unit tests.
+- 2025-08-08: Added MIDI 2.0 channel voice message decoding to UMPParser and unit tests.
 
 ---
 
