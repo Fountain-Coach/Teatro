@@ -4,6 +4,8 @@ import Teatro
 import Dispatch
 #if os(Linux)
 import Glibc
+#else
+import Darwin
 #endif
 
 public enum RenderTarget: String, ExpressibleByArgument {
@@ -147,6 +149,22 @@ public struct RenderCLI: ParsableCommand {
     }
 
     private func watchFile(path: String, target: RenderTarget, outputPath: String?) {
+#if canImport(Darwin)
+        let descriptor = open(path, O_EVTONLY)
+        guard descriptor >= 0 else { return }
+        let queue = DispatchQueue.global()
+        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: descriptor, eventMask: DispatchSource.FileSystemEvent.write, queue: queue)
+        source.setEventHandler {
+            if let view = try? loadInput(path: path) {
+                try? render(view: view, target: target, outputPath: outputPath)
+            }
+        }
+        source.setCancelHandler {
+            close(descriptor)
+        }
+        source.resume()
+        dispatchMain()
+#else
         var last = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? Date.distantPast
         while true {
             sleep(1)
@@ -158,6 +176,7 @@ public struct RenderCLI: ParsableCommand {
                 }
             }
         }
+#endif
     }
 }
 

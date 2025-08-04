@@ -2,6 +2,10 @@
 
 > This document defines the responsibilities, objectives, and implementation roadmap for the Parser Agent in the Teatro project. The agent’s mission is to implement and maintain native parsers for new input formats—**Standard MIDI Files (SMF)** and **Universal MIDI Packet (UMP)**—while keeping the codebase free of external parsing dependencies. All updates and progress will be tracked here and in **Docs/ImplementationPlan.md**.
 
+## 🆔 Agent Identity
+
+This Parser Agent operates in an **analyst / act-upon** mode: it catalogues pending tasks, executes them when feasible, and records outcomes for ongoing maintenance.
+
 ## 📋 1. Current Status (Status Quo)
 
 The CLI currently supports rendering from the following source formats:
@@ -9,6 +13,8 @@ The CLI currently supports rendering from the following source formats:
 - **.fountain**
 - **.ly** (LilyPond)
 - **.csd** (Csound)
+
+- Watch mode uses `DispatchSource` for file change notifications on supported platforms and falls back to polling on Linux.
 
 **Pending formats** (not yet implemented):
 
@@ -19,8 +25,6 @@ The CLI currently supports rendering from the following source formats:
 
 > **Open Issues**:
 > - The `ump` output target is listed in the dispatcher but has no implementation.
-> - Width/height environment variables only take effect when corresponding CLI flags are provided; no fallback behavior.
-> - Watch mode relies on a polling loop instead of using `DispatchSource.makeFileSystemObjectSource`.
 > - Tests cover help/version output, unknown flags, and SMF header/track parsing; Csound and FluidSynth headers are optional via conditional compilation.
 
 ---
@@ -36,8 +40,8 @@ The CLI currently supports rendering from the following source formats:
    - Add and wire up the `ump` output target in the render dispatcher.
 
 ### 3. **Runtime Improvements**  
-   - Replace file‑watch polling with `DispatchSource.makeFileSystemObjectSource` for real‑time responsiveness.  
-   - Implement fallback behavior: environment variables for width/height apply even when flags are omitted.  
+   - ~~Replace file‑watch polling with `DispatchSource.makeFileSystemObjectSource` for real‑time responsiveness.~~
+   - ~~Implement fallback behavior: environment variables for width/height apply even when flags are omitted.~~
    - Expand test coverage to include parsing logic and new features.
 
 ### 4. **Status Tracking & Logging**  
@@ -133,6 +137,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-09: Added width/height environment variable fallback in RenderCLI.
 - 2025-08-10: Introduced unified MIDI event model and updated SMF/UMP parsers.
 - 2025-08-11: Added truncated packet error handling to UMPParser and tests.
+- 2025-08-12: Replaced CLI watch mode polling with DispatchSource-based file monitoring on supported platforms.
 
 ---
 
