@@ -103,8 +103,13 @@ struct UMPParser {
                 let controller = UInt8((data1 >> 8) & 0xFF)
                 let value = ChannelVoiceEvent.normalizeController(data2)
                 return ChannelVoiceEvent(timestamp: 0, type: .controlChange, channelNumber: channel, noteNumber: controller, velocity: nil, controllerValue: UInt32(value))
+            case 0xC0:
+                let program = UInt8((data2 >> 24) & 0x7F)
+                return ChannelVoiceEvent(timestamp: 0, type: .programChange, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program))
             case 0xD0:
                 return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+            case 0xE0:
+                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             default:
                 return UnknownEvent(timestamp: 0, data: rawData(from: words))
             }
