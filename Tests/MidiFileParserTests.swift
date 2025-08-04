@@ -218,6 +218,22 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 
+    func testSysExEventDecoding() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0A,
+            0x00, 0xF0, 0x03, 0x01, 0x02, 0x03,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let sysEx = events[0] as? SysExEvent {
+            XCTAssertEqual(sysEx.rawData, Data([0x01, 0x02, 0x03]))
+        } else {
+            XCTFail("Expected SysExEvent")
+        }
+    }
+
     func testUnknownMetaEventPreserved() throws {
         let bytes: [UInt8] = [
             0x4D, 0x54, 0x72, 0x6B,

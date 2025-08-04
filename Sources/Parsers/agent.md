@@ -151,6 +151,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-21: Treat Note On with velocity 0 as Note Off in MidiFileParser and UMPParser.
 - 2025-08-22: Added Control Change decoding tests for MidiFileParser and UMPParser.
 - 2025-08-23: Added running status decoding test to MidiFileParser.
+- 2025-08-24: Added SysEx event decoding test to MidiFileParser.
 
 ---
 
