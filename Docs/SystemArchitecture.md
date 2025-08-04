@@ -30,6 +30,8 @@ _A high-level view of Teatro's modules and design patterns._
 
 **CLI Utilities** (`Sources/CLI`)
 - [`RenderCLI`](../Sources/CLI/RenderCLI.swift) exposes rendering targets via command line.
+- Entry point [`main.swift`](../Sources/CLI/main.swift) invokes `RenderCLI.main()`.
+- Generation targets are declared by the `RenderTarget` enum in [`RenderCLI.swift`](../Sources/CLI/RenderCLI.swift).
 
 ![AI Image Prompt: Diagram showing flow from Storyboard to SVGAnimator to final animated SVG output](storyboard-flow.png)
 
@@ -45,4 +47,4 @@ The modular structure allows adding new renderers or sampler backends with minim
 ![AI Image Prompt: Layered architecture showing ViewCore at the center, surrounded by Renderers, Audio, CLI and Tests](layered-architecture.png)
 
 ---
-``© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.``
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

@@ -138,10 +138,8 @@ Example output snippet:
 Run via the CLI:
 
 ```bash
-swift run RenderCLI svg-animated
+swift run RenderCLI --input demo.storyboard --format svgAnimated --output anim.svg
 ```
----
 
-`````text
-©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-`````
+---
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
