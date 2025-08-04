@@ -157,6 +157,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-27: Added error handling tests for invalid SMF headers, tracks, and events in MidiFileParser.
 - 2025-08-28: Added track length bounds check to MidiFileParser and unit test.
 - 2025-08-29: MidiFileParser now accumulates delta times into absolute timestamps and includes a unit test.
+- 2025-08-30: Added system common/real-time message decoding and running status clearing to MidiFileParser with unit tests.
 
 ---
 
