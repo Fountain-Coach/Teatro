@@ -58,6 +58,20 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.velocity, 0x7F)
     }
 
+    func testMIDI2NoteOnZeroVelocityTreatedAsNoteOff() throws {
+        let bytes: [UInt8] = [
+            0x40, 0x90, 0x3C, 0x00,
+            0x00, 0x00, 0x00, 0x00
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
+        }
+        XCTAssertEqual(event.type, .noteOff)
+        XCTAssertEqual(event.noteNumber, 0x3C)
+        XCTAssertEqual(event.velocity, 0x00)
+    }
+
     func testMIDI2ProgramChangeDecoding() throws {
         let bytes: [UInt8] = [
             0x40, 0xC0, 0x00, 0x00,

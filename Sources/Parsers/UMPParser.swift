@@ -95,7 +95,8 @@ struct UMPParser {
             case 0x90:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let vel = ChannelVoiceEvent.normalizeVelocity(UInt16((data2 >> 16) & 0xFFFF))
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOn, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                let eventType: MidiEventType = vel == 0 ? .noteOff : .noteOn
+                return ChannelVoiceEvent(timestamp: 0, type: eventType, channelNumber: channel, noteNumber: note, velocity: vel, controllerValue: nil)
             case 0xA0:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let pressure = ChannelVoiceEvent.normalizeController(data2)
