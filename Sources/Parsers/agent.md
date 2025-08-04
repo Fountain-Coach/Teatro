@@ -160,6 +160,7 @@ The CLI currently supports rendering from the following source formats:
 - 2025-08-30: Added system common/real-time message decoding and running status clearing to MidiFileParser with unit tests.
 - 2025-08-31: Added real-time message running status preservation test to MidiFileParser.
 - 2025-09-01: Added key signature meta event decoding to MidiFileParser and unit test.
+- 2025-09-02: Added TempoEvent and TimeSignatureEvent decoding to MidiFileParser and unit tests.
 
 ---
 
