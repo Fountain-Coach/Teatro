@@ -1,94 +1,32 @@
 ## 4. CLI Integration
 _Command-line tools for scripted rendering._
 
-The Teatro View Engine includes a lightweight command-line interface (CLI) implementation for rendering any `Renderable` to a chosen output format. This enables scripting, automation, or integration with external developer tools.
+The Teatro view engine exposes an ArgumentParser-powered command-line interface (`RenderCLI`) capable of rendering any `Renderable` to multiple backends.
 
----
+### Flags
 
-### RenderCLI
+- `--input <file>` or positional file argument
+- `--format <target>` where target ∈ {html, svg, png, markdown, codex, svgAnimated, csound, ump}
+- `--output <path>` to override the destination filename
+- `--watch` to re-render on file changes
+- `--width` / `--height` to override canvas dimensions
+- `--help` / `--version`
 
-```swift
-public enum RenderTarget: String {
-    case html, svg, png, markdown, codex, svgAnimated
-}
-```
+### Defaults
 
-This enum defines supported output formats.
+- Omitting `--format` selects `codex` when writing to stdout and `png` when writing to a file.
+- When `--output` is absent, defaults such as `output.png`, `output.svg`, or `output.csd` are used.
+- Size flags take precedence over environment variables `TEATRO_SVG_WIDTH`, `TEATRO_SVG_HEIGHT`, `TEATRO_IMAGE_WIDTH`, and `TEATRO_IMAGE_HEIGHT`.
 
-```swift
-public struct RenderCLI {
-    public static func main(args: [String]) {
-        let view = Stage(title: "CLI Demo") {
-            VStack(alignment: .center, padding: 2) {
-                TeatroIcon("🎭")
-                Text("CLI Renderer", style: .bold)
-            }
-        }
-
-        let target = RenderTarget(rawValue: args.first ?? "codex") ?? .codex
-
-        switch target {
-        case .html:
-            print(HTMLRenderer.render(view))
-        case .svg:
-            print(SVGRenderer.render(view))
-        case .png:
-            ImageRenderer.renderToPNG(view)
-        case .markdown:
-            print(MarkdownRenderer.render(view))
-        case .codex:
-            print(CodexPreviewer.preview(view))
-        case .svgAnimated:
-            let storyboard = Storyboard {
-                Scene("One") {
-                    VStack(alignment: .center) {
-                        Text("Teatro", style: .bold)
-                        Text("SVG Animation Demo")
-                    }
-                }
-                Transition(style: .crossfade, frames: 10)
-                Scene("Two") {
-                    VStack(alignment: .center) {
-                        Text("Scene Two")
-                    }
-                }
-            }
-
-            print(SVGAnimator.renderAnimatedSVG(storyboard: storyboard))
-        }
-    }
-}
-```
-
----
-
-### Usage
+### Examples
 
 ```bash
-swift run RenderCLI html
-swift run RenderCLI svg
-swift run RenderCLI svgAnimated
-swift run RenderCLI png
-swift run RenderCLI markdown
-swift run RenderCLI codex
+swift run RenderCLI --input scene.fountain --format html
+swift run RenderCLI score.ly --format svg --output score.svg
+swift run RenderCLI --input demo.storyboard --format svgAnimated --output anim.svg
+swift run RenderCLI --input scene.fountain --watch --format codex
 ```
 
-If no argument is provided, the CLI defaults to the `codex` renderer.
-
-The output width and height can be adjusted through environment variables:
-`TEATRO_SVG_WIDTH`, `TEATRO_SVG_HEIGHT`, `TEATRO_IMAGE_WIDTH`, and `TEATRO_IMAGE_HEIGHT`.
-
-The `svg-animated` target converts a multi-scene `Storyboard` into a single
-animated `.svg` file. This differs from `svg` (static) and `png` (individual
-frame images) by embedding `<animate>` elements directly in the output.
-
-This CLI is ideal for:
-- Previewing scenes, tests, or examples from terminal
-- Connecting renderable output to other tools (e.g., orchestration logs, build pipelines)
-- Rendering `.fountain`, `.mid`, or `.ly` views via CLI with extended routing
-
 ---
+© 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
 
-``````text
-©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-``````
