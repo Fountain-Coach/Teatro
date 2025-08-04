@@ -58,7 +58,7 @@ struct UMPParser {
         case 0x2: // MIDI 1.0 Channel Voice Messages
             let word = words[0]
             let status = UInt8(((word >> 20) & 0x0F) << 4)
-            let channel = UInt8((word >> 16) & 0x0F)
+            let channel = UInt8((group << 4) | UInt8((word >> 16) & 0x0F))
             let data1 = UInt8((word >> 8) & 0x7F)
             let data2 = UInt8(word & 0x7F)
             switch status {
@@ -79,7 +79,7 @@ struct UMPParser {
         case 0x4: // MIDI 2.0 Channel Voice Messages
             let word1 = words[0]
             let status = UInt8(((word1 >> 20) & 0x0F) << 4)
-            let channel = UInt8((word1 >> 16) & 0x0F)
+            let channel = UInt8((group << 4) | UInt8((word1 >> 16) & 0x0F))
             let data1 = UInt16(word1 & 0xFFFF)
             let data2 = words.count > 1 ? words[1] : 0
             switch status {
