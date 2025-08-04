@@ -250,5 +250,46 @@ final class MidiFileParserTests: XCTestCase {
             XCTFail("Expected MetaEvent with type 0x7F")
         }
     }
+
+    func testInvalidHeaderThrows() {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x68, 0x64,
+            0x00, 0x00, 0x00, 0x06,
+            0x00
+        ]
+        let data = Data(bytes)
+        XCTAssertThrowsError(try MidiFileParser.parseHeader(data: data)) { error in
+            guard case MidiFileParserError.invalidHeader = error else {
+                return XCTFail("Expected invalidHeader error")
+            }
+        }
+    }
+
+    func testInvalidTrackChunkThrows() {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x68, 0x64,
+            0x00, 0x00, 0x00, 0x00
+        ]
+        let data = Data(bytes)
+        XCTAssertThrowsError(try MidiFileParser.parseTrack(data: data)) { error in
+            guard case MidiFileParserError.invalidTrack = error else {
+                return XCTFail("Expected invalidTrack error")
+            }
+        }
+    }
+
+    func testInvalidEventThrows() {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x02,
+            0x00, 0x90
+        ]
+        let data = Data(bytes)
+        XCTAssertThrowsError(try MidiFileParser.parseTrack(data: data)) { error in
+            guard case MidiFileParserError.invalidEvent = error else {
+                return XCTFail("Expected invalidEvent error")
+            }
+        }
+    }
 }
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
