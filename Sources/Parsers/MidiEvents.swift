@@ -8,6 +8,7 @@ enum MidiEventType {
     case programChange
     case pitchBend
     case channelPressure
+    case polyphonicKeyPressure
     case meta
     case sysEx
     case unknown

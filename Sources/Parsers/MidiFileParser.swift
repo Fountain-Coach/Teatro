@@ -88,7 +88,11 @@ struct MidiFileParser {
                 let value = (msb << 7) | lsb
                 events.append(ChannelVoiceEvent(timestamp: delta, type: .pitchBend, channelNumber: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(value)))
                 index += 2
-            case 0xA0: // Polyphonic Key Pressure - ignore contents
+            case 0xA0: // Polyphonic Key Pressure
+                guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
+                let note = data[index]
+                let pressure = data[index + 1]
+                events.append(ChannelVoiceEvent(timestamp: delta, type: .polyphonicKeyPressure, channelNumber: channel, noteNumber: note, velocity: pressure, controllerValue: nil))
                 index += 2
             case 0xD0: // Channel Pressure
                 guard index < end else { throw MidiFileParserError.invalidEvent }
