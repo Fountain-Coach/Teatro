@@ -52,10 +52,10 @@ public struct RenderCLI: ParsableCommand {
         }
 
         var effectiveWidth = width
-        if effectiveWidth == nil,
-           let env = ProcessInfo.processInfo.environment["TEATRO_WIDTH"],
-           let value = Int(env) {
-            effectiveWidth = value
+        if effectiveWidth == nil {
+            let envSVG = ProcessInfo.processInfo.environment["TEATRO_SVG_WIDTH"].flatMap(Int.init)
+            let envIMG = ProcessInfo.processInfo.environment["TEATRO_IMAGE_WIDTH"].flatMap(Int.init)
+            effectiveWidth = envSVG ?? envIMG
         }
         if let w = effectiveWidth {
             setenv("TEATRO_SVG_WIDTH", String(w), 1)
@@ -63,10 +63,10 @@ public struct RenderCLI: ParsableCommand {
         }
 
         var effectiveHeight = height
-        if effectiveHeight == nil,
-           let env = ProcessInfo.processInfo.environment["TEATRO_HEIGHT"],
-           let value = Int(env) {
-            effectiveHeight = value
+        if effectiveHeight == nil {
+            let envSVG = ProcessInfo.processInfo.environment["TEATRO_SVG_HEIGHT"].flatMap(Int.init)
+            let envIMG = ProcessInfo.processInfo.environment["TEATRO_IMAGE_HEIGHT"].flatMap(Int.init)
+            effectiveHeight = envSVG ?? envIMG
         }
         if let h = effectiveHeight {
             setenv("TEATRO_SVG_HEIGHT", String(h), 1)
@@ -226,7 +226,11 @@ public struct RenderCLI: ParsableCommand {
         let descriptor = open(path, O_EVTONLY)
         guard descriptor >= 0 else { return }
         let queue = DispatchQueue.global()
-        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: descriptor, eventMask: DispatchSource.FileSystemEvent.write, queue: queue)
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: descriptor,
+            eventMask: [.write, .delete, .rename],
+            queue: queue
+        )
         source.setEventHandler {
             if let view = try? loadInput(path: path) {
                 try? render(view: view, target: target, outputPath: outputPath)

@@ -19,8 +19,8 @@
 | `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | ✅ Complete   | ✅ Done  | —                          | parser, dsl, cli     |
 | `.session` support     | `SessionParser.swift`, CLI, tests, `Docs/Chapters/13_SessionFormat.md`  | ✅ Complete   | ✅ Done  | —                          | parser, container    |
 | CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
-| CLI flags              | `RenderCLI.swift`                                                       | Add          | ⚠️ Partial | `--force-format` added, more flags pending | cli, flags           |
-| Watch mode (macOS)     | CLI watcher                                                             | Add          | ⏳ TODO | Add `DispatchSource` impl   | cli, watcher         |
+| CLI flags              | `RenderCLI.swift`                                                       | Add          | ⚠️ Partial | `--force-format` added, env precedence in place, more flags pending | cli, flags           |
+| Watch mode (macOS)     | CLI watcher                                                             | Add          | ⚠️ Partial | DispatchSource + polling; tests pending   | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | ✅ Complete   | ✅ Done  | —                          | encoder, ump         |
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | ✅ Complete   | ✅ Done  | —                          | audio, output        |
