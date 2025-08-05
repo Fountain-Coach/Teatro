@@ -51,6 +51,25 @@ final class RenderCLITests: XCTestCase {
         XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "600")
     }
 
+    func testWidthHeightFlagsOverrideEnv() throws {
+        setenv("TEATRO_SVG_WIDTH", "800", 1)
+        setenv("TEATRO_IMAGE_WIDTH", "800", 1)
+        setenv("TEATRO_SVG_HEIGHT", "600", 1)
+        setenv("TEATRO_IMAGE_HEIGHT", "600", 1)
+        defer {
+            unsetenv("TEATRO_SVG_WIDTH")
+            unsetenv("TEATRO_IMAGE_WIDTH")
+            unsetenv("TEATRO_SVG_HEIGHT")
+            unsetenv("TEATRO_IMAGE_HEIGHT")
+        }
+        let cli = try RenderCLI.parse(["--width", "1024", "--height", "768"])
+        try cli.run()
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_WIDTH")), "1024")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_WIDTH")), "1024")
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_HEIGHT")), "768")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "768")
+    }
+
     func testMidiSignatureRecognition() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("sigtest.bin")
         defer { try? FileManager.default.removeItem(at: url) }

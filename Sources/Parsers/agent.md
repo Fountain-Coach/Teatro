@@ -19,7 +19,7 @@
 | `.storyboard` parser   | `StoryboardParser.swift`, CLI, tests, DSL doc                           | ✅ Complete   | ✅ Done  | —                          | parser, dsl, cli     |
 | `.session` support     | `SessionParser.swift`, CLI, tests, `Docs/Chapters/13_SessionFormat.md`  | ✅ Complete   | ✅ Done  | —                          | parser, container    |
 | CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
-| CLI flags              | `RenderCLI.swift`                                                       | Add          | ⚠️ Partial | `--force-format` added, env precedence in place, more flags pending | cli, flags           |
+| CLI flags              | `RenderCLI.swift`, tests                                                | Add          | ✅ Done  | — | cli, flags           |
 | Watch mode (macOS)     | CLI watcher                                                             | ✅ Complete   | ✅ Done  |
 —                          | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | ✅ Complete   | ✅ Done  | —                          | encoder, ump         |
