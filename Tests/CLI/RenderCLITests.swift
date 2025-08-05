@@ -35,11 +35,9 @@ final class RenderCLITests: XCTestCase {
     }
 
     func testEnvironmentFallback() throws {
-        setenv("TEATRO_WIDTH", "800", 1)
-        setenv("TEATRO_HEIGHT", "600", 1)
+        setenv("TEATRO_SVG_WIDTH", "800", 1)
+        setenv("TEATRO_SVG_HEIGHT", "600", 1)
         defer {
-            unsetenv("TEATRO_WIDTH")
-            unsetenv("TEATRO_HEIGHT")
             unsetenv("TEATRO_SVG_WIDTH")
             unsetenv("TEATRO_IMAGE_WIDTH")
             unsetenv("TEATRO_SVG_HEIGHT")
