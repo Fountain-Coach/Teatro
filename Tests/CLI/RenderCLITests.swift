@@ -126,6 +126,38 @@ final class RenderCLITests: XCTestCase {
         let cli = try RenderCLI.parse([url.path])
         XCTAssertNoThrow(try cli.run())
     }
+
+#if canImport(Darwin)
+    func testWatchModeRerendersOnChange() throws {
+        let text = """
+        Scene: One
+        Text: Start
+        """
+        let input = FileManager.default.temporaryDirectory.appendingPathComponent("watch.storyboard")
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("watch.md")
+        try text.write(to: input, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: input)
+            try? FileManager.default.removeItem(at: output)
+        }
+        let cli = RenderCLI()
+        let source = cli.watchFile(path: input.path, target: .markdown, outputPath: output.path)
+        let exp = expectation(description: "rerender")
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+            try? """
+            Scene: One
+            Text: Changed
+            """.write(to: input, atomically: true, encoding: .utf8)
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
+            if let contents = try? String(contentsOf: output), contents.contains("Changed") {
+                exp.fulfill()
+            }
+        }
+        wait(for: [exp], timeout: 5)
+        source?.cancel()
+    }
+#endif
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

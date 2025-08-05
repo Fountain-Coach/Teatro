@@ -77,7 +77,8 @@ public struct RenderCLI: ParsableCommand {
         try render(view: view, target: target, outputPath: output)
 
         if watch, let path = inputPath {
-            watchFile(path: path, target: target, outputPath: output)
+            _ = watchFile(path: path, target: target, outputPath: output)
+            dispatchMain()
         }
     }
 
@@ -221,17 +222,17 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    private func watchFile(path: String, target: RenderTarget, outputPath: String?) {
+    @discardableResult
+    func watchFile(path: String, target: RenderTarget, outputPath: String?, queue: DispatchQueue = .global()) -> DispatchSourceProtocol? {
 #if canImport(Darwin)
         let descriptor = open(path, O_EVTONLY)
-        guard descriptor >= 0 else { return }
-        let queue = DispatchQueue.global()
+        guard descriptor >= 0 else { return nil }
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: descriptor,
             eventMask: [.write, .delete, .rename],
             queue: queue
         )
-        source.setEventHandler {
+        source.setEventHandler { [self] in
             if let view = try? loadInput(path: path) {
                 try? render(view: view, target: target, outputPath: outputPath)
             }
@@ -240,11 +241,12 @@ public struct RenderCLI: ParsableCommand {
             close(descriptor)
         }
         source.resume()
-        dispatchMain()
+        return source
 #else
         var last = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? Date.distantPast
-        while true {
-            sleep(1)
+        let source = DispatchSource.makeTimerSource(queue: queue)
+        source.schedule(deadline: .now(), repeating: .seconds(1))
+        source.setEventHandler { [self] in
             let mod = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? last
             if mod > last {
                 last = mod
@@ -253,6 +255,8 @@ public struct RenderCLI: ParsableCommand {
                 }
             }
         }
+        source.resume()
+        return source
 #endif
     }
 }

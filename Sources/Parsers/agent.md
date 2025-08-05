@@ -20,7 +20,8 @@
 | `.session` support     | `SessionParser.swift`, CLI, tests, `Docs/Chapters/13_SessionFormat.md`  | ✅ Complete   | ✅ Done  | —                          | parser, container    |
 | CLI dispatch           | `RenderCLI.swift`, tests                                                | ✅ Complete   | ✅ Done  | —                          | cli, tested        |
 | CLI flags              | `RenderCLI.swift`                                                       | Add          | ⚠️ Partial | `--force-format` added, env precedence in place, more flags pending | cli, flags           |
-| Watch mode (macOS)     | CLI watcher                                                             | Add          | ⚠️ Partial | DispatchSource + polling; tests pending   | cli, watcher         |
+| Watch mode (macOS)     | CLI watcher                                                             | ✅ Complete   | ✅ Done  |
+—                          | cli, watcher         |
 | UMP encoder            | `UMPEncoder.swift`                                                      | ✅ Complete   | ✅ Done  | —                          | encoder, ump         |
 | `.csd` renderer        | `CSDRenderer.swift`                                                     | ✅ Complete   | ✅ Done  | —                           | renderer, csound    |
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | ✅ Complete   | ✅ Done  | —                          | audio, output        |
