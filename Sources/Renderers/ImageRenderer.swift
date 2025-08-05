@@ -38,9 +38,17 @@ public struct ImageRenderer {
         cairo_surface_destroy(surface)
 #else
         // Fallback when Cairo is unavailable: generate an SVG next to the desired PNG path.
-        let svgPath = path.replacingOccurrences(of: ".png", with: ".svg")
+        let requestedURL = URL(fileURLWithPath: path)
+        let svgURL: URL
+        if requestedURL.pathExtension.lowercased() == "png" {
+            svgURL = requestedURL.deletingPathExtension().appendingPathExtension("svg")
+        } else {
+            svgURL = requestedURL
+        }
         let svg = SVGRenderer.render(view)
-        try? svg.write(toFile: svgPath, atomically: true, encoding: .utf8)
+        try? svg.write(toFile: svgURL.path, atomically: true, encoding: .utf8)
 #endif
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

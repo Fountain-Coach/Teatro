@@ -8,7 +8,7 @@ final class RendererFileTests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("svg")
         try svg.write(to: url, atomically: true, encoding: .utf8)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
-        let content = try String(contentsOf: url)
+        let content = try String(contentsOf: url, encoding: .utf8)
         XCTAssertTrue(content.contains("<svg"))
     }
 
@@ -20,10 +20,12 @@ final class RendererFileTests: XCTestCase {
             let data = try Data(contentsOf: url)
             XCTAssertFalse(data.isEmpty)
         } else {
-            let alt = URL(fileURLWithPath: url.path.replacingOccurrences(of: ".png", with: ".svg"))
+            let alt = url.deletingPathExtension().appendingPathExtension("svg")
             XCTAssertTrue(FileManager.default.fileExists(atPath: alt.path))
-            let content = try String(contentsOf: alt)
+            let content = try String(contentsOf: alt, encoding: .utf8)
             XCTAssertTrue(content.contains("<svg"))
         }
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
