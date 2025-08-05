@@ -19,7 +19,7 @@ The executable entry point lives in [`Sources/CLI/main.swift`](../../Sources/CLI
 
 - When `--output` is present but `--format` is omitted, the extension of the output path selects the format; otherwise `codex` (stdout) or `png` (file) is used.
 - When `--output` is absent, defaults such as `output.png`, `output.svg`, or `output.csd` are used.
-- If `--width`/`--height` are omitted, the CLI reads `TEATRO_WIDTH` and `TEATRO_HEIGHT` and propagates them to `TEATRO_SVG_WIDTH`, `TEATRO_SVG_HEIGHT`, `TEATRO_IMAGE_WIDTH`, and `TEATRO_IMAGE_HEIGHT`.
+- If `--width`/`--height` are omitted, the CLI checks `TEATRO_SVG_WIDTH`/`TEATRO_IMAGE_WIDTH` and `TEATRO_SVG_HEIGHT`/`TEATRO_IMAGE_HEIGHT` environment variables before falling back to renderer defaults.
 
 ### Examples
 
