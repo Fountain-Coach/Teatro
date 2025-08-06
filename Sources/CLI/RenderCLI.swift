@@ -212,8 +212,10 @@ public struct RenderCLI: ParsableCommand {
             }
             CSDRenderer.renderToFile(score, to: outputPath ?? "output.csd")
         case .ump:
-            let note = MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0)
-            let words = UMPEncoder.encode(note)
+            guard let midiView = view as? MidiEventView else {
+                throw ValidationError("UMP output requires MIDI or UMP input")
+            }
+            let words = UMPEncoder.encodeEvents(midiView.events)
             var data = Data()
             for word in words {
                 var be = word.bigEndian
