@@ -1,6 +1,6 @@
 # 🧩 Teatro Parser Agent Task Matrix
 
-**Last Updated:** August 04, 2025  
+**Last Updated:** August 06, 2025
 **Maintainer:** FountainAI / Codex Agents  
 **Directory:** `Sources/Parsers/agent.md`  
 **Purpose:** Replace prose-style spec with machine-actionable backlog. Codex agents can consume this table and implement full vertical slices.
@@ -28,7 +28,7 @@
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | ✅ Complete   | ✅ Done  | —                          | core, protocol       |
 | Grammar docs           | `Docs/Chapters/10_StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md` | ✅ Complete   | ✅ Done | —                         | docs, spec           |
 | Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ✅ Done  | —                           | tests, fixtures      |
-| Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⚠️ Partial | Further CLI output checks needed | tests, cli           |
+| Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | ✅ Complete  | ✅ Done  | —                           | tests, cli           |
 | Coverage tracking      | `COVERAGE.md`                                                           | Add          | ✅ Done  | —                          | coverage, report     |
 
 ---
