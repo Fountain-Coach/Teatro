@@ -37,4 +37,9 @@ final class ViewCoreTests: XCTestCase {
         XCTAssertEqual(Rule().render(), String(repeating: "-", count: 10))
         XCTAssertEqual(InputCursor().render(), "|")
     }
+
+    func testUnderlineAndPlainStyles() {
+        XCTAssertEqual(Text("U", style: .underline).render(), "_U_")
+        XCTAssertEqual(Text("P", style: .plain).render(), "P")
+    }
 }
