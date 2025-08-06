@@ -208,7 +208,7 @@ public final class FountainParser {
     }
 
     private func parseBody(line: String, previousBlank: Bool, nextBlank: Bool, lastElement: FountainElementType?) -> FountainElementType? {
-        var trimmed = line.trimmingCharacters(in: .whitespaces)
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return nil }
 
         // FountainAI overrides
@@ -402,3 +402,5 @@ public final class FountainParser {
         return result
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
