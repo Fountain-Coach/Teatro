@@ -159,13 +159,39 @@ final class RenderCLITests: XCTestCase {
         XCTAssertTrue(output.contains("noteOn"))
     }
 
-    func testUMPOutputWritesFile() throws {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("out.ump")
-        defer { try? FileManager.default.removeItem(at: url) }
-        let cli = try RenderCLI.parse(["--format", "ump", "--output", url.path])
+    func testUMPOutputEncodesInput() throws {
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        var inputData = Data()
+        for word in packets {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { inputData.append(contentsOf: $0) }
+        }
+        let inputURL = FileManager.default.temporaryDirectory.appendingPathComponent("in.ump")
+        try inputData.write(to: inputURL)
+        defer { try? FileManager.default.removeItem(at: inputURL) }
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("out.ump")
+        defer { try? FileManager.default.removeItem(at: outputURL) }
+        let cli = try RenderCLI.parse([inputURL.path, "--format", "ump", "--output", outputURL.path])
         try cli.run()
-        let data = try Data(contentsOf: url)
-        XCTAssertEqual(data.count, 8)
+        let outData = try Data(contentsOf: outputURL)
+        let events = try UMPParser.parse(data: inputData)
+        let expectedWords = UMPEncoder.encodeEvents(events)
+        var expected = Data()
+        for word in expectedWords {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { expected.append(contentsOf: $0) }
+        }
+        XCTAssertEqual(outData, expected)
+    }
+
+    func testUMPRequiresMidiInput() throws {
+        let cli = try RenderCLI.parse(["--format", "ump"])
+        XCTAssertThrowsError(try cli.run()) { error in
+            guard let val = error as? ValidationError, val.description.contains("UMP output requires") else {
+                XCTFail("Expected UMP input validation error")
+                return
+            }
+        }
     }
 
     func testOutputExtensionMismatchThrows() throws {
