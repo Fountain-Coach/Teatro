@@ -6,12 +6,12 @@ import Foundation
 
 public struct ImageRenderer {
     // Default image width in points. Override with `TEATRO_IMAGE_WIDTH`.
-    private static var width: Int {
+    static var width: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_IMAGE_WIDTH"] ?? "800") ?? 800
     }
 
     // Default image height in points. Override with `TEATRO_IMAGE_HEIGHT`.
-    private static var height: Int {
+    static var height: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_IMAGE_HEIGHT"] ?? "600") ?? 600
     }
 
