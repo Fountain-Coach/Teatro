@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 import ArgumentParser
 @testable import RenderCLI
-import Teatro
+@testable import Teatro
 
 final class RenderCLICoverageTests: XCTestCase {
     private func tempURL(_ name: String) -> URL {
@@ -169,6 +169,69 @@ final class RenderCLICoverageTests: XCTestCase {
         XCTAssertFalse(output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 
+    func testRunAppliesWidthAndHeightOptions() throws {
+        let cli = try RenderCLI.parse(["--width", "123", "--height", "321"])
+        try cli.run()
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_WIDTH")), "123")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_WIDTH")), "123")
+        XCTAssertEqual(String(cString: getenv("TEATRO_SVG_HEIGHT")), "321")
+        XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "321")
+    }
+
+    func testSvgAnimatedFormatRequiresStoryboard() throws {
+        let cli = try RenderCLI.parse(["--format", "svgAnimated"])
+        XCTAssertThrowsError(try cli.run())
+    }
+
+    func testCsoundFormatRequiresScore() throws {
+        let cli = try RenderCLI.parse(["--format", "csound"])
+        XCTAssertThrowsError(try cli.run())
+    }
+
+    func testUMPFormatRequiresMIDI() throws {
+        let cli = try RenderCLI.parse(["--format", "ump"])
+        XCTAssertThrowsError(try cli.run())
+    }
+
+    func testMidiEventViewRendersAllCases() throws {
+        let events: [MidiEventProtocol] = [
+            ChannelVoiceEvent(timestamp: 0, type: .noteOn, group: nil, channel: 0, noteNumber: 60, velocity: 64, controllerValue: nil),
+            ChannelVoiceEvent(timestamp: 1, type: .noteOff, group: nil, channel: 0, noteNumber: 60, velocity: 0, controllerValue: nil),
+            ChannelVoiceEvent(timestamp: 2, type: .controlChange, group: nil, channel: 0, noteNumber: 1, velocity: nil, controllerValue: 2),
+            ChannelVoiceEvent(timestamp: 3, type: .programChange, group: nil, channel: 0, noteNumber: nil, velocity: nil, controllerValue: 5),
+            ChannelVoiceEvent(timestamp: 4, type: .pitchBend, group: nil, channel: 0, noteNumber: nil, velocity: nil, controllerValue: 0x2000),
+            ChannelVoiceEvent(timestamp: 5, type: .channelPressure, group: nil, channel: 0, noteNumber: nil, velocity: nil, controllerValue: 3),
+            ChannelVoiceEvent(timestamp: 6, type: .polyphonicKeyPressure, group: nil, channel: 0, noteNumber: 61, velocity: 70, controllerValue: nil),
+            MetaEvent(timestamp: 7, meta: 0x2F, data: Data()),
+            DummySysExEvent(timestamp: 8, bytes: Data([0x00])),
+            DummyUnknownEvent(timestamp: 9)
+        ]
+        let view = MidiEventView(events: events)
+        let out = view.render()
+        XCTAssertTrue(out.contains("noteOn"))
+        XCTAssertTrue(out.contains("noteOff"))
+        XCTAssertTrue(out.contains("cc"))
+        XCTAssertTrue(out.contains("program"))
+        XCTAssertTrue(out.contains("pitch"))
+        XCTAssertTrue(out.contains("pressure"))
+        XCTAssertTrue(out.contains("polyPressure"))
+        XCTAssertTrue(out.contains("meta"))
+        XCTAssertTrue(out.contains("sysex"))
+        XCTAssertTrue(out.contains("unknown"))
+    }
+
+    #if canImport(Darwin)
+    func testWatchFileDarwinReturnsSource() {
+        let cli = RenderCLI()
+        let url = tempURL("watch.txt")
+        FileManager.default.createFile(atPath: url.path, contents: Data())
+        defer { try? FileManager.default.removeItem(at: url) }
+        let source = cli.watchFile(path: url.path, target: .markdown, outputPath: nil)
+        XCTAssertNotNil(source)
+        source?.cancel()
+    }
+    #endif
+
     #if !canImport(Darwin)
     func testWatchModeRerendersOnChangeLinux() throws {
         let text = """
@@ -228,6 +291,31 @@ final class RenderCLICoverageTests: XCTestCase {
         let output = String(decoding: data, as: UTF8.self)
         XCTAssertTrue(output.contains("0.1.0"))
     }
+}
+
+struct DummySysExEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let bytes: Data
+    var type: MidiEventType { .sysEx }
+    var group: UInt8? { nil }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { bytes }
+}
+
+struct DummyUnknownEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    var type: MidiEventType { .unknown }
+    var group: UInt8? { nil }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt8? { nil }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
