@@ -1,25 +1,25 @@
 import Foundation
 
 /// Represents the header of a Standard MIDI File.
-struct MidiFileHeader {
+public struct MidiFileHeader {
     let format: UInt16
     let trackCount: UInt16
     let division: UInt16
 }
 
 /// Errors that can occur while parsing a Standard MIDI File.
-enum MidiFileParserError: Error {
+public enum MidiFileParserError: Error {
     case invalidHeader
     case invalidTrack
     case invalidEvent
 }
 
 /// Parser for Standard MIDI Files (SMF).
-struct MidiFileParser {
+public struct MidiFileParser {
     /// Parses the header chunk (MThd) of a MIDI file.
     /// - Parameter data: The raw data of the MIDI file beginning at the header.
     /// - Returns: A `MidiFileHeader` describing the file.
-    static func parseHeader(data: Data) throws -> MidiFileHeader {
+    public static func parseHeader(data: Data) throws -> MidiFileHeader {
         guard data.count >= 14 else { throw MidiFileParserError.invalidHeader }
         let magic = data.prefix(4)
         guard magic == Data([0x4D, 0x54, 0x68, 0x64]) else { throw MidiFileParserError.invalidHeader }
@@ -34,7 +34,7 @@ struct MidiFileParser {
     /// Parses a track chunk (MTrk) from a MIDI file.
     /// - Parameter data: Data starting at the beginning of the `MTrk` chunk.
     /// - Returns: Array of decoded `MidiEventProtocol` values.
-    static func parseTrack(data: Data) throws -> [any MidiEventProtocol] {
+    public static func parseTrack(data: Data) throws -> [any MidiEventProtocol] {
         guard data.count >= 8 else { throw MidiFileParserError.invalidTrack }
         guard data.prefix(4) == Data([0x4D, 0x54, 0x72, 0x6B]) else { throw MidiFileParserError.invalidTrack }
         let length = UInt32(bigEndian: data[4..<8].withUnsafeBytes { $0.load(as: UInt32.self) })
@@ -195,6 +195,26 @@ struct MidiFileParser {
             }
         }
 
+        return events
+    }
+
+    /// Parses an entire Standard MIDI File and returns all contained events.
+    /// - Parameter data: Raw bytes of the MIDI file starting at the header.
+    /// - Returns: Array of decoded `MidiEventProtocol` values across all tracks.
+    public static func parseFile(data: Data) throws -> [any MidiEventProtocol] {
+        let header = try parseHeader(data: data)
+        var index = 14 // after MThd header
+        var events: [any MidiEventProtocol] = []
+        for _ in 0..<header.trackCount {
+            guard index + 8 <= data.count else { throw MidiFileParserError.invalidTrack }
+            let lengthSlice = data[index+4..<index+8]
+            let length = lengthSlice.reduce(0) { (acc, byte) in (acc << 8) | UInt32(byte) }
+            let end = index + 8 + Int(length)
+            guard end <= data.count else { throw MidiFileParserError.invalidTrack }
+            let chunk = data[index..<end]
+            events.append(contentsOf: try parseTrack(data: Data(chunk)))
+            index = end
+        }
         return events
     }
 
