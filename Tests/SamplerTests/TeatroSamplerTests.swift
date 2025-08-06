@@ -40,4 +40,16 @@ final class TeatroSamplerTests: XCTestCase {
         let stopped = await mock.didStop()
         XCTAssertTrue(stopped)
     }
+
+    func testInitWithFluidSynthBackend() async throws {
+        let path = FileManager.default.currentDirectoryPath + "/assets/example.sf2"
+        let sampler = try await TeatroSampler(backend: .fluidsynth(sf2Path: path))
+        await sampler.stopAll()
+    }
+
+    func testInitWithCsoundBackend() async throws {
+        let path = FileManager.default.currentDirectoryPath + "/assets/sine.orc"
+        let sampler = try await TeatroSampler(backend: .csound(orchestra: path))
+        await sampler.stopAll()
+    }
 }

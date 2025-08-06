@@ -124,6 +124,25 @@ final class RenderCLICoverageTests: XCTestCase {
         XCTAssertTrue(contents.contains("<svg"))
     }
 
+    func testPNGOutputWritesFile() throws {
+        let url = tempURL("out.png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse(["--format", "png", "--output", url.path])
+        XCTAssertNoThrow(try cli.run())
+        if !FileManager.default.fileExists(atPath: url.path) {
+            let alt = url.deletingPathExtension().appendingPathExtension("svg")
+            XCTAssertTrue(FileManager.default.fileExists(atPath: alt.path))
+        }
+    }
+
+    func testMarkdownOutputWritesFile() throws {
+        let url = tempURL("out.md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse(["--format", "markdown", "--output", url.path])
+        XCTAssertNoThrow(try cli.run())
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+    }
+
     func testSvgAnimatedStoryboardRenders() throws {
         let text = """
         Scene: One
@@ -167,6 +186,11 @@ final class RenderCLICoverageTests: XCTestCase {
             try cli.run()
         }
         XCTAssertFalse(output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
+    func testRunWithoutArguments() throws {
+        let cli = try RenderCLI.parse([])
+        XCTAssertNoThrow(try cli.run())
     }
 
     func testRunAppliesWidthAndHeightOptions() throws {
