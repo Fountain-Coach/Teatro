@@ -3,7 +3,15 @@ import XCTest
 
 final class CsoundSamplerTests: XCTestCase {
     func testCsoundSamplerLifecycle() async throws {
-        let path = FileManager.default.currentDirectoryPath + "/assets/sine.orc"
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent() // CsoundSamplerTests.swift
+            .deletingLastPathComponent() // SamplerTests
+            .deletingLastPathComponent() // Tests
+        let path = root.appendingPathComponent("assets/sine.orc").path
+        guard FileManager.default.fileExists(atPath: path) else {
+            XCTFail("Missing resource at \(path)")
+            return
+        }
         weak var weakSampler: CsoundSampler?
         do {
             let sampler = CsoundSampler()

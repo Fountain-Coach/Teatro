@@ -265,19 +265,9 @@ final class RenderCLICoverageTests: XCTestCase {
     #endif
 
     func testRenderCLIMainExecutable() throws {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let build = root.appendingPathComponent(".build")
-        let fm = FileManager.default
-        guard let enumerator = fm.enumerator(at: build, includingPropertiesForKeys: nil) else {
-            XCTFail("No build directory")
-            return
-        }
-        var exe: URL?
-        for case let url as URL in enumerator {
-            if url.lastPathComponent == "RenderCLI" { exe = url; break }
-        }
-        guard let exec = exe else {
-            XCTFail("Executable not found")
+        let exec = productsDirectory.appendingPathComponent("RenderCLI")
+        guard FileManager.default.fileExists(atPath: exec.path) else {
+            XCTFail("Executable not found at \(exec.path)")
             return
         }
         let process = Process()
@@ -291,6 +281,17 @@ final class RenderCLICoverageTests: XCTestCase {
         let output = String(decoding: data, as: UTF8.self)
         XCTAssertTrue(output.contains("0.1.0"))
     }
+}
+
+private var productsDirectory: URL {
+#if os(macOS)
+    for bundle in Bundle.allBundles where bundle.bundlePath.hasSuffix(".xctest") {
+        return bundle.bundleURL.deletingLastPathComponent()
+    }
+    fatalError("Could not locate products directory")
+#else
+    return Bundle.main.bundleURL
+#endif
 }
 
 struct DummySysExEvent: MidiEventProtocol {
