@@ -61,4 +61,15 @@ final class RendererTests: XCTestCase {
         XCTAssertTrue(svg.contains("begin=\"0s\""), "First scene should begin at 0s")
         XCTAssertTrue(svg.contains("begin=\"1s\""), "Fade out or second scene should begin at 1s")
     }
+
+    func testImageRendererDimensionEnvironmentOverrides() {
+        setenv("TEATRO_IMAGE_WIDTH", "1024", 1)
+        setenv("TEATRO_IMAGE_HEIGHT", "768", 1)
+        XCTAssertEqual(ImageRenderer.width, 1024)
+        XCTAssertEqual(ImageRenderer.height, 768)
+        unsetenv("TEATRO_IMAGE_WIDTH")
+        unsetenv("TEATRO_IMAGE_HEIGHT")
+    }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

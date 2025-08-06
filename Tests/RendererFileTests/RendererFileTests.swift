@@ -26,6 +26,15 @@ final class RendererFileTests: XCTestCase {
             XCTAssertTrue(content.contains("<svg"))
         }
     }
+
+    func testImageRendererFallbackWithoutPNGExtension() throws {
+        let view = Text("Plain")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        ImageRenderer.renderToPNG(view, to: url.path)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        let content = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(content.contains("<svg"))
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
