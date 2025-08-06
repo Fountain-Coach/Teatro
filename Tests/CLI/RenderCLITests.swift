@@ -83,6 +83,22 @@ final class RenderCLITests: XCTestCase {
         }
     }
 
+    func testMidiFixtureFileThrows() throws {
+        let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
+        let base64 = try String(contentsOf: fixtures.appendingPathComponent("sample.mid")).components(separatedBy: "\n").first ?? ""
+        let data = Data(base64Encoded: base64)!
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("fixture.mid")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cli = try RenderCLI.parse([url.path])
+        XCTAssertThrowsError(try cli.run()) { error in
+            guard let val = error as? ValidationError, val.description.contains("MIDI") else {
+                XCTFail("Expected MIDI parsing error")
+                return
+            }
+        }
+    }
+
     func testUMPSignatureRecognition() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("umptest.bin")
         defer { try? FileManager.default.removeItem(at: url) }
