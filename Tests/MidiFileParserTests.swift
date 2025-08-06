@@ -477,5 +477,45 @@ final class MidiFileParserTests: XCTestCase {
             }
         }
     }
+
+    func testParseFileCombinesHeaderAndTrack() throws {
+        let header: [UInt8] = [
+            0x4D, 0x54, 0x68, 0x64,
+            0x00, 0x00, 0x00, 0x06,
+            0x00, 0x00, // format 0
+            0x00, 0x01, // one track
+            0x01, 0xE0  // division 480
+        ]
+        let track: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x24,
+            0x00, 0xFF, 0x03, 0x04, 0x54, 0x65, 0x73, 0x74,
+            0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20,
+            0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08,
+            0x00, 0x90, 0x3C, 0x40,
+            0x83, 0x60, 0x80, 0x3C, 0x40,
+            0x00, 0xFF, 0x2F, 0x00
+        ]
+        let data = Data(header + track)
+        let events = try MidiFileParser.parseFile(data: data)
+        XCTAssertEqual(events.count, 6)
+        XCTAssert(events.first is TrackNameEvent)
+    }
+
+    func testVariableLengthQuantityLargeDelta() throws {
+        let bytes: [UInt8] = [
+            0x4D, 0x54, 0x72, 0x6B,
+            0x00, 0x00, 0x00, 0x0A,
+            0x00, 0xFF, 0x03, 0x00,
+            0x81, 0x80, 0x00, 0xFF, 0x2F, 0x00
+        ]
+        let events = try MidiFileParser.parseTrack(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        if let eot = events.last as? MetaEvent {
+            XCTAssertEqual(eot.timestamp, 0x4000)
+        } else {
+            XCTFail("Expected MetaEvent")
+        }
+    }
 }
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
