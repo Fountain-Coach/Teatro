@@ -70,6 +70,24 @@ final class RendererTests: XCTestCase {
         unsetenv("TEATRO_IMAGE_WIDTH")
         unsetenv("TEATRO_IMAGE_HEIGHT")
     }
+
+    func testImageRendererDefaultDimensions() {
+        unsetenv("TEATRO_IMAGE_WIDTH")
+        unsetenv("TEATRO_IMAGE_HEIGHT")
+        XCTAssertEqual(ImageRenderer.width, 800)
+        XCTAssertEqual(ImageRenderer.height, 600)
+    }
+
+    func testSVGRendererDimensionEnvironmentOverrides() {
+        setenv("TEATRO_SVG_WIDTH", "700", 1)
+        setenv("TEATRO_SVG_HEIGHT", "500", 1)
+        let view = Text("Env")
+        let svg = SVGRenderer.render(view)
+        XCTAssertTrue(svg.contains("width=\"700\""))
+        XCTAssertTrue(svg.contains("height=\"500\""))
+        unsetenv("TEATRO_SVG_WIDTH")
+        unsetenv("TEATRO_SVG_HEIGHT")
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

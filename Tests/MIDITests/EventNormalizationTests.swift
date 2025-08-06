@@ -25,6 +25,12 @@ final class EventNormalizationTests: XCTestCase {
         }
         XCTAssertEqual(event.controllerValue, UInt32(0xFF))
     }
+
+    func testNormalizeControllerFunction() {
+        let value: UInt32 = 0x12345678
+        let normalized = ChannelVoiceEvent.normalizeController(value)
+        XCTAssertEqual(normalized, 0x12)
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
