@@ -185,6 +185,40 @@ INT. HOUSE - DAY
         XCTAssertTrue(children.contains { if case .emphasis(style: .boldItalic) = $0.type { return true } else { return false } })
         XCTAssertFalse(children.contains { if case .emphasis(style: .italic) = $0.type { return true } else { return false } })
     }
+
+    func testInlineFlushAppendsRemainingText() {
+        let script = "JOHN\nSay *something* now"
+        let nodes = FountainParser().parse(script)
+        let dialogue = nodes.first { $0.type == .dialogue }
+        XCTAssertNotNil(dialogue)
+        XCTAssertEqual(dialogue!.children.last?.rawText, " now")
+    }
+
+    func testTransitionRequiresAllCaps() {
+        let script = "Cut To:\n\n"
+        let nodes = FountainParser().parse(script)
+        XCTAssertEqual(nodes.first?.type, .action)
+    }
+
+    func testTransitionWithTrailingSpaceIsAction() {
+        let script = "\nCUT TO: \n\n"
+        let nodes = FountainParser().parse(script)
+        XCTAssertEqual(nodes.first?.type, .character)
+    }
+
+    func testSynopsisDisabledTreatsLineAsAction() {
+        let rules = RuleSet(enableSynopses: false)
+        let parser = FountainParser(rules: rules)
+        let nodes = parser.parse("= Summary")
+        XCTAssertEqual(nodes.first?.type, .action)
+    }
+
+    func testSectionDisabledTreatsLineAsAction() {
+        let rules = RuleSet(enableSections: false)
+        let parser = FountainParser(rules: rules)
+        let nodes = parser.parse("# Heading")
+        XCTAssertEqual(nodes.first?.type, .action)
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
