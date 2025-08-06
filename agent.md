@@ -2,69 +2,41 @@
 
 | Feature | File(s) or Area | Action | Status | Blockers | Tags |
 |---|---|---|---|---|---|
-| RenderCLI.RenderCLI.run() throws -> () | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 79 of `RenderCLI.RenderCLI.run() throws -> ()` | ⚠️ |  | CLI |
-| RenderCLI.RenderCLI.(determineTarget in _2035FF180BFA761CE9971969A081DB68)() throws -> RenderCLI.RenderTarget | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 98,100,102 of `RenderCLI.RenderCLI.(determineTarget in _2035FF180BFA761CE9971969A081DB68)() throws -> RenderCLI.RenderTarget` | ⚠️ |  | CLI |
-| static RenderCLI.RenderCLI.(inferFormat in _2035FF180BFA761CE9971969A081DB68)(fromExtension: Swift.String) -> RenderCLI.RenderTarget? | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 111,112,114,115,117 of `static RenderCLI.RenderCLI.(inferFormat in _2035FF180BFA761CE9971969A081DB68)(fromExtension: Swift.String) -> RenderCLI.RenderTarget?` | ⚠️ |  | CLI |
-| RenderCLI.RenderCLI.(loadInput in _2035FF180BFA761CE9971969A081DB68)(path: Swift.String) throws -> Teatro.Renderable | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 136,139,142,159,161,162,164 of `RenderCLI.RenderCLI.(loadInput in _2035FF180BFA761CE9971969A081DB68)(path: Swift.String) throws -> Teatro.Renderable` | ⚠️ |  | CLI |
-| RenderCLI.RenderCLI.(render in _2035FF180BFA761CE9971969A081DB68)(view: Teatro.Renderable, target: RenderCLI.RenderTarget, outputPath: Swift.String?) throws -> () | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 189,192,203,204,206,209,210,212 of `RenderCLI.RenderCLI.(render in _2035FF180BFA761CE9971969A081DB68)(view: Teatro.Renderable, target: RenderCLI.RenderTarget, outputPath: Swift.String?) throws -> ()` | ⚠️ |  | CLI |
-| RenderCLI.RenderCLI.(writeData in _2035FF180BFA761CE9971969A081DB68)(_: FoundationEssentials.Data, to: Swift.String, isStdout: Swift.Bool) throws -> () | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 238 of `RenderCLI.RenderCLI.(writeData in _2035FF180BFA761CE9971969A081DB68)(_: FoundationEssentials.Data, to: Swift.String, isStdout: Swift.Bool) throws -> ()` | ⚠️ |  | CLI |
-| RenderCLI.RenderCLI.watchFile(path: Swift.String, target: RenderCLI.RenderTarget, outputPath: Swift.String?, queue: Dispatch.DispatchQueue) -> Dispatch.DispatchSourceProtocol? | Sources/CLI/RenderCLI.swift | Add tests to exercise lines 248,249,268,282 of `RenderCLI.RenderCLI.watchFile(path: Swift.String, target: RenderCLI.RenderTarget, outputPath: Swift.String?, queue: Dispatch.DispatchQueue) -> Dispatch.DispatchSourceProtocol?` | ❌ |  | CLI |
-| RenderCLI_main | Sources/CLI/main.swift | Add tests to exercise lines 1 of `RenderCLI_main` | ❌ |  | CLI |
-| static Teatro.Animator.renderFrames(_: [Teatro.Renderable], baseName: Swift.String) -> () | Sources/Animation/Animator.swift | Add tests to exercise lines 5,6,9 of `static Teatro.Animator.renderFrames(_: [Teatro.Renderable], baseName: Swift.String) -> ()` | ❌ |  | Animation |
-| static Teatro.CSDParser.parse(Swift.String) throws -> Teatro.CsoundScore | Sources/Parsers/CSDParser.swift | Add tests to exercise lines 14,17 of `static Teatro.CSDParser.parse(Swift.String) throws -> Teatro.CsoundScore` | ⚠️ |  | Parsers |
-| static Teatro.CSDParser.(extract in _14C61545125D422CA9C601D7EFBC2DF9)(tag: Swift.String, from: Swift.String) -> Swift.String? | Sources/Parsers/CSDParser.swift | Add tests to exercise lines 28 of `static Teatro.CSDParser.(extract in _14C61545125D422CA9C601D7EFBC2DF9)(tag: Swift.String, from: Swift.String) -> Swift.String?` | ⚠️ |  | Parsers |
-| Teatro.CsoundSampler.init() -> Teatro.CsoundSampler | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to exercise lines 11 of `Teatro.CsoundSampler.init() -> Teatro.CsoundSampler` | ❌ |  | Audio |
-| Teatro.CsoundSampler.deinit | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to exercise lines 13,15 of `Teatro.CsoundSampler.deinit` | ❌ |  | Audio |
-| Teatro.CsoundSampler.loadInstrument(Swift.String) async throws -> () | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to exercise lines 23,25 of `Teatro.CsoundSampler.loadInstrument(Swift.String) async throws -> ()` | ❌ |  | Audio |
-| Teatro.CsoundSampler.trigger(Teatro.MIDI2Note) async -> () | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to exercise lines 38,39 of `Teatro.CsoundSampler.trigger(Teatro.MIDI2Note) async -> ()` | ❌ |  | Audio |
-| Teatro.CsoundSampler.stopAll() async -> () | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to exercise lines 48,51 of `Teatro.CsoundSampler.stopAll() async -> ()` | ❌ |  | Audio |
-| Teatro.DispatcherPrompt.init() -> Teatro.DispatcherPrompt | Sources/ViewCore/DispatcherPrompt.swift | Add tests to exercise lines 6 of `Teatro.DispatcherPrompt.init() -> Teatro.DispatcherPrompt` | ❌ |  | ViewCore |
-| Teatro.DispatcherPrompt.render() -> Swift.String | Sources/ViewCore/DispatcherPrompt.swift | Add tests to exercise lines 8 of `Teatro.DispatcherPrompt.render() -> Swift.String` | ❌ |  | ViewCore |
-| Teatro.FluidSynthSampler.init() -> Teatro.FluidSynthSampler | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 10 of `Teatro.FluidSynthSampler.init() -> Teatro.FluidSynthSampler` | ❌ |  | Audio |
-| Teatro.FluidSynthSampler.deinit | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 12,13,14,15 of `Teatro.FluidSynthSampler.deinit` | ❌ |  | Audio |
-| Teatro.FluidSynthSampler.loadInstrument(Swift.String) async throws -> () | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 19,23,27,29,33 of `Teatro.FluidSynthSampler.loadInstrument(Swift.String) async throws -> ()` | ❌ |  | Audio |
-| Teatro.FluidSynthSampler.trigger(Teatro.MIDI2Note) async -> () | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 42,43,45 of `Teatro.FluidSynthSampler.trigger(Teatro.MIDI2Note) async -> ()` | ❌ |  | Audio |
-| Teatro.FluidSynthSampler.(noteOff in _88E2AFA5225A8AB6EBD392EE6C90AB1B)(Teatro.MIDI2Note) async -> () | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 53,54 of `Teatro.FluidSynthSampler.(noteOff in _88E2AFA5225A8AB6EBD392EE6C90AB1B)(Teatro.MIDI2Note) async -> ()` | ❌ |  | Audio |
-| Teatro.FluidSynthSampler.stopAll() async -> () | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to exercise lines 59,60,61,62,63 of `Teatro.FluidSynthSampler.stopAll() async -> ()` | ❌ |  | Audio |
-| Teatro.FountainElement.render() -> Swift.String | Sources/ViewCore/Fountain.swift | Add tests to exercise lines 11,12,14 of `Teatro.FountainElement.render() -> Swift.String` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.parse(Swift.String) -> [Teatro.FountainNode] | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 122,124,127,135,140,142,145,151,167,176,185,193,195 of `Teatro.FountainParser.parse(Swift.String) -> [Teatro.FountainNode]` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(parseBody in _83E8B540A9DCE3BC677312051270FBB5)(line: Swift.String, previousBlank: Swift.Bool, nextBlank: Swift.Bool, lastElement: Teatro.FountainElementType?) -> Teatro.FountainElementType? | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 238 of `Teatro.FountainParser.(parseBody in _83E8B540A9DCE3BC677312051270FBB5)(line: Swift.String, previousBlank: Swift.Bool, nextBlank: Swift.Bool, lastElement: Teatro.FountainElementType?) -> Teatro.FountainElementType?` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(isTransition in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, trimmed: Swift.String, previousBlank: Swift.Bool, nextBlank: Swift.Bool) -> Swift.Bool | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 256,259,260 of `Teatro.FountainParser.(isTransition in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, trimmed: Swift.String, previousBlank: Swift.Bool, nextBlank: Swift.Bool) -> Swift.Bool` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(isAllCaps in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Bool | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 274 of `Teatro.FountainParser.(isAllCaps in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Bool` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(isCharacter in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, previousBlank: Swift.Bool) -> Swift.Bool | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 287 of `Teatro.FountainParser.(isCharacter in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, previousBlank: Swift.Bool) -> Swift.Bool` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(isParenthetical in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, last: Teatro.FountainElementType?) -> Swift.Bool | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 297,300 of `Teatro.FountainParser.(isParenthetical in _83E8B540A9DCE3BC677312051270FBB5)(_: Swift.String, last: Teatro.FountainElementType?) -> Swift.Bool` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(sectionLevel in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Int? | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 313 of `Teatro.FountainParser.(sectionLevel in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Int?` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(isSynopsis in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Bool | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 319 of `Teatro.FountainParser.(isSynopsis in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> Swift.Bool` | ⚠️ |  | ViewCore |
-| Teatro.FountainParser.(parseInline in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> [Teatro.FountainNode] | Sources/ViewCore/FountainParser.swift | Add tests to exercise lines 347,349,352,374,388 of `Teatro.FountainParser.(parseInline in _83E8B540A9DCE3BC677312051270FBB5)(Swift.String) -> [Teatro.FountainNode]` | ⚠️ |  | ViewCore |
-| static Teatro.ImageRenderer.(width in _41E1D911639A13F6E8D53EB35C69E439).getter : Swift.Int | Sources/Renderers/ImageRenderer.swift | Add tests to exercise lines 9 of `static Teatro.ImageRenderer.(width in _41E1D911639A13F6E8D53EB35C69E439).getter : Swift.Int` | ❌ |  | Renderers |
-| static Teatro.ImageRenderer.(height in _41E1D911639A13F6E8D53EB35C69E439).getter : Swift.Int | Sources/Renderers/ImageRenderer.swift | Add tests to exercise lines 14 of `static Teatro.ImageRenderer.(height in _41E1D911639A13F6E8D53EB35C69E439).getter : Swift.Int` | ❌ |  | Renderers |
-| static Teatro.ImageRenderer.renderToPNG(_: Teatro.Renderable, to: Swift.String) -> () | Sources/Renderers/ImageRenderer.swift | Add tests to exercise lines 19,50 of `static Teatro.ImageRenderer.renderToPNG(_: Teatro.Renderable, to: Swift.String) -> ()` | ⚠️ |  | Renderers |
-| Teatro.LilyScore.renderToPDF(filename: Swift.String) -> () | Sources/ViewCore/LilyScore.swift | Add tests to exercise lines 14 of `Teatro.LilyScore.renderToPDF(filename: Swift.String) -> ()` | ❌ |  | ViewCore |
-| static Teatro.MIDICompatibilityBridge.toLilyScore(Teatro.MIDI2NoteEvent) -> Teatro.LilyScore | Sources/Audio/MIDICompatibilityBridge.swift | Add tests to exercise lines 47,54,56,57,58 of `static Teatro.MIDICompatibilityBridge.toLilyScore(Teatro.MIDI2NoteEvent) -> Teatro.LilyScore` | ⚠️ |  | Audio |
-| (extension in Teatro):Teatro.MidiEventProtocol.group.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 34 of `(extension in Teatro):Teatro.MidiEventProtocol.group.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.ChannelVoiceEvent.metaType.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 53 of `Teatro.ChannelVoiceEvent.metaType.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.ChannelVoiceEvent.rawData.getter : FoundationEssentials.Data? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 54 of `Teatro.ChannelVoiceEvent.rawData.getter : FoundationEssentials.Data?` | ❌ |  | Parsers |
-| Teatro.MetaEvent.noteNumber.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 65 of `Teatro.MetaEvent.noteNumber.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.MetaEvent.velocity.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 66 of `Teatro.MetaEvent.velocity.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.MetaEvent.controllerValue.getter : Swift.UInt32? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 67 of `Teatro.MetaEvent.controllerValue.getter : Swift.UInt32?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.type.getter : Teatro.MidiEventType | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 78 of `Teatro.TempoEvent.type.getter : Teatro.MidiEventType` | ❌ |  | Parsers |
-| Teatro.TempoEvent.channel.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 79 of `Teatro.TempoEvent.channel.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.noteNumber.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 80 of `Teatro.TempoEvent.noteNumber.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.velocity.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 81 of `Teatro.TempoEvent.velocity.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.controllerValue.getter : Swift.UInt32? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 82 of `Teatro.TempoEvent.controllerValue.getter : Swift.UInt32?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.metaType.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 83 of `Teatro.TempoEvent.metaType.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TempoEvent.rawData.getter : FoundationEssentials.Data? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 84 of `Teatro.TempoEvent.rawData.getter : FoundationEssentials.Data?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.type.getter : Teatro.MidiEventType | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 101 of `Teatro.TimeSignatureEvent.type.getter : Teatro.MidiEventType` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.channel.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 102 of `Teatro.TimeSignatureEvent.channel.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.noteNumber.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 103 of `Teatro.TimeSignatureEvent.noteNumber.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.velocity.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 104 of `Teatro.TimeSignatureEvent.velocity.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.controllerValue.getter : Swift.UInt32? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 105 of `Teatro.TimeSignatureEvent.controllerValue.getter : Swift.UInt32?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.metaType.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 106 of `Teatro.TimeSignatureEvent.metaType.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TimeSignatureEvent.rawData.getter : FoundationEssentials.Data? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 107,110,113 of `Teatro.TimeSignatureEvent.rawData.getter : FoundationEssentials.Data?` | ❌ |  | Parsers |
-| Teatro.TrackNameEvent.type.getter : Teatro.MidiEventType | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 123 of `Teatro.TrackNameEvent.type.getter : Teatro.MidiEventType` | ❌ |  | Parsers |
-| Teatro.TrackNameEvent.channel.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 124 of `Teatro.TrackNameEvent.channel.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TrackNameEvent.noteNumber.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 125 of `Teatro.TrackNameEvent.noteNumber.getter : Swift.UInt8?` | ❌ |  | Parsers |
-| Teatro.TrackNameEvent.velocity.getter : Swift.UInt8? | Sources/Parsers/MidiEvents.swift | Add tests to exercise lines 126 of `Teatro.TrackNameEvent.velocity.getter : Swift.UInt8?` | ❌ |  | Parsers |
-
----
-©\ 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
+| loadInstrument | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to cover line(s) 33 of `loadInstrument` | ❌ |  | Audio |
+| trigger | Sources/Audio/Samplers/CsoundSampler.swift | Add tests to cover line(s) 39 of `trigger` | ❌ |  | Audio |
+| (global) | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to cover line(s) 13,14,15 of `(global)` | ❌ |  | Audio |
+| loadInstrument | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to cover line(s) 23,27,29 of `loadInstrument` | ❌ |  | Audio |
+| noteOff | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to cover line(s) 54 of `noteOff` | ❌ |  | Audio |
+| trigger | Sources/Audio/Samplers/FluidSynthSampler.swift | Add tests to cover line(s) 43 of `trigger` | ❌ |  | Audio |
+| loadInstrument | Sources/Audio/TeatroSampler.swift | Add tests to cover line(s) 21,22,23,25,27,29,31,48 of `loadInstrument` | ❌ |  | Audio |
+| stopAll | Sources/Audio/TeatroSampler.swift | Add tests to cover line(s) 47 of `stopAll` | ❌ |  | Audio |
+| trigger | Sources/Audio/TeatroSampler.swift | Add tests to cover line(s) 43 of `trigger` | ❌ |  | Audio |
+| render | Sources/CLI/RenderCLI.swift | Add tests to cover line(s) 191,194,196,199,204,208,213,295,296,297,… of `render` | ❌ |  | CLI |
+| run | Sources/CLI/RenderCLI.swift | Add tests to cover line(s) 57,68,79 of `run` | ❌ |  | CLI |
+| watchFile | Sources/CLI/RenderCLI.swift | Add tests to cover line(s) 249,268,272,282 of `watchFile` | ❌ |  | CLI |
+| build | Sources/MIDI/UMPEncoder.swift | Add tests to cover line(s) 51,52,54,56,57,59,61,62,64,66,… of `build` | ❌ |  | MIDI |
+| encodeEvent | Sources/MIDI/UMPEncoder.swift | Add tests to cover line(s) 40,41 of `encodeEvent` | ❌ |  | MIDI |
+| normalizeController | Sources/Parsers/MidiEvents.swift | Add tests to cover line(s) 127,128,129,137,138,139,140,141,142,143,… of `normalizeController` | ❌ |  | Parsers |
+| parseFile | Sources/Parsers/MidiFileParser.swift | Add tests to cover line(s) 209,213 of `parseFile` | ❌ |  | Parsers |
+| parseHeader | Sources/Parsers/MidiFileParser.swift | Add tests to cover line(s) 25,27 of `parseHeader` | ❌ |  | Parsers |
+| parseTrack | Sources/Parsers/MidiFileParser.swift | Add tests to cover line(s) 38,51,69,82,88,93,100,106,112,116,… of `parseTrack` | ❌ |  | Parsers |
+| readVariableLengthQuantity | Sources/Parsers/MidiFileParser.swift | Add tests to cover line(s) 225 of `readVariableLengthQuantity` | ❌ |  | Parsers |
+| parse | Sources/Parsers/StoryboardParser.swift | Add tests to cover line(s) 33,34,38 of `parse` | ❌ |  | Parsers |
+| decode | Sources/Parsers/UMPParser.swift | Add tests to cover line(s) 65,74,76,81,89,91,115 of `decode` | ❌ |  | Parsers |
+| packetLength | Sources/Parsers/UMPParser.swift | Add tests to cover line(s) 51 of `packetLength` | ❌ |  | Parsers |
+| (global) | Sources/Renderers/ImageRenderer.swift | Add tests to cover line(s) 10,15 of `(global)` | ❌ |  | Renderers |
+| renderToPNG | Sources/Renderers/ImageRenderer.swift | Add tests to cover line(s) 19,50 of `renderToPNG` | ❌ |  | Renderers |
+| render | Sources/Renderers/SVGAnimation/SVGAnimate.swift | Add tests to cover line(s) 17 of `render` | ❌ |  | Renderers |
+| (global) | Sources/Renderers/SVGAnimation/SVGAnimateTransform.swift | Add tests to cover line(s) 7,14 of `(global)` | ❌ |  | Renderers |
+| (global) | Sources/Renderers/SVGAnimation/SVGAnimator.swift | Add tests to cover line(s) 4 of `(global)` | ❌ |  | Renderers |
+| (global) | Sources/Renderers/SVGAnimation/SVGDelta.swift | Add tests to cover line(s) 5,10 of `(global)` | ❌ |  | Renderers |
+| (global) | Sources/Renderers/SVGRenderer.swift | Add tests to cover line(s) 6,11 of `(global)` | ❌ |  | Renderers |
+| parse | Sources/ViewCore/Fountain.swift | Add tests to cover line(s) 26,27,28,31,33 of `parse` | ❌ |  | ViewCore |
+| flush | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 374 of `flush` | ❌ |  | ViewCore |
+| isAllCaps | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 274 of `isAllCaps` | ❌ |  | ViewCore |
+| isParenthetical | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 300 of `isParenthetical` | ❌ |  | ViewCore |
+| isSynopsis | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 319 of `isSynopsis` | ❌ |  | ViewCore |
+| isTransition | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 256,259,260 of `isTransition` | ❌ |  | ViewCore |
+| parse | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 122,124,127,135,140,142,145,151,167,176,… of `parse` | ❌ |  | ViewCore |
+| sectionLevel | Sources/ViewCore/FountainParser.swift | Add tests to cover line(s) 313 of `sectionLevel` | ❌ |  | ViewCore |
+| apply | Sources/ViewCore/Protocols.swift | Add tests to cover line(s) 25 of `apply` | ❌ |  | ViewCore |
