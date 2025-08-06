@@ -21,6 +21,19 @@ func XCTAssertExit(_ closure: () throws -> Void, file: StaticString = #filePath,
     XCTAssertThrowsError(try closure(), file: file, line: line)
 }
 
+func captureStdout(_ closure: () throws -> Void) throws -> String {
+    let pipe = Pipe()
+    let original = dup(STDOUT_FILENO)
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+    try closure()
+    fflush(nil)
+    dup2(original, STDOUT_FILENO)
+    close(original)
+    pipe.fileHandleForWriting.closeFile()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return String(decoding: data, as: UTF8.self)
+}
+
 final class RenderCLITests: XCTestCase {
     func testHelpFlag() {
         XCTAssertHelp(RenderCLI.self, expected: "USAGE:")
@@ -68,6 +81,24 @@ final class RenderCLITests: XCTestCase {
         XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_WIDTH")), "1024")
         XCTAssertEqual(String(cString: getenv("TEATRO_SVG_HEIGHT")), "768")
         XCTAssertEqual(String(cString: getenv("TEATRO_IMAGE_HEIGHT")), "768")
+    }
+
+    func testCodexOutputToStdout() throws {
+        let output = try captureStdout {
+            let cli = try RenderCLI.parse([])
+            try cli.run()
+        }
+        XCTAssertTrue(output.contains("[Stage: CLI Demo]"))
+    }
+
+    func testFileOutputWritesMessage() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("out.md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let output = try captureStdout {
+            let cli = try RenderCLI.parse(["--format", "markdown", "--output", url.path])
+            try cli.run()
+        }
+        XCTAssertTrue(output.contains("Wrote \(url.path)"))
     }
 
     func testMidiSignatureRecognition() throws {
