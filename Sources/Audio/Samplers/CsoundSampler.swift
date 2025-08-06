@@ -1,7 +1,7 @@
 import Foundation
 import CCsound
 
-extension OpaquePointer: @unchecked Sendable {}
+extension OpaquePointer: @retroactive @unchecked Sendable {}
 
 /// Csound-based sampler using libcsound for realtime playback.
 public actor CsoundSampler: SampleSource {
@@ -21,7 +21,7 @@ public actor CsoundSampler: SampleSource {
 
     /// Loads a Csound orchestra file and prepares the engine.
     public func loadInstrument(_ path: String) async throws {
-        try await stopAll()
+        await stopAll()
         let orc = try String(contentsOfFile: path)
         let cs = csoundCreate(nil)
         csoundSetOption(cs, "-d")             // no displays

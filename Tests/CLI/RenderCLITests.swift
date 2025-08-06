@@ -45,7 +45,7 @@ final class RenderCLITests: XCTestCase {
     }
 
     func testUnknownFlag() {
-        XCTAssertExit { try RenderCLI.parse(["--unknown"]) }
+        XCTAssertExit { _ = try RenderCLI.parse(["--unknown"]) }
     }
 
     func testEnvironmentFallback() throws {
