@@ -152,5 +152,39 @@ EXT. CITY STREET - NIGHT
         XCTAssertTrue(nodes.contains { $0.type == .promote })
         XCTAssertTrue(nodes.contains { $0.type == .summary })
     }
+    func testLyricsLine() {
+        let script = "~la la"
+        let nodes = FountainParser().parse(script)
+        XCTAssertTrue(nodes.contains { $0.type == .lyrics })
+    }
+
+    func testCharacterWithCaretMixedCase() {
+        let script = "\nJoe^"
+        let nodes = FountainParser().parse(script)
+        XCTAssertTrue(nodes.contains { $0.type == .action && $0.rawText == "Joe^" })
+    }
+
+    func testParentheticalContext() {
+        let script = """
+JOHN
+(whispers)
+INT. HOUSE - DAY
+(parenthetical?)
+"""
+        let nodes = FountainParser().parse(script)
+        XCTAssertEqual(nodes[1].type, .parenthetical)
+        XCTAssertTrue(nodes.contains { $0.type == .action && $0.rawText == "(parenthetical?)" })
+    }
+
+    func testInlineEscapesAndBoldItalic() {
+        let script = "JOHN\nThis \\*isn't\\* ***very*** complex\\"
+        let nodes = FountainParser().parse(script)
+        let dialogue = nodes.first { $0.type == .dialogue }
+        XCTAssertNotNil(dialogue)
+        let children = dialogue!.children
+        XCTAssertTrue(children.contains { if case .emphasis(style: .boldItalic) = $0.type { return true } else { return false } })
+        XCTAssertFalse(children.contains { if case .emphasis(style: .italic) = $0.type { return true } else { return false } })
+    }
 }
 
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
