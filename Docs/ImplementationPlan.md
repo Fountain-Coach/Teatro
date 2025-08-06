@@ -17,7 +17,7 @@
 
 ## Action Plan
 
-1. Implement parsers and renderers for `.mid`/`.midi` and `.ump` files (session parser implemented).
+1. ~~Implement parsers and renderers for `.mid`/`.midi` and `.ump` files (session parser implemented).~~
 2. ~~Add `ump` output target in the render dispatcher and ensure all formats are documented.~~
 3. ~~Apply environment variable fallback when width/height flags are absent and add tests for precedence.~~
 4. ~~Replace polling watch mode with `DispatchSource.makeFileSystemObjectSource` on platforms that support it.~~

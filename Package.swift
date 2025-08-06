@@ -20,7 +20,7 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth"],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "Parsers/agent.md", "CCsound", "CFluidSynth"]
+            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth"]
         ),
         .executableTarget(
             name: "RenderCLI",
