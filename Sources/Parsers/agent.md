@@ -27,8 +27,8 @@
 | FluidSynth backend     | `TeatroSampler.swift`                                                   | ✅ Complete   | ✅ Done  | —                          | audio, output        |
 | `MidiEventProtocol`    | `MidiEvents.swift`, shared model                                        | ✅ Complete   | ✅ Done  | —                          | core, protocol       |
 | Grammar docs           | `Docs/Chapters/10_StoryboardDSL.md`, `Docs/Chapters/13_SessionFormat.md` | ✅ Complete   | ✅ Done | —                         | docs, spec           |
-| Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ⚠️ Partial | Need fixture MIDI           | tests, fixtures      |
-| Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⏳ TODO | CLI outputs not verified    | tests, cli           |
+| Test fixture coverage  | `Tests/Fixtures/`, normalization tests                                  | Add          | ✅ Done  | —                           | tests, fixtures      |
+| Test parity tracker    | `Tests/Parsers/*.swift`, CLI tests                                      | Expand       | ⚠️ Partial | Further CLI output checks needed | tests, cli           |
 | Coverage tracking      | `COVERAGE.md`                                                           | Add          | ✅ Done  | —                          | coverage, report     |
 
 ---
