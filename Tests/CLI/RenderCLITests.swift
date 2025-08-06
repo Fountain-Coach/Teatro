@@ -2,6 +2,7 @@ import XCTest
 import Foundation
 import ArgumentParser
 @testable import RenderCLI
+import Teatro
 #if os(Linux)
 import Glibc
 #else
@@ -114,33 +115,48 @@ final class RenderCLITests: XCTestCase {
         }
     }
 
-    func testMidiFixtureFileThrows() throws {
+    func testMidiFixtureFileParses() throws {
         let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
         let base64 = try String(contentsOf: fixtures.appendingPathComponent("sample.mid")).components(separatedBy: "\n").first ?? ""
         let data = Data(base64Encoded: base64)!
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("fixture.mid")
         try data.write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
+        let output = try captureStdout {
+            let cli = try RenderCLI.parse([url.path])
+            try cli.run()
+        }
+        XCTAssertTrue(output.contains("meta"))
+    }
+
+    func testUMPMisalignedThrows() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("umptest.ump")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data([0x20, 0x00, 0x00]).write(to: url) // misaligned
         let cli = try RenderCLI.parse([url.path])
         XCTAssertThrowsError(try cli.run()) { error in
-            guard let val = error as? ValidationError, val.description.contains("MIDI") else {
-                XCTFail("Expected MIDI parsing error")
+            guard let val = error as? ValidationError, val.description.contains("UMP") else {
+                XCTFail("Expected UMP misalignment error")
                 return
             }
         }
     }
 
-    func testUMPSignatureRecognition() throws {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("umptest.bin")
-        defer { try? FileManager.default.removeItem(at: url) }
-        try Data([0x20, 0x00, 0x00, 0x00]).write(to: url) // single UMP word
-        let cli = try RenderCLI.parse([url.path])
-        XCTAssertThrowsError(try cli.run()) { error in
-            guard let val = error as? ValidationError, val.description.contains("UMP") else {
-                XCTFail("Expected UMP signature error")
-                return
-            }
+    func testUMPFileParses() throws {
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        var data = Data()
+        for word in packets {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
         }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("note.ump")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let output = try captureStdout {
+            let cli = try RenderCLI.parse([url.path])
+            try cli.run()
+        }
+        XCTAssertTrue(output.contains("noteOn"))
     }
 
     func testUMPOutputWritesFile() throws {

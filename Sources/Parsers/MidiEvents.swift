@@ -1,7 +1,7 @@
 import Foundation
 
 /// High-level MIDI event categories.
-enum MidiEventType {
+public enum MidiEventType {
     case noteOn
     case noteOff
     case controlChange
@@ -15,7 +15,7 @@ enum MidiEventType {
 }
 
 /// Protocol describing a normalized MIDI event.
-protocol MidiEventProtocol {
+public protocol MidiEventProtocol {
     var timestamp: UInt32 { get }
     var type: MidiEventType { get }
     /// MIDI 2.0 group number if present.
@@ -30,7 +30,7 @@ protocol MidiEventProtocol {
     static func normalizeController(_ value: UInt32) -> UInt8
 }
 
-extension MidiEventProtocol {
+public extension MidiEventProtocol {
     var group: UInt8? { nil }
     static func normalizeVelocity(_ value: UInt16) -> UInt8 {
         return UInt8(truncatingIfNeeded: value >> 8)

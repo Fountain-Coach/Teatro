@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors that can occur while parsing Universal MIDI Packet files.
-enum UMPParserError: Error {
+public enum UMPParserError: Error {
     case misaligned
     case truncated
 }
@@ -10,11 +10,11 @@ enum UMPParserError: Error {
 /// decoding utility, system real-time/common, MIDI 1.0 channel voice, and MIDI
 /// 2.0 channel voice messages while preserving all other packet types as opaque
 /// data.
-struct UMPParser {
+public struct UMPParser {
     /// Parses a UMP-formatted data stream.
     /// - Parameter data: Raw bytes of the UMP file.
     /// - Returns: Array of decoded `MidiEventProtocol` values.
-    static func parse(data: Data) throws -> [any MidiEventProtocol] {
+    public static func parse(data: Data) throws -> [any MidiEventProtocol] {
         guard data.count % 4 == 0 else { throw UMPParserError.misaligned }
         var events: [any MidiEventProtocol] = []
         var index = 0

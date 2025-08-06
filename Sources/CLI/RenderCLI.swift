@@ -146,20 +146,40 @@ public struct RenderCLI: ParsableCommand {
             let text = String(decoding: fileData, as: UTF8.self)
             return StoryboardParser.parse(text)
         case "mid", "midi":
-            throw ValidationError("Parsing for MIDI files is not implemented")
+            let events = try parseMidiFile(data: fileData)
+            return MidiEventView(events: events)
         case "ump":
-            throw ValidationError("Parsing for UMP files is not implemented")
+            let events = try parseUMPFile(data: fileData)
+            return MidiEventView(events: events)
         case "session":
             let text = String(decoding: fileData, as: UTF8.self)
             return SessionParser.parse(text)
         default:
             if signature == Data([0x4d, 0x54, 0x68, 0x64]) { // "MThd"
-                throw ValidationError("Parsing for MIDI files is not implemented")
+                let events = try parseMidiFile(data: fileData)
+                return MidiEventView(events: events)
             } else if fileData.count % 4 == 0 {
-                throw ValidationError("Parsing for UMP files is not implemented")
+                let events = try parseUMPFile(data: fileData)
+                return MidiEventView(events: events)
             } else {
                 throw ValidationError("Unsupported input extension: .\(ext)")
             }
+        }
+    }
+
+    private func parseMidiFile(data: Data) throws -> [any MidiEventProtocol] {
+        do {
+            return try MidiFileParser.parseFile(data: data)
+        } catch {
+            throw ValidationError("Failed to parse MIDI file: \(error)")
+        }
+    }
+
+    private func parseUMPFile(data: Data) throws -> [any MidiEventProtocol] {
+        do {
+            return try UMPParser.parse(data: data)
+        } catch {
+            throw ValidationError("Failed to parse UMP file: \(error)")
         }
     }
 
@@ -258,6 +278,41 @@ public struct RenderCLI: ParsableCommand {
         source.resume()
         return source
 #endif
+    }
+}
+
+struct MidiEventView: Renderable {
+    let events: [any MidiEventProtocol]
+
+    func render() -> String {
+        events.map { event in
+            var parts: [String] = ["t\(event.timestamp)"]
+            if let ch = event.channel { parts.append("ch\(ch)") }
+            switch event.type {
+            case .noteOn:
+                parts.append("noteOn \(event.noteNumber ?? 0) v\(event.velocity ?? 0)")
+            case .noteOff:
+                parts.append("noteOff \(event.noteNumber ?? 0)")
+            case .controlChange:
+                parts.append("cc \(event.noteNumber ?? 0) \(event.controllerValue ?? 0)")
+            case .programChange:
+                parts.append("program \(event.controllerValue ?? 0)")
+            case .pitchBend:
+                parts.append("pitch \(event.controllerValue ?? 0)")
+            case .channelPressure:
+                parts.append("pressure \(event.controllerValue ?? 0)")
+            case .polyphonicKeyPressure:
+                parts.append("polyPressure \(event.noteNumber ?? 0) v\(event.velocity ?? 0)")
+            case .meta:
+                let meta = event.metaType.map { String(format: "%02X", $0) } ?? "??"
+                parts.append("meta \(meta)")
+            case .sysEx:
+                parts.append("sysex \(event.rawData?.count ?? 0) bytes")
+            case .unknown:
+                parts.append("unknown")
+            }
+            return parts.joined(separator: " ")
+        }.joined(separator: "\n")
     }
 }
 
