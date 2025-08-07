@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-swift@v1
+      - name: Build and test
+        run: swift test
+      - name: Generate CLI reference
+        run: swift package plugin generate-docc-reference
+      - name: Verify committed CLI docs are current
+        run: diff -q Sources/CLI/RenderCLI.docc/render-cli.md Docs/CLI/RenderCLI.md
+      - name: Validate CLI docs against OpenAPI
+        run: node scripts/validate-cli-openapi.js
