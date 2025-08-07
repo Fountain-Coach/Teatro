@@ -249,7 +249,7 @@ final class RenderCLITests: XCTestCase {
             try? FileManager.default.removeItem(at: output)
         }
         let cli = RenderCLI()
-        let source = cli.watchFile(path: input.path, target: .markdown, outputPath: output.path)
+        let source = cli.watchFile(path: input.path, target: MarkdownTarget.self, outputPath: output.path)
         let exp = expectation(description: "rerender")
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
             try? """
@@ -281,7 +281,7 @@ final class RenderCLITests: XCTestCase {
             try? FileManager.default.removeItem(at: output)
         }
         let cli = RenderCLI()
-        let source = cli.watchFile(path: input.path, target: .markdown, outputPath: output.path)
+        let source = cli.watchFile(path: input.path, target: MarkdownTarget.self, outputPath: output.path)
         let exp = expectation(description: "rerender")
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
             try? """
