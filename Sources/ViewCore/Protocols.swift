@@ -19,6 +19,10 @@ public enum Alignment: String {
     case trailing = "right"
 }
 
+public enum Distribution {
+    case leading, center, trailing
+}
+
 public enum TextStyle {
     case bold, italic, underline, plain
 
