@@ -14,12 +14,30 @@ public struct UMPEncoder {
             let tsWord = (0x1 << 28) | UInt32(ts & 0xFFFFFF)
             words.append(tsWord)
         }
-
         let messageType: UInt32 = 0x4 << 28 // MIDI 2.0 Channel Voice Message
         let groupBits = UInt32(group & 0xF) << 24
-        let status: UInt32 = 0x9 << 20 // Note On opcode
         let channelBits = UInt32(note.channel & 0xF) << 16
         let noteBits = UInt32(note.note & 0x7F) << 8
+
+        if let controllers = note.perNoteControllers {
+            for ctrl in controllers {
+                let status: UInt32 = 0x0 << 20
+                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(ctrl.index)
+                words.append(word1)
+                words.append(ctrl.value)
+            }
+        }
+
+        if let attrs = note.attributes {
+            for (attr, value) in attrs {
+                let status: UInt32 = 0xF << 20
+                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(attr.rawValue)
+                words.append(word1)
+                words.append(value)
+            }
+        }
+
+        let status: UInt32 = 0x9 << 20 // Note On opcode
         let word1 = messageType | groupBits | status | channelBits | noteBits
         let word2 = note.velocity
         words.append(contentsOf: [word1, word2])
@@ -46,60 +64,117 @@ public struct UMPEncoder {
         case .sysEx:
             guard let data = event.rawData else { return [] }
             return encodeSysEx7(data, group: event.group ?? defaultGroup)
-        default:
-            let messageType: UInt32 = 0x2 << 28 // MIDI 1.0 Channel Voice Message
+        case .jrTimestamp:
+            let messageType: UInt32 = 0x1 << 28
             let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let value = (event.controllerValue ?? 0) & 0xFFFFFF
+            return [messageType | groupBits | value]
+        case .perNoteController:
+            guard let ctrl = event as? PerNoteControllerEvent else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x0 << 20) | channelBits | noteBits | UInt32(ctrl.controllerIndex)
+            return [word1, ctrl.controllerValue ?? 0]
+        case .noteAttribute:
+            guard let attr = event as? NoteAttributeEvent else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0xF << 20) | channelBits | noteBits | UInt32(attr.attributeIndex)
+            return [word1, attr.attributeValue]
+        default:
             guard let channel = event.channel else { return [] }
+            let controllerThreshold: UInt32 = event.type == .pitchBend ? 0x3FFF : 0x7F
+            let isMIDI2 = (event.velocity ?? 0) > 0x7F || (event.controllerValue ?? 0) > controllerThreshold
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
             let channelBits = UInt32(channel & 0xF) << 16
-
-            func build(_ status: UInt32, _ data1: UInt32, _ data2: UInt32) -> UInt32 {
-                messageType | groupBits | status | channelBits | (data1 << 8) | data2
-            }
-
-            switch event.type {
-            case .noteOn:
-                let status: UInt32 = 0x9 << 20
-                let note = UInt32(event.noteNumber ?? 0)
-                let raw = event.velocity ?? 0
-                let vel = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
-                return [build(status, note, vel)]
-            case .noteOff:
-                let status: UInt32 = 0x8 << 20
-                let note = UInt32(event.noteNumber ?? 0)
-                let raw = event.velocity ?? 0
-                let vel = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
-                return [build(status, note, vel)]
-            case .polyphonicKeyPressure:
-                let status: UInt32 = 0xA << 20
-                let note = UInt32(event.noteNumber ?? 0)
-                let raw = event.velocity ?? 0
-                let pressure = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
-                return [build(status, note, pressure)]
-            case .controlChange:
-                let status: UInt32 = 0xB << 20
-                let controller = UInt32(event.noteNumber ?? 0)
-                let raw = event.controllerValue ?? 0
-                let value = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
-                return [build(status, controller, value)]
-            case .programChange:
-                let status: UInt32 = 0xC << 20
-                let raw = event.controllerValue ?? 0
-                let program = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
-                return [build(status, program, 0)]
-            case .channelPressure:
-                let status: UInt32 = 0xD << 20
-                let raw = event.controllerValue ?? 0
-                let pressure = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
-                return [build(status, pressure, 0)]
-            case .pitchBend:
-                let status: UInt32 = 0xE << 20
-                let raw = event.controllerValue ?? 0
-                let bend = raw > 0x3FFF ? raw >> 18 : raw
-                let data1 = bend & 0x7F
-                let data2 = (bend >> 7) & 0x7F
-                return [build(status, data1, data2)]
-            default:
-                return []
+            if isMIDI2 {
+                let messageType: UInt32 = 0x4 << 28
+                switch event.type {
+                case .noteOn:
+                    let status: UInt32 = 0x9 << 20
+                    let noteBits = UInt32(event.noteNumber ?? 0) << 8
+                    let word1 = messageType | groupBits | status | channelBits | noteBits
+                    return [word1, event.velocity ?? 0]
+                case .noteOff:
+                    let status: UInt32 = 0x8 << 20
+                    let noteBits = UInt32(event.noteNumber ?? 0) << 8
+                    let word1 = messageType | groupBits | status | channelBits | noteBits
+                    return [word1, event.velocity ?? 0]
+                case .polyphonicKeyPressure:
+                    let status: UInt32 = 0xA << 20
+                    let noteBits = UInt32(event.noteNumber ?? 0) << 8
+                    let word1 = messageType | groupBits | status | channelBits | noteBits
+                    return [word1, event.velocity ?? 0]
+                case .controlChange:
+                    let status: UInt32 = 0xB << 20
+                    let controller = UInt32(event.noteNumber ?? 0) << 8
+                    let word1 = messageType | groupBits | status | channelBits | controller
+                    return [word1, event.controllerValue ?? 0]
+                case .channelPressure:
+                    let status: UInt32 = 0xD << 20
+                    let word1 = messageType | groupBits | status | channelBits
+                    return [word1, event.controllerValue ?? 0]
+                case .pitchBend:
+                    let status: UInt32 = 0xE << 20
+                    let word1 = messageType | groupBits | status | channelBits
+                    return [word1, event.controllerValue ?? 0]
+                default:
+                    return []
+                }
+            } else {
+                let messageType: UInt32 = 0x2 << 28
+                func build(_ status: UInt32, _ data1: UInt32, _ data2: UInt32) -> UInt32 {
+                    messageType | groupBits | status | channelBits | (data1 << 8) | data2
+                }
+                switch event.type {
+                case .noteOn:
+                    let status: UInt32 = 0x9 << 20
+                    let note = UInt32(event.noteNumber ?? 0)
+                    let raw = event.velocity ?? 0
+                    let vel = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
+                    return [build(status, note, vel)]
+                case .noteOff:
+                    let status: UInt32 = 0x8 << 20
+                    let note = UInt32(event.noteNumber ?? 0)
+                    let raw = event.velocity ?? 0
+                    let vel = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
+                    return [build(status, note, vel)]
+                case .polyphonicKeyPressure:
+                    let status: UInt32 = 0xA << 20
+                    let note = UInt32(event.noteNumber ?? 0)
+                    let raw = event.velocity ?? 0
+                    let pressure = raw > 0x7F ? UInt32(MIDI.midi1Velocity(from: raw)) : raw
+                    return [build(status, note, pressure)]
+                case .controlChange:
+                    let status: UInt32 = 0xB << 20
+                    let controller = UInt32(event.noteNumber ?? 0)
+                    let raw = event.controllerValue ?? 0
+                    let value = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
+                    return [build(status, controller, value)]
+                case .programChange:
+                    let status: UInt32 = 0xC << 20
+                    let raw = event.controllerValue ?? 0
+                    let program = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
+                    return [build(status, program, 0)]
+                case .channelPressure:
+                    let status: UInt32 = 0xD << 20
+                    let raw = event.controllerValue ?? 0
+                    let pressure = raw > 0x7F ? UInt32(MIDI.midi1Controller(from: raw)) : raw
+                    return [build(status, pressure, 0)]
+                case .pitchBend:
+                    let status: UInt32 = 0xE << 20
+                    let raw = event.controllerValue ?? 0
+                    let bend = raw > 0x3FFF ? raw >> 18 : raw
+                    let data1 = bend & 0x7F
+                    let data2 = (bend >> 7) & 0x7F
+                    return [build(status, data1, data2)]
+                default:
+                    return []
+                }
             }
         }
     }

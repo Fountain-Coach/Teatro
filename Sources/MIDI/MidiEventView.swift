@@ -29,6 +29,9 @@ public struct MidiEventView: Renderable {
             case .perNoteController:
                 let ctrl = (event as? PerNoteControllerEvent)?.controllerIndex ?? 0
                 parts.append("pnc \(event.noteNumber ?? 0) c\(ctrl) \(event.controllerValue ?? 0)")
+            case .noteAttribute:
+                let attr = (event as? NoteAttributeEvent)?.attributeIndex ?? 0
+                parts.append("attr \(event.noteNumber ?? 0) a\(attr) \(event.controllerValue ?? 0)")
             case .jrTimestamp:
                 parts.append("jr \(event.controllerValue ?? 0)")
             case .meta:

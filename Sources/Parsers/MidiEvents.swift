@@ -10,6 +10,7 @@ public enum MidiEventType {
     case channelPressure
     case polyphonicKeyPressure
     case perNoteController
+    case noteAttribute
     case jrTimestamp
     case meta
     case sysEx
@@ -57,6 +58,21 @@ struct PerNoteControllerEvent: MidiEventProtocol {
     let controllerIndex: UInt8
     let controllerValue: UInt32?
     var velocity: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+}
+
+/// Represents per-note attribute messages in MIDI 2.0.
+struct NoteAttributeEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let type: MidiEventType = .noteAttribute
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let attributeIndex: UInt8
+    let attributeValue: UInt32
+    var velocity: UInt32? { nil }
+    var controllerValue: UInt32? { attributeValue }
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }
 }
