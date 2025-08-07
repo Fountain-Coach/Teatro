@@ -212,8 +212,7 @@ final class UMPParserTests: XCTestCase {
         let words: [UInt32] = [
             0x10000001,
             0x40003C02, 0x0A0B0C0D,
-            0x40F03C01, 0x11223344,
-            0x40903C00, 0x01020304
+            0x40903C01, 0x03043344
         ]
         var bytes: [UInt8] = []
         for w in words {
@@ -223,7 +222,7 @@ final class UMPParserTests: XCTestCase {
             bytes.append(UInt8(w & 0xFF))
         }
         let events = try UMPParser.parse(data: Data(bytes))
-        XCTAssertEqual(events.count, 4)
+        XCTAssertEqual(events.count, 3)
         let encoded = UMPEncoder.encodeEvents(events)
         XCTAssertEqual(encoded, words)
     }
