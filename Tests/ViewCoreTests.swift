@@ -24,6 +24,30 @@ final class ViewCoreTests: XCTestCase {
         XCTAssertEqual(stack.render(), " A B")
     }
 
+    func testVStackSpacing() {
+        let stack = VStack(spacing: 1) {
+            Text("A")
+            Text("B")
+        }
+        XCTAssertEqual(stack.render(), "A\n\nB")
+    }
+
+    func testHStackSpacingAndDistribution() {
+        let stack = HStack(spacing: 2, distribution: .center) {
+            Text("A")
+            Text("B")
+        }
+        XCTAssertEqual(stack.render(), " A  B ")
+    }
+
+    func testZStackRendering() {
+        let stack = ZStack {
+            Text("A")
+            Text("B")
+        }
+        XCTAssertEqual(stack.render(), "B")
+    }
+
     func testPanelRendering() {
         let panel = Panel(width: 100, height: 100, cornerRadius: 5) {
             Text("X")
