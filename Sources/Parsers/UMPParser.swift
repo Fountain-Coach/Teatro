@@ -125,17 +125,45 @@ public struct UMPParser {
             case 0xE0:
                 return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0x10:
+                guard words.count > 1 else {
+                    return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                }
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let attr = UInt8(data1 & 0xFF)
-                let vel = UInt32((data2 >> 16) & 0xFFFF)
-                let attrData = UInt16(data2 & 0xFFFF)
-                return NoteEndEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
-            case 0x20:
-                let note = UInt8((data1 >> 8) & 0xFF)
-                return PitchClampEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, pitch: data2)
-            case 0x30:
-                let note = UInt8((data1 >> 8) & 0xFF)
-                return PitchReleaseEvent(timestamp: 0, group: group, channel: channel, noteNumber: note)
+                let word2 = words[1]
+                let subtype = UInt8((word2 >> 28) & 0xF)
+                switch subtype {
+                case 0x0:
+                    let velocity = UInt32((word2 >> 16) & 0xFFFF)
+                    let attributeData = UInt16(word2 & 0xFFFF)
+                    return NoteEndEvent(
+                        timestamp: 0,
+                        group: group,
+                        channel: channel,
+                        noteNumber: note,
+                        velocity: velocity,
+                        attributeType: attr,
+                        attributeData: attributeData
+                    )
+                case 0x2:
+                    let pitch = word2 & 0x0FFFFFFF
+                    return PitchClampEvent(
+                        timestamp: 0,
+                        group: group,
+                        channel: channel,
+                        noteNumber: note,
+                        pitch: pitch
+                    )
+                case 0x3:
+                    return PitchReleaseEvent(
+                        timestamp: 0,
+                        group: group,
+                        channel: channel,
+                        noteNumber: note
+                    )
+                default:
+                    return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                }
             case 0x00:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let index = UInt8(data1 & 0xFF)
