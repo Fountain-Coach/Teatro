@@ -28,8 +28,15 @@ public struct UMPEncoder {
             }
         }
 
-        if let attrs = note.attributes {
-            for (attr, value) in attrs {
+        var remainingAttributes = note.attributes ?? [:]
+        var primaryAttribute: (MIDI2NoteAttribute, UInt32)?
+        if let first = remainingAttributes.first {
+            primaryAttribute = first
+            remainingAttributes.removeValue(forKey: first.key)
+        }
+
+        if !remainingAttributes.isEmpty {
+            for (attr, value) in remainingAttributes {
                 let status: UInt32 = 0xF << 20
                 let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(attr.rawValue)
                 words.append(word1)
@@ -38,10 +45,18 @@ public struct UMPEncoder {
         }
 
         let status: UInt32 = 0x9 << 20 // Note On opcode
-        let word1 = messageType | groupBits | status | channelBits | noteBits
-        let vel16 = (note.velocity >> 16) & 0xFFFF
-        let word2 = (vel16 << 16)
-        words.append(contentsOf: [word1, word2])
+        if let primary = primaryAttribute {
+            let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(primary.0.rawValue)
+            let velocity = (note.velocity >> 16) & 0xFFFF
+            let attrData = UInt16(primary.1 & 0xFFFF)
+            let word2 = (velocity << 16) | UInt32(attrData)
+            words.append(contentsOf: [word1, word2])
+        } else {
+            let word1 = messageType | groupBits | status | channelBits | noteBits
+            let vel16 = (note.velocity >> 16) & 0xFFFF
+            let word2 = (vel16 << 16)
+            words.append(contentsOf: [word1, word2])
+        }
         return words
     }
 
@@ -86,7 +101,7 @@ public struct UMPEncoder {
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
             let word1 = messageType | groupBits | (0x9 << 20) | channelBits | noteBits | UInt32(n.attributeType.rawValue)
             let velocity = ((n.velocity ?? 0) >> 16) & 0xFFFF
-            let word2 = (velocity << 16) | UInt32(n.attributeData)
+            let word2 = (0x0 << 28) | (velocity << 16) | UInt32(n.attributeData)
             return [word1, word2]
         case .noteOffWithAttribute:
             guard let n = event as? NoteOffWithAttributeEvent, n.type != .unknown else { return [] }
@@ -96,7 +111,7 @@ public struct UMPEncoder {
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
             let word1 = messageType | groupBits | (0x8 << 20) | channelBits | noteBits | UInt32(n.attributeType.rawValue)
             let velocity = ((n.velocity ?? 0) >> 16) & 0xFFFF
-            let word2 = (velocity << 16) | UInt32(n.attributeData)
+            let word2 = (0x0 << 28) | (velocity << 16) | UInt32(n.attributeData)
             return [word1, word2]
         case .noteEnd:
             guard let n = event as? NoteEndEvent, n.type != .unknown else { return [] }
