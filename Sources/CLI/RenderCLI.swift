@@ -12,10 +12,6 @@ import Glibc
 import Darwin
 #endif
 
-public enum RenderTarget: String, ExpressibleByArgument, Sendable {
-    case html, svg, png, markdown, codex, svgAnimated, csound, ump
-}
-
 public struct RenderCLI: ParsableCommand {
     public static let configuration = CommandConfiguration(
         abstract: "Render Teatro views from scripts, scores, and storyboards.",
@@ -28,8 +24,8 @@ public struct RenderCLI: ParsableCommand {
     @Option(name: [.short, .long], help: "Input file path")
     public var input: String?
 
-    @Option(name: [.short, .long], help: "Output format")
-    public var format: RenderTarget?
+    @Option(name: [.short, .long], help: ArgumentHelp("Output format", discussion: "Available: \(RenderTargetRegistry.shared.availableFormats.joined(separator: ", "))"))
+    public var format: String?
 
     @Option(name: [.short, .long], help: "Destination file path")
     public var output: String?
@@ -86,40 +82,35 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    private func determineTarget() throws -> RenderTarget {
+    private func determineTarget() throws -> RenderTargetProtocol.Type {
         if let fmt = format {
+            guard let target = RenderTargetRegistry.shared.lookup(fmt) else {
+                let available = RenderTargetRegistry.shared.availableFormats.joined(separator: ", ")
+                throw ValidationError("Unsupported format \(fmt). Available: \(available)")
+            }
             if let out = output {
                 let ext = URL(fileURLWithPath: out).pathExtension.lowercased()
                 if !forceFormat,
                    let inferred = Self.inferFormat(fromExtension: ext),
-                   inferred != fmt,
+                   inferred.name != target.name,
                    !ext.isEmpty {
-                    throw ValidationError("Output extension .\(ext) does not match format \(fmt.rawValue). Use --force-format to override.")
+                    throw ValidationError("Output extension .\(ext) does not match format \(target.name). Use --force-format to override.")
                 }
             }
-            return fmt
+            return target
         }
         if let out = output {
             let ext = URL(fileURLWithPath: out).pathExtension.lowercased()
             if let inferred = Self.inferFormat(fromExtension: ext) {
                 return inferred
             }
-            return .png
+            return RenderTargetRegistry.shared.lookup("png")!
         }
-        return .codex
+        return RenderTargetRegistry.shared.lookup("codex")!
     }
 
-    private static func inferFormat(fromExtension ext: String) -> RenderTarget? {
-        switch ext {
-        case "html": return .html
-        case "svg": return .svg
-        case "png": return .png
-        case "md", "markdown": return .markdown
-        case "codex": return .codex
-        case "csd": return .csound
-        case "ump": return .ump
-        default: return nil
-        }
+    private static func inferFormat(fromExtension ext: String) -> RenderTargetProtocol.Type? {
+        RenderTargetRegistry.shared.lookup(ext)
     }
 
     private func defaultView() -> Renderable {
@@ -199,69 +190,12 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    func render(view: Renderable, target: RenderTarget, outputPath: String?) throws {
-        let isStdout = outputPath == nil
-        switch target {
-        case .html:
-            let result = HTMLRenderer.render(view)
-            try write(result, to: outputPath ?? "output.html", isStdout: isStdout)
-        case .svg:
-            let result = SVGRenderer.render(view)
-            try write(result, to: outputPath ?? "output.svg", isStdout: isStdout)
-        case .png:
-            ImageRenderer.renderToPNG(view, to: outputPath ?? "output.png")
-        case .markdown:
-            let result = MarkdownRenderer.render(view)
-            try write(result, to: outputPath ?? "output.md", isStdout: isStdout)
-        case .codex:
-            let result = CodexPreviewer.preview(view)
-            try write(result, to: outputPath ?? "output.codex", isStdout: isStdout)
-        case .svgAnimated:
-            guard let storyboard = view as? Storyboard else {
-                throw ValidationError("Animated SVG requires a Storyboard input")
-            }
-            let result = SVGAnimator.renderAnimatedSVG(storyboard: storyboard)
-            try write(result, to: outputPath ?? "output.svg", isStdout: isStdout)
-        case .csound:
-            guard let score = view as? CsoundScore else {
-                throw ValidationError("Csound output requires a Csound score input")
-            }
-            CSDRenderer.renderToFile(score, to: outputPath ?? "output.csd")
-        case .ump:
-            guard let midiView = view as? MidiEventView else {
-                throw ValidationError("UMP output requires MIDI or UMP input")
-            }
-            let words = UMPEncoder.encodeEvents(midiView.events)
-            var data = Data()
-            for word in words {
-                var be = word.bigEndian
-                withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
-            }
-            try writeData(data, to: outputPath ?? "output.ump", isStdout: isStdout)
-        }
-    }
-
-    private func write(_ string: String, to path: String, isStdout: Bool) throws {
-        if isStdout {
-            print(string)
-        } else {
-            try string.write(toFile: path, atomically: true, encoding: .utf8)
-            print("Wrote \(path)")
-        }
-    }
-
-    private func writeData(_ data: Data, to path: String, isStdout: Bool) throws {
-        if isStdout {
-            let hex = data.map { String(format: "%02X", $0) }.joined()
-            print(hex)
-        } else {
-            try data.write(to: URL(fileURLWithPath: path))
-            print("Wrote \(path)")
-        }
+    func render(view: Renderable, target: RenderTargetProtocol.Type, outputPath: String?) throws {
+        try target.render(view: view, output: outputPath)
     }
 
     @discardableResult
-    func watchFile(path: String, target: RenderTarget, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
+    func watchFile(path: String, target: RenderTargetProtocol.Type, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
         #if canImport(TSCBasic) && !os(Linux)
         let cwd = localFileSystem.currentWorkingDirectory ?? AbsolutePath(FileManager.default.currentDirectoryPath)
         let fileURL = URL(fileURLWithPath: path)
