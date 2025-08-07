@@ -142,4 +142,38 @@ swift run RenderCLI --input demo.storyboard --format svgAnimated --output anim.s
 ```
 
 ---
+### 3.7 Registering Custom Renderers
+
+Third-party packages can hook into the registry and provide additional render targets. Conform to `RenderTargetPlugin` and register it during module initialization:
+
+```swift
+import RenderCLI
+import Teatro
+
+struct MyTarget: RenderTargetProtocol {
+    static let name = "myTarget"
+    static let aliases: [String] = []
+    static func render(view: Renderable, output: String?) throws {
+        try write("custom output", to: output, defaultName: "out.txt")
+    }
+}
+
+enum MyPlugin: RenderTargetPlugin {
+    static func registerTargets(in registry: RenderTargetRegistry) {
+        registry.register(MyTarget.self)
+    }
+}
+
+private let _pluginRegistration: Void = {
+    RenderTargetRegistry.register(plugin: MyPlugin.self)
+}()
+```
+
+After importing the module containing this code, the new target becomes available to the CLI:
+
+```bash
+swift run RenderCLI --format myTarget
+```
+
+---
 © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

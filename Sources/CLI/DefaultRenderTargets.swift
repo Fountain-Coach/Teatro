@@ -85,3 +85,17 @@ struct UMPTarget: RenderTargetProtocol {
         try writeData(data, to: output, defaultName: "output.ump")
     }
 }
+
+// Plugin used to register all built-in render targets with the registry.
+struct BuiltInRenderTargetPlugin: RenderTargetPlugin {
+    static func registerTargets(in registry: RenderTargetRegistry) {
+        registry.register(HTMLTarget.self)
+        registry.register(SVGTarget.self)
+        registry.register(PNGTarget.self)
+        registry.register(MarkdownTarget.self)
+        registry.register(CodexTarget.self)
+        registry.register(SVGAnimatedTarget.self)
+        registry.register(CsoundTarget.self)
+        registry.register(UMPTarget.self)
+    }
+}
