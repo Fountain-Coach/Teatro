@@ -1,198 +1,120 @@
-# Codex Agent Instructions: Convert MIDI2 Spec PDFs to Markdown Files
+# Codex Agent Instructions: Enhanced OCR & Markdown Conversion for MIDI2 Spec PDFs
 
-This document instructs Codex to generate a shell-based agent that converts *each* MIDI 2.0 specification PDF in a directory into a corresponding Markdown (`.md`) file containing human- and machine-readable content. The agent:
+This **agent.md** describes how Codex should generate a shell-based agent (`run_conversion.sh`) that transforms *each* MIDI 2.0 specification PDF in a directory into a polished Markdown file (`<basename>.md`) with minimal manual cleanup. Key features:
 
-- Extracts embedded text via **Poppler-Utils**.
-- Extracts and embeds table/diagram images.
-- Performs OCR on images with **Tesseract**.
-- Integrates raw text, images, and OCR tables into `<basename>.md` files.
-- Flags and summarizes OCR failures for manual review.
+- **Text extraction** via Poppler-Utils (`pdftotext`).
+- **Table image extraction** via Poppler-Utils (`pdfimages`).
+- **Pre-processing** of images with ImageMagick (deskew, resize, threshold).
+- **Multi-pass OCR** using Tesseract, OCRmyPDF, and Kraken.
+- **Consolidation**: first non-empty OCR result per image.
+- **Automated cleanup**: Pandoc for reflow, `sed` for artifact removal.
+- **OCR Failure summary** for any remaining images.
 
 ---
 
 ## 1. Prerequisites
 
-Install on Debian/Ubuntu or macOS:
+Install required tools on Debian/Ubuntu or macOS:
 
 ```bash
-# Poppler-Utils for text and image extraction
-sudo apt-get install poppler-utils      # Debian/Ubuntu
-brew install poppler                    # macOS
+# PDF processing
+sudo apt-get install poppler-utils imagemagick pandoc  # Debian/Ubuntu
+brew install poppler imagemagick pandoc                # macOS
 
-# Tesseract OCR for image-to-text
-sudo apt-get install tesseract-ocr      # Debian/Ubuntu
-brew install tesseract                  # macOS
+# OCR engines
+sudo apt-get install tesseract-ocr ocrmypdf            # Debian/Ubuntu
+brew install tesseract ocrmypdf                        # macOS
+pip install kraken                                     # Kraken OCR
 ```
 
-Ensure the following directory layout before running:
-
+Ensure this layout:
 ```
 <working_dir>/
 ├── *.pdf             # MIDI2 spec PDFs
-├── text/             # will hold raw text (.txt)
-├── images/           # will hold extracted images per PDF
-├── ocr/              # will hold OCR outputs per PDF
+├── text/             # raw text outputs
+├── images/           # extracted images per PDF
+├── ocr_t1/           # Tesseract first-pass outputs
+├── ocr_t2/           # OCRmyPDF outputs
+├── ocr_k/            # Kraken outputs
+├── ocr_final/        # Consolidated OCR results
+├── ocr_failures.txt  # records images with no OCR output
 └── run_conversion.sh # generated agent script
 ```
 
 ---
 
-## 2. Agent Workflow Within `run_conversion.sh`
+## 2. Agent Workflow (`run_conversion.sh`)
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Initialize directories
-mkdir -p text images ocr
-> ocr_failures.txt
-```
+# Initialize directories and failure log
+mkdir -p text images ocr_t1 ocr_t2 ocr_k ocr_final
+: > ocr_failures.txt
 
-### Loop Over Each PDF
-
-```bash
 for pdf in *.pdf; do
   base="${pdf%%.*}"
+  md_file="${base}.md"
 
-  # 1. Extract raw text
+  # 1. Extract embedded text
   pdftotext "$pdf" -layout "text/$base.txt"
 
-  # 2. Extract table/diagram images
+  # 2. Extract table images
   mkdir -p "images/$base"
   pdfimages -png "$pdf" "images/$base/table"
 
-  # 3. OCR images
-  mkdir -p "ocr/$base"
-  for img in images/$base/table-*.png; do
-    out="ocr/$base/$(basename "$img" .png).txt"
-    tesseract "$img" "$out" --psm 1 txt
-    # Record failures
-    if [ ! -s "$out" ]; then
-      echo "$img" >> ocr_failures.txt
-    fi
+  # 3. Multi-pass OCR pipeline
+  find "images/$base" -name 'table-*.png' | while read img; do
+    proc="${img%.png}-proc.png"
+    # Pre-process: deskew, upscale, binarize
+    convert "$img" -deskew 40% -resize 200% -threshold 50% "$proc"
+
+    # Tesseract first pass
+    t1="ocr_t1/${base}-$(basename "$img" .png).txt"
+    tesseract "$proc" "$t1" --psm 6 txt
+
+    # OCRmyPDF second pass
+    mkdir -p ocr_t2
+    t2_pdf="ocr_t2/${base}-$(basename "$img" .png)-ocr.pdf"
+    ocrmypdf --force-ocr "$proc" "$t2_pdf"
+    pdftotext "$t2_pdf" "ocr_t2/${base}-$(basename "$img" .png).txt"
+
+    # Kraken third pass
+    mkdir -p ocr_k
+    t3="ocr_k/${base}-$(basename "$img" .png).txt"
+    kraken -i "$proc" ocr -o "$t3"
+
+    # Consolidate: pick first non-empty
+    final="ocr_final/${base}-$(basename "$img" .png).txt"
+    mkdir -p ocr_final
+    for src in "$t1" "ocr_t2/${base}-$(basename "$img" .png).txt" "$t3"; do
+      if [ -s "$src" ]; then
+        cp "$src" "$final"
+        break
+      fi
+    done
+
+    # Log failures
+    [[ -s "$final" ]] || echo "$img" >> ocr_failures.txt
   done
 
-  # 4. Assemble Markdown file for this PDF
-  md_file="$base.md"
-  echo "# $base" > "$md_file"
-  echo "<!-- Generated from $pdf by MIDI2 PDF→MD Agent -->\n" >> "$md_file"
-
-  # 4a. Append raw text
-  echo "## Extracted Text" >> "$md_file"
-  cat "text/$base.txt" >> "$md_file"
-
-  # 4b. Append tables & images
-  echo "\n## Tables & Diagrams" >> "$md_file"
-  for img in images/$base/table-*.png; do
-    txt="ocr/$base/$(basename "$img" .png).txt"
-    echo "### Table: $(basename $img)" >> "$md_file"
-    echo "![Table]($img)\n" >> "$md_file"
-    if [ -s "$txt" ]; then
-      # Render OCR into Markdown table
-      header=true
-      while IFS= read -r line; do
-        if \$header; then
-          cols=( $line )
-          # Header row
-          echo "| ${cols[*]} |" >> "$md_file"
-          # Separator row
-          echo "|$(printf ' --- |%.0s' "\${cols[@]}")" >> "$md_file"
-          header=false
-        else
-          cells=( $line )
-          echo "| ${cells[*]} |" >> "$md_file"
-        fi
-      done < "$txt"
-    else
-      echo "**⚠️ OCR failed; please review image above.**" >> "$md_file"
-    fi
-  done
-
-done
-```
-
----
-
-## 3. OCR Failure Report
-
-After processing all PDFs, generate a summary file `OCR_Failures.md`:
-
-```bash
-# (existing OCR failure report commands)
-```
-
----
-
-## 4. Readability Post-Processing
-
-To transform the raw OCR-heavy Markdown into a clean, human-readable format, add a post-processing step to the agent:
-
-1. **Reflow Paragraphs**
-   ```bash
-   pandoc "$md_file" \
-     --wrap=auto \
-     -f markdown -t markdown \
-     -o tmp.md && mv tmp.md "$md_file"
-   ```
-   - Auto-wraps text to paragraph widths, joining broken lines.
-
-2. **Remove Common OCR Artifacts**
-   ```bash
-   sed -i \
-     -e 's/\s\{2,\}/ /g' \        # collapse multiple spaces
-     -e 's/\(—\)\1\+/$\1/g' \    # dedupe em-dashes
-     -e 's/[‘’]/'/g' \               # normalize quotes
-     -e 's/[“”]/"/g' \              # normalize double quotes
-     -e '/^\s*\([|]\|\*\|-\)\s*$/d' \  # drop empty list/table lines
-     -e 's/[0O]\([^a-z]\)/0\1/g' "$md_file"
-   ```
-
-3. **Normalize Headings & Spacing**
-   ```bash
-   # Ensure exactly one blank line before each heading
-   sed -i -E 's/([^\n])\n(#+)/\1\n\n\2/g' "$md_file"
-   ```
-
-4. **Final Touch**
-   - Remove trailing spaces:
-     ```bash
-     sed -i 's/[ \t]*$//' "$md_file"
-     ```
-   - Ensure file ends with a newline:
-     ```bash
-     [ -f "$md_file" ] && sed -i -e '$a\' "$md_file"
-     ```
-
-Integrate these commands into `run_conversion.sh` after generating each `<basename>.md`. This ensures each Markdown file is automatically cleaned up for readability, reducing OCR clutter and formatting inconsistencies.
-
----
-
-## 5. Usage
-
-Make the script executable and run it:
-
-```bash
-chmod +x run_conversion.sh
-./run_conversion.sh
-```
-
-Each PDF `<basename>.pdf` produces a clean `<basename>.md`. The `OCR_Failures.md` lists any image files requiring manual inspection.
-
-*End of agent instructions.*
-
-## 6. Final Note
-
-By integrating these readability steps, the agent yields polished Markdown documents ready for review or publication, minimizing manual cleanup.
-
-Make the script executable and run it:
-
-```bash
-chmod +x run_conversion.sh
-./run_conversion.sh
-```
-
-Each PDF `<basename>.pdf` produces `<basename>.md`. The `OCR_Failures.md` lists any image files requiring manual inspection.
-
----
-
-*End of agent instructions.*
+  # 4. Build Markdown document
+  {
+    echo "# $base"
+    echo "<!-- Generated from $pdf -->"
+    echo
+    echo "## Extracted Text"
+    cat "text/$base.txt"
+    echo
+    echo "## Tables & OCR Results"
+    find "images/$base" -name 'table-*.png' | while read img; do
+      echo
+echo "### $(basename "$img")"
+      echo "![Table]($img)"
+      echo
+      final="ocr_final/${base}-$(basename "$img" .png).txt"
+      if [ -s "$final" ]; then
+        header=true
+        while IFS= read -r line; do
+          if 
