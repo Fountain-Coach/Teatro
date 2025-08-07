@@ -25,9 +25,6 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 
 Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
 
-An In depth Critique of the Teatro View Engine here:
-https://chatgpt.com/s/dr_688a599e140481918875466585ea01f1
-
 ## Installation
 Add the package to your `Package.swift` dependencies:
 ```swift
