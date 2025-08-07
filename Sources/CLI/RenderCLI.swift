@@ -24,7 +24,7 @@ public struct RenderCLI: ParsableCommand {
     @Option(name: [.short, .long], help: "Input file path")
     public var input: String?
 
-    @Option(name: [.short, .long], help: ArgumentHelp("Output format", discussion: "Available: \(RenderTargetRegistry.shared.availableFormats.joined(separator: ", "))"))
+    @Option(name: [.short, .long], help: ArgumentHelp("Output format", discussion: "Available: \(RendererRegistry.shared.availableIdentifiers.joined(separator: ", "))"))
     public var format: String?
 
     @Option(name: [.short, .long], help: "Destination file path")
@@ -82,19 +82,19 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    private func determineTarget() throws -> RenderTargetProtocol.Type {
+    private func determineTarget() throws -> RendererPlugin.Type {
         if let fmt = format {
-            guard let target = RenderTargetRegistry.shared.lookup(fmt) else {
-                let available = RenderTargetRegistry.shared.availableFormats.joined(separator: ", ")
+            guard let target = RendererRegistry.shared.plugin(for: fmt) else {
+                let available = RendererRegistry.shared.availableIdentifiers.joined(separator: ", ")
                 throw ValidationError("Unsupported format \(fmt). Available: \(available)")
             }
             if let out = output {
                 let ext = URL(fileURLWithPath: out).pathExtension.lowercased()
                 if !forceFormat,
                    let inferred = Self.inferFormat(fromExtension: ext),
-                   inferred.name != target.name,
+                   inferred.identifier != target.identifier,
                    !ext.isEmpty {
-                    throw ValidationError("Output extension .\(ext) does not match format \(target.name). Use --force-format to override.")
+                    throw ValidationError("Output extension .\(ext) does not match format \(target.identifier). Use --force-format to override.")
                 }
             }
             return target
@@ -104,13 +104,13 @@ public struct RenderCLI: ParsableCommand {
             if let inferred = Self.inferFormat(fromExtension: ext) {
                 return inferred
             }
-            return RenderTargetRegistry.shared.lookup("png")!
+            return RendererRegistry.shared.plugin(for: "png")!
         }
-        return RenderTargetRegistry.shared.lookup("codex")!
+        return RendererRegistry.shared.plugin(for: "codex")!
     }
 
-    private static func inferFormat(fromExtension ext: String) -> RenderTargetProtocol.Type? {
-        RenderTargetRegistry.shared.lookup(ext)
+    private static func inferFormat(fromExtension ext: String) -> RendererPlugin.Type? {
+        RendererRegistry.shared.pluginForExtension(ext)
     }
 
     private func defaultView() -> Renderable {
@@ -190,12 +190,16 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    func render(view: Renderable, target: RenderTargetProtocol.Type, outputPath: String?) throws {
-        try target.render(view: view, output: outputPath)
+    func render(view: Renderable, target: RendererPlugin.Type, outputPath: String?) throws {
+        do {
+            try target.render(view: view, output: outputPath)
+        } catch RendererError.unsupportedInput(let msg) {
+            throw ValidationError(msg)
+        }
     }
 
     @discardableResult
-    func watchFile(path: String, target: RenderTargetProtocol.Type, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
+    func watchFile(path: String, target: RendererPlugin.Type, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
         #if canImport(TSCBasic) && !os(Linux)
         let cwd = localFileSystem.currentWorkingDirectory ?? AbsolutePath(FileManager.default.currentDirectoryPath)
         let fileURL = URL(fileURLWithPath: path)
@@ -253,42 +257,6 @@ final class WatchToken {
         timer = nil
     }
     #endif
-}
-
-struct MidiEventView: Renderable {
-    let events: [any MidiEventProtocol]
-
-    func layout() -> LayoutNode {
-        let lines = events.map { event -> String in
-            var parts: [String] = ["t\(event.timestamp)"]
-            if let ch = event.channel { parts.append("ch\(ch)") }
-            switch event.type {
-            case .noteOn:
-                parts.append("noteOn \(event.noteNumber ?? 0) v\(event.velocity ?? 0)")
-            case .noteOff:
-                parts.append("noteOff \(event.noteNumber ?? 0)")
-            case .controlChange:
-                parts.append("cc \(event.noteNumber ?? 0) \(event.controllerValue ?? 0)")
-            case .programChange:
-                parts.append("program \(event.controllerValue ?? 0)")
-            case .pitchBend:
-                parts.append("pitch \(event.controllerValue ?? 0)")
-            case .channelPressure:
-                parts.append("pressure \(event.controllerValue ?? 0)")
-            case .polyphonicKeyPressure:
-                parts.append("polyPressure \(event.noteNumber ?? 0) v\(event.velocity ?? 0)")
-            case .meta:
-                let meta = event.metaType.map { String(format: "%02X", $0) } ?? "??"
-                parts.append("meta \(meta)")
-            case .sysEx:
-                parts.append("sysex \(event.rawData?.count ?? 0) bytes")
-            case .unknown:
-                parts.append("unknown")
-            }
-            return parts.joined(separator: " ")
-        }.joined(separator: "\n")
-        return .raw(lines)
-    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

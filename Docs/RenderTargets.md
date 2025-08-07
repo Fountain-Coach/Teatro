@@ -3,40 +3,42 @@ _A guide to extending Teatro's CLI with custom output formats._
 
 For CLI usage, see [render-cli](CLI/RenderCLI.md).
 
-## RenderTargetProtocol
-`RenderTargetProtocol` defines the contract each renderer must satisfy. A target declares a unique `name`, optional `aliases`, and implements `render(view:output:)` where rendering work occurs. Convenience helpers like `write(_:)` and `writeData(_:)` make it easy to send results to stdout or a file.
+## RendererPlugin
+`RendererPlugin` defines the contract each renderer must satisfy. A plugin declares a unique `identifier`, optional `fileExtensions`, and implements `render(view:output:)` where rendering work occurs. Helpers like `write(_:)` and `writeData(_:)` make it easy to send results to stdout or a file.
 
 ```swift
-public protocol RenderTargetProtocol {
-    static var name: String { get }
-    static var aliases: [String] { get }
+public protocol RendererPlugin {
+    static var identifier: String { get }
+    static var fileExtensions: [String] { get }
     static func render(view: Renderable, output: String?) throws
 }
 ```
 
-## RenderTargetRegistry
-`RenderTargetRegistry` keeps a mapping from target names to types. Use `register(_:)` to add a single target, or `register(plugin:)` to let a plugin supply many targets. The shared singleton is used by the CLI to determine valid `--format` options.
+## RendererRegistry
+`RendererRegistry` keeps a mapping from identifiers and file extensions to plugin types. Use `register(_:)` to add a plugin. The shared singleton is used by the CLI to determine valid `--format` options.
 
 ```swift
-// Register a target
-RenderTargetRegistry.register(MyTarget.self)
+// Register a renderer
+RendererRegistry.register(MyRenderer.self)
 
-// Lookup by name
-let target = RenderTargetRegistry.shared.lookup("svg")
+// Lookup by name or extension
+let renderer = RendererRegistry.shared.plugin(for: "svg")
 ```
 
 ## Plugin Discovery
-Plugins conform to `RenderTargetPlugin` and are responsible for registering one or more targets. Because Swift packages do not expose automatic plugin discovery, each module performs registration when it is loaded. A common pattern is a private global that executes during module initialization.
+Because Swift packages do not expose automatic plugin discovery, each module performs registration when it is loaded. A common pattern is to call `RendererRegistry.register` from a global during module initialization.
 
 ```swift
-enum MyPlugin: RenderTargetPlugin {
-    static func registerTargets(in registry: RenderTargetRegistry) {
-        registry.register(MyTarget.self)
+struct MyRenderer: RendererPlugin {
+    static let identifier = "mine"
+    static let fileExtensions = ["mine"]
+    static func render(view: Renderable, output: String?) throws {
+        try write("custom", to: output, defaultName: "out.mine")
     }
 }
 
-private let _pluginRegistration: Void = {
-    RenderTargetRegistry.register(plugin: MyPlugin.self)
+private let _registration: Void = {
+    RendererRegistry.register(MyRenderer.self)
 }()
 ```
 

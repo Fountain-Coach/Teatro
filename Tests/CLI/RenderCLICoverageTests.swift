@@ -250,7 +250,7 @@ final class RenderCLICoverageTests: XCTestCase {
         let url = tempURL("watch.txt")
         FileManager.default.createFile(atPath: url.path, contents: Data())
         defer { try? FileManager.default.removeItem(at: url) }
-        let source = cli.watchFile(path: url.path, target: MarkdownTarget.self, outputPath: nil)
+        let source = cli.watchFile(path: url.path, target: MarkdownRenderer.self, outputPath: nil)
         XCTAssertNotNil(source)
         source?.cancel()
     }
@@ -270,7 +270,7 @@ final class RenderCLICoverageTests: XCTestCase {
             try? FileManager.default.removeItem(at: output)
         }
         let cli = RenderCLI()
-        let source = cli.watchFile(path: input.path, target: MarkdownTarget.self, outputPath: output.path)
+        let source = cli.watchFile(path: input.path, target: MarkdownRenderer.self, outputPath: output.path)
         let exp = expectation(description: "rerender")
         DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
             try? """
