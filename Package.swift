@@ -13,7 +13,8 @@ let package = Package(
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
+        .package(url: "https://github.com/swiftlang/swift-tools-support-core", from: "0.6.0")
     ],
     targets: [
         .target(
@@ -26,7 +27,8 @@ let package = Package(
             name: "RenderCLI",
             dependencies: [
                 "Teatro",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "SwiftToolsSupport", package: "swift-tools-support-core")
             ],
             path: "Sources/CLI"
         ),

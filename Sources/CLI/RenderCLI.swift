@@ -2,13 +2,17 @@ import Foundation
 import ArgumentParser
 import Teatro
 import Dispatch
+#if canImport(TSCBasic)
+import TSCBasic
+import TSCUtility
+#endif
 #if os(Linux)
 import Glibc
 #else
 import Darwin
 #endif
 
-public enum RenderTarget: String, ExpressibleByArgument {
+public enum RenderTarget: String, ExpressibleByArgument, Sendable {
     case html, svg, png, markdown, codex, svgAnimated, csound, ump
 }
 
@@ -257,26 +261,24 @@ public struct RenderCLI: ParsableCommand {
     }
 
     @discardableResult
-    func watchFile(path: String, target: RenderTarget, outputPath: String?, queue: DispatchQueue = .global()) -> DispatchSourceProtocol? {
-#if canImport(Darwin)
-        let descriptor = open(path, O_EVTONLY)
-        guard descriptor >= 0 else { return nil }
-        let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: descriptor,
-            eventMask: [.write, .delete, .rename],
-            queue: queue
-        )
-        source.setEventHandler { [self] in
-            if let view = try? loadInput(path: path) {
-                try? render(view: view, target: target, outputPath: outputPath)
+    func watchFile(path: String, target: RenderTarget, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
+        #if canImport(TSCBasic) && !os(Linux)
+        let cwd = localFileSystem.currentWorkingDirectory ?? AbsolutePath(FileManager.default.currentDirectoryPath)
+        let fileURL = URL(fileURLWithPath: path)
+        let dirAbs = AbsolutePath(fileURL.deletingLastPathComponent().path, relativeTo: cwd)
+        let fileName = fileURL.lastPathComponent
+        let watcher = FSWatch(paths: [dirAbs], latency: 1.0) { [self] paths in
+            if paths.contains(where: { $0.basename == fileName }) {
+                queue.async {
+                    if let view = try? loadInput(path: path) {
+                        try? render(view: view, target: target, outputPath: outputPath)
+                    }
+                }
             }
         }
-        source.setCancelHandler {
-            close(descriptor)
-        }
-        source.resume()
-        return source
-#else
+        try? watcher.start()
+        return WatchToken(watcher)
+        #else
         var last = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? Date.distantPast
         let source = DispatchSource.makeTimerSource(queue: queue)
         source.schedule(deadline: .now(), repeating: .seconds(1))
@@ -290,9 +292,33 @@ public struct RenderCLI: ParsableCommand {
             }
         }
         source.resume()
-        return source
-#endif
+        return WatchToken(timer: source)
+        #endif
     }
+}
+
+extension RenderCLI: Sendable {}
+
+final class WatchToken {
+    #if canImport(TSCUtility) && !os(Linux)
+    private var watcher: FSWatch?
+    init(_ watcher: FSWatch) {
+        self.watcher = watcher
+    }
+    func cancel() {
+        watcher?.stop()
+        watcher = nil
+    }
+    #else
+    private var timer: DispatchSourceTimer?
+    init(timer: DispatchSourceTimer) {
+        self.timer = timer
+    }
+    func cancel() {
+        timer?.cancel()
+        timer = nil
+    }
+    #endif
 }
 
 struct MidiEventView: Renderable {
