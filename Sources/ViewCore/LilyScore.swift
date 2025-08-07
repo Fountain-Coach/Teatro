@@ -16,7 +16,7 @@ public struct LilyScore: Renderable {
         try? content.write(toFile: tempPath, atomically: true, encoding: .utf8)
 
         let task = Process()
-        task.launchPath = "/usr/bin/env"
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         task.arguments = ["lilypond", "-o", filename, tempPath]
         try? task.run()
         task.waitUntilExit()
