@@ -118,21 +118,71 @@ done
 After processing all PDFs, generate a summary file `OCR_Failures.md`:
 
 ```bash
-echo "# OCR Failure Summary" > OCR_Failures.md
-if [ -s ocr_failures.txt ]; then
-  echo "The following images had no OCR output and require manual review:" >> OCR_Failures.md
-  echo "" >> OCR_Failures.md
-  while read -r img; do
-    echo "- $img" >> OCR_Failures.md
-  done < ocr_failures.txt
-else
-  echo "No OCR failures detected!" >> OCR_Failures.md
-fi
+# (existing OCR failure report commands)
 ```
 
 ---
 
-## 4. Usage
+## 4. Readability Post-Processing
+
+To transform the raw OCR-heavy Markdown into a clean, human-readable format, add a post-processing step to the agent:
+
+1. **Reflow Paragraphs**
+   ```bash
+   pandoc "$md_file" \
+     --wrap=auto \
+     -f markdown -t markdown \
+     -o tmp.md && mv tmp.md "$md_file"
+   ```
+   - Auto-wraps text to paragraph widths, joining broken lines.
+
+2. **Remove Common OCR Artifacts**
+   ```bash
+   sed -i \
+     -e 's/\s\{2,\}/ /g' \        # collapse multiple spaces
+     -e 's/\(—\)\1\+/$\1/g' \    # dedupe em-dashes
+     -e 's/[‘’]/'/g' \               # normalize quotes
+     -e 's/[“”]/"/g' \              # normalize double quotes
+     -e '/^\s*\([|]\|\*\|-\)\s*$/d' \  # drop empty list/table lines
+     -e 's/[0O]\([^a-z]\)/0\1/g' "$md_file"
+   ```
+
+3. **Normalize Headings & Spacing**
+   ```bash
+   # Ensure exactly one blank line before each heading
+   sed -i -E 's/([^\n])\n(#+)/\1\n\n\2/g' "$md_file"
+   ```
+
+4. **Final Touch**
+   - Remove trailing spaces:
+     ```bash
+     sed -i 's/[ \t]*$//' "$md_file"
+     ```
+   - Ensure file ends with a newline:
+     ```bash
+     [ -f "$md_file" ] && sed -i -e '$a\' "$md_file"
+     ```
+
+Integrate these commands into `run_conversion.sh` after generating each `<basename>.md`. This ensures each Markdown file is automatically cleaned up for readability, reducing OCR clutter and formatting inconsistencies.
+
+---
+
+## 5. Usage
+
+Make the script executable and run it:
+
+```bash
+chmod +x run_conversion.sh
+./run_conversion.sh
+```
+
+Each PDF `<basename>.pdf` produces a clean `<basename>.md`. The `OCR_Failures.md` lists any image files requiring manual inspection.
+
+*End of agent instructions.*
+
+## 6. Final Note
+
+By integrating these readability steps, the agent yields polished Markdown documents ready for review or publication, minimizing manual cleanup.
 
 Make the script executable and run it:
 
