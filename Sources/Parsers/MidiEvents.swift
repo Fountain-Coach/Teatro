@@ -9,6 +9,8 @@ public enum MidiEventType {
     case pitchBend
     case channelPressure
     case polyphonicKeyPressure
+    case perNoteController
+    case jrTimestamp
     case meta
     case sysEx
     case unknown
@@ -22,23 +24,14 @@ public protocol MidiEventProtocol {
     var group: UInt8? { get }
     var channel: UInt8? { get }
     var noteNumber: UInt8? { get }
-    var velocity: UInt8? { get }
+    var velocity: UInt32? { get }
     var controllerValue: UInt32? { get }
     var metaType: UInt8? { get }
     var rawData: Data? { get }
-    static func normalizeVelocity(_ value: UInt16) -> UInt8
-    static func normalizeController(_ value: UInt32) -> UInt8
 }
 
 public extension MidiEventProtocol {
     var group: UInt8? { nil }
-    static func normalizeVelocity(_ value: UInt16) -> UInt8 {
-        return UInt8(truncatingIfNeeded: value >> 8)
-    }
-
-    static func normalizeController(_ value: UInt32) -> UInt8 {
-        return UInt8(truncatingIfNeeded: value >> 24)
-    }
 }
 
 /// Represents channel voice messages such as Note On/Off and Control Change.
@@ -48,8 +41,37 @@ struct ChannelVoiceEvent: MidiEventProtocol {
     let group: UInt8?
     let channel: UInt8?
     let noteNumber: UInt8?
-    let velocity: UInt8?
+    let velocity: UInt32?
     let controllerValue: UInt32?
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+}
+
+/// Represents per-note controller messages in MIDI 2.0.
+struct PerNoteControllerEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let type: MidiEventType = .perNoteController
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let controllerIndex: UInt8
+    let controllerValue: UInt32?
+    var velocity: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+}
+
+/// Represents JR Timestamp utility messages.
+struct JRTimestampEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let value: UInt32
+
+    var type: MidiEventType { .jrTimestamp }
+    var channel: UInt8? { nil }
+    var noteNumber: UInt8? { nil }
+    var velocity: UInt32? { nil }
+    var controllerValue: UInt32? { value }
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }
 }
@@ -63,7 +85,7 @@ struct MetaEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { meta }
     var rawData: Data? { data }
@@ -78,7 +100,7 @@ struct TempoEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x51 }
     var rawData: Data? {
@@ -101,7 +123,7 @@ struct TimeSignatureEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x58 }
     var rawData: Data? {
@@ -123,7 +145,7 @@ struct TrackNameEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x03 }
     var rawData: Data? { name.data(using: .utf8) }
@@ -137,7 +159,7 @@ struct InstrumentNameEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x04 }
     var rawData: Data? { name.data(using: .utf8) }
@@ -151,7 +173,7 @@ struct LyricEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x05 }
     var rawData: Data? { text.data(using: .utf8) }
@@ -165,7 +187,7 @@ struct MarkerEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x06 }
     var rawData: Data? { name.data(using: .utf8) }
@@ -179,7 +201,7 @@ struct CuePointEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x07 }
     var rawData: Data? { text.data(using: .utf8) }
@@ -196,7 +218,7 @@ struct KeySignatureEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x59 }
     var rawData: Data? { Data([UInt8(bitPattern: key), isMinor ? 1 : 0]) }
@@ -214,7 +236,7 @@ struct SMPTEOffsetEvent: MidiEventProtocol {
     var type: MidiEventType { .meta }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { 0x54 }
     var rawData: Data? { Data([hour, minute, second, frame, subframe]) }
@@ -229,7 +251,7 @@ struct SysExEvent: MidiEventProtocol {
     var type: MidiEventType { .sysEx }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { nil }
     var rawData: Data? { data }
@@ -244,7 +266,7 @@ struct UnknownEvent: MidiEventProtocol {
     var type: MidiEventType { .unknown }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { nil }
     var rawData: Data? { data }

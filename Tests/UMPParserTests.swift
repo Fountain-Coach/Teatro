@@ -27,6 +27,46 @@ final class UMPParserTests: XCTestCase {
         XCTAssertTrue(events.first is SysExEvent)
     }
 
+    func test32BitVelocityDecoding() throws {
+        let bytes: [UInt8] = [
+            0x40, 0x90, 0x3C, 0x00,
+            0x12, 0x34, 0x56, 0x78
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        XCTAssertEqual(events.count, 1)
+        guard let event = events.first as? ChannelVoiceEvent else {
+            return XCTFail("Expected ChannelVoiceEvent")
+        }
+        XCTAssertEqual(event.velocity, 0x12345678)
+    }
+
+    func testPerNoteControllerDecoding() throws {
+        let bytes: [UInt8] = [
+            0x40, 0x00, 0x3C, 0x01,
+            0x00, 0x00, 0x00, 0x05
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        XCTAssertEqual(events.count, 1)
+        guard let event = events.first as? PerNoteControllerEvent else {
+            return XCTFail("Expected PerNoteControllerEvent")
+        }
+        XCTAssertEqual(event.noteNumber, 0x3C)
+        XCTAssertEqual(event.controllerIndex, 0x01)
+        XCTAssertEqual(event.controllerValue, 0x00000005)
+    }
+
+    func testJRTimestampParsing() throws {
+        let bytes: [UInt8] = [
+            0x10, 0x00, 0x00, 0x01,
+            0x40, 0x90, 0x3C, 0x00,
+            0x00, 0x00, 0x00, 0x01
+        ]
+        let events = try UMPParser.parse(data: Data(bytes))
+        XCTAssertEqual(events.count, 2)
+        XCTAssertTrue(events.first is JRTimestampEvent)
+        XCTAssertTrue(events.last is ChannelVoiceEvent)
+    }
+
     func testTruncatedPacketThrows() {
         let bytes: [UInt8] = [0x40, 0x90, 0x3C, 0x00]
         XCTAssertThrowsError(try UMPParser.parse(data: Data(bytes))) { error in

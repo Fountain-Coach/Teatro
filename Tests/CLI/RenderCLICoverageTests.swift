@@ -78,7 +78,7 @@ final class RenderCLICoverageTests: XCTestCase {
     }
 
     func testUMPDetectionByLength() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
         var data = Data()
         for word in packets {
             var be = word.bigEndian
@@ -172,7 +172,7 @@ final class RenderCLICoverageTests: XCTestCase {
     }
 
     func testUMPOutputToStdoutHex() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
         var data = Data()
         for word in packets {
             var be = word.bigEndian
@@ -325,7 +325,7 @@ struct DummySysExEvent: MidiEventProtocol {
     var group: UInt8? { nil }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { nil }
     var rawData: Data? { bytes }
@@ -337,7 +337,7 @@ struct DummyUnknownEvent: MidiEventProtocol {
     var group: UInt8? { nil }
     var channel: UInt8? { nil }
     var noteNumber: UInt8? { nil }
-    var velocity: UInt8? { nil }
+    var velocity: UInt32? { nil }
     var controllerValue: UInt32? { nil }
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }

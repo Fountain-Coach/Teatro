@@ -9,7 +9,7 @@ final class FluidSynthSamplerTests: XCTestCase {
             let sampler = FluidSynthSampler()
             weakSampler = sampler
             try await sampler.loadInstrument(path)
-            await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: 0.8, duration: 0.001))
+            await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(0.8), duration: 0.001))
             try? await Task.sleep(nanoseconds: 5_000_000)
             await sampler.stopAll()
         }
@@ -19,7 +19,7 @@ final class FluidSynthSamplerTests: XCTestCase {
 
     func testTriggerWithoutLoadDoesNothing() async {
         let sampler = FluidSynthSampler()
-        await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: 0.5, duration: 0.0))
+        await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(0.5), duration: 0.0))
         await sampler.stopAll()
     }
 
