@@ -23,8 +23,7 @@ final class UMPEncoderEventTests: XCTestCase {
         let expected: [UInt32] = [
             0x10000001,
             0x40003C02, 0x0A0B0C0D,
-            0x40F03C02, 0x11223344,
-            0x40903C00, 0x01020000
+            0x40903C02, 0x01023344
         ]
         XCTAssertEqual(encoded, expected)
         var bytes: [UInt8] = []
@@ -35,16 +34,15 @@ final class UMPEncoderEventTests: XCTestCase {
             bytes.append(UInt8(w & 0xFF))
         }
         let events = try UMPParser.parse(data: Data(bytes))
-        XCTAssertEqual(events.count, 4)
+        XCTAssertEqual(events.count, 3)
         guard let _ = events[0] as? JRTimestampEvent,
               let ctrl = events[1] as? PerNoteControllerEvent,
-              let attr = events[2] as? NoteAttributeEvent,
-              let noteOn = events[3] as? ChannelVoiceEvent else {
+              let noteOn = events[2] as? NoteOnWithAttributeEvent else {
             return XCTFail("Unexpected event types")
         }
         XCTAssertEqual(ctrl.timestamp, 0x00000001)
-        XCTAssertEqual(attr.attributeValue, 0x11223344)
-        XCTAssertEqual(noteOn.timestamp, 0x00000001)
+        XCTAssertEqual(noteOn.attributeData, 0x3344)
+        XCTAssertEqual(noteOn.velocity, 0x01020000)
         let roundTrip = UMPEncoder.encodeEvents(events)
         XCTAssertEqual(roundTrip, expected)
     }

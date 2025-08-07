@@ -131,7 +131,7 @@ public struct UMPParser {
                 return ChannelVoiceEvent(timestamp: timestamp, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0xE0:
                 return ChannelVoiceEvent(timestamp: timestamp, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
-            case 0x10:
+            case let s where (s & 0xF0) == 0x10:
                 guard words.count > 1 else {
                     return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
                 }

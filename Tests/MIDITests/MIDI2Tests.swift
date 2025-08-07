@@ -128,6 +128,32 @@ final class MIDI2Tests: XCTestCase {
         XCTAssertEqual(encoded, words)
     }
 
+    func testCompleteNoteLifecycleSequence() throws {
+        let words: [UInt32] = [
+            0x40903C02, 0x12345678, // Note On with attribute
+            0x40103C00, 0x21234567, // Pitch Clamp
+            0x40103C00, 0x30000000, // Pitch Release
+            0x40803C02, 0x87654321, // Note Off with attribute
+            0x40103C00, 0x01234567  // Note End
+        ]
+        let events = try UMPParser.parse(data: Data(bytes(from: words)))
+        XCTAssertEqual(events.count, 5)
+        guard let on = events[0] as? NoteOnWithAttributeEvent,
+              let clamp = events[1] as? PitchClampEvent,
+              let release = events[2] as? PitchReleaseEvent,
+              let off = events[3] as? NoteOffWithAttributeEvent,
+              let end = events[4] as? NoteEndEvent else {
+            return XCTFail("Expected full note lifecycle events")
+        }
+        XCTAssertEqual(on.attributeType, .profileSpecific)
+        XCTAssertEqual(clamp.pitch, 0x01234567)
+        XCTAssertEqual(release.noteNumber, 0x3C)
+        XCTAssertEqual(off.attributeData, 0x4321)
+        XCTAssertEqual(end.attributeData, 0x4567)
+        let encoded = UMPEncoder.encodeEvents(events)
+        XCTAssertEqual(encoded, words)
+    }
+
     // MARK: - Negative cases
 
     func testMalformedNoteManagementMissingWordThrows() {
@@ -141,6 +167,15 @@ final class MIDI2Tests: XCTestCase {
 
     func testTruncatedNoteOnWithAttributeThrows() {
         let bytes: [UInt8] = [0x40, 0x90, 0x3C, 0x02]
+        XCTAssertThrowsError(try UMPParser.parse(data: Data(bytes))) { error in
+            guard case UMPParserError.truncated = error else {
+                return XCTFail("Expected truncated error")
+            }
+        }
+    }
+
+    func testTruncatedNoteOffWithAttributeThrows() {
+        let bytes: [UInt8] = [0x40, 0x80, 0x3C, 0x02]
         XCTAssertThrowsError(try UMPParser.parse(data: Data(bytes))) { error in
             guard case UMPParserError.truncated = error else {
                 return XCTFail("Expected truncated error")
