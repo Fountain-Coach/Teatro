@@ -11,19 +11,27 @@ public struct StoryboardParser {
     ///
     /// - Parameter text: The raw storyboard text.
     /// - Returns: Constructed `Storyboard`.
-    public static func parse(_ text: String) -> Storyboard {
+    public static func parse(_ text: String) throws -> Storyboard {
         var steps: [StoryboardStep] = []
-        let lines = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
+        var offset = 0
         var index = 0
         while index < lines.count {
-            let line = lines[index]
+            let rawLine = lines[index]
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            defer { offset += rawLine.count + 1; index += 1 }
+            if line.isEmpty { continue }
             if line.lowercased().hasPrefix("scene:") {
                 let name = line.dropFirst("scene:".count).trimmingCharacters(in: .whitespaces)
-                index += 1
                 var content = ""
-                if index < lines.count, lines[index].lowercased().hasPrefix("text:") {
-                    content = lines[index].dropFirst("text:".count).trimmingCharacters(in: .whitespaces)
-                    index += 1
+                if index + 1 < lines.count {
+                    let nextRaw = lines[index + 1]
+                    let next = nextRaw.trimmingCharacters(in: .whitespaces)
+                    if next.lowercased().hasPrefix("text:") {
+                        content = next.dropFirst("text:".count).trimmingCharacters(in: .whitespaces)
+                        index += 1
+                        offset += nextRaw.count + 1
+                    }
                 }
                 let scene = Scene(name) { Text(content) }
                 steps.append(.scene(scene))
@@ -34,9 +42,9 @@ public struct StoryboardParser {
                 let frames = parts.count > 1 ? Int(parts[1]) ?? 1 : 1
                 let transition = Transition(style: style, frames: frames)
                 steps.append(.transition(transition))
-                index += 1
             } else {
-                index += 1
+                let idx = text.index(text.startIndex, offsetBy: offset)
+                throw ParserError(message: "Unexpected line", text: text, index: idx)
             }
         }
         return Storyboard(steps: steps)

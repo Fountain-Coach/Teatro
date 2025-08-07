@@ -141,10 +141,18 @@ public struct RenderCLI: ParsableCommand {
             return LilyScore(text)
         case "csd":
             let text = String(decoding: fileData, as: UTF8.self)
-            return try CSDParser.parse(text)
+            do {
+                return try CSDParser.parse(text)
+            } catch let err as ParserError {
+                throw ValidationError(formatParserError(err, path: path))
+            }
         case "storyboard":
             let text = String(decoding: fileData, as: UTF8.self)
-            return StoryboardParser.parse(text)
+            do {
+                return try StoryboardParser.parse(text)
+            } catch let err as ParserError {
+                throw ValidationError(formatParserError(err, path: path))
+            }
         case "mid", "midi":
             let events = try parseMidiFile(data: fileData)
             return MidiEventView(events: events)
@@ -165,6 +173,10 @@ public struct RenderCLI: ParsableCommand {
                 throw ValidationError("Unsupported input extension: .\(ext)")
             }
         }
+    }
+
+    private func formatParserError(_ error: ParserError, path: String) -> String {
+        "\(path):\(error.line):\(error.column): \(error.message)\n\(error.snippet)"
     }
 
     private func parseMidiFile(data: Data) throws -> [any MidiEventProtocol] {

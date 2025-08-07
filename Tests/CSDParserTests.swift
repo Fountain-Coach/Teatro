@@ -25,7 +25,8 @@ final class CSDParserTests: XCTestCase {
         </CsoundSynthesizer>
         """
         XCTAssertThrowsError(try CSDParser.parse(csdMissingOrchestra)) { error in
-            XCTAssertEqual(error as? CSDParserError, .missingOrchestra)
+            guard let parseError = error as? ParserError else { return XCTFail("Expected ParserError") }
+            XCTAssertTrue(parseError.message.contains("Orchestra"))
         }
         let csdMissingScore = """
         <CsoundSynthesizer>
@@ -33,7 +34,8 @@ final class CSDParserTests: XCTestCase {
         </CsoundSynthesizer>
         """
         XCTAssertThrowsError(try CSDParser.parse(csdMissingScore)) { error in
-            XCTAssertEqual(error as? CSDParserError, .missingScore)
+            guard let parseError = error as? ParserError else { return XCTFail("Expected ParserError") }
+            XCTAssertTrue(parseError.message.contains("Score"))
         }
         let csdUnclosedOrchestra = """
         <CsoundSynthesizer>
@@ -42,7 +44,8 @@ final class CSDParserTests: XCTestCase {
         </CsoundSynthesizer>
         """
         XCTAssertThrowsError(try CSDParser.parse(csdUnclosedOrchestra)) { error in
-            XCTAssertEqual(error as? CSDParserError, .missingOrchestra)
+            guard let parseError = error as? ParserError else { return XCTFail("Expected ParserError") }
+            XCTAssertTrue(parseError.message.contains("Orchestra"))
         }
     }
 }
