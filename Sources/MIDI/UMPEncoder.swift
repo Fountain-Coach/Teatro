@@ -79,7 +79,15 @@ public struct UMPEncoder {
         switch event.type {
         case .sysEx:
             guard let data = event.rawData else { return [] }
-            return encodeSysEx7(data, group: event.group ?? defaultGroup)
+            let bytes = [UInt8](data)
+            let uses8Bit = bytes.contains { b in
+                b > 0x7F && b != 0xF0 && b != 0xF7
+            }
+            if uses8Bit {
+                return encodeSysEx8(data, group: event.group ?? defaultGroup)
+            } else {
+                return encodeSysEx7(data, group: event.group ?? defaultGroup)
+            }
         case .jrTimestamp:
             let messageType: UInt32 = 0x1 << 28
             let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
@@ -269,22 +277,97 @@ public struct UMPEncoder {
         }
     }
 
-    /// Encodes a SysEx7 message into UMP words. Only a subset of the full
-    /// specification is implemented, covering packets up to 6 bytes which are
-    /// emitted as a single message type 0x5 packet.
+    /// Encodes a SysEx7 message using segmentation as defined in the
+    /// MIDI 2.0 specification. Messages longer than six bytes are split
+    /// into Start, Continue, and End packets.
     private static func encodeSysEx7(_ data: Data, group: UInt8) -> [UInt32] {
-        var bytes = Array(data)
-        while bytes.count < 6 { bytes.append(0) }
-        let word1 = (0x5 << 28)
+        let bytes = [UInt8](data)
+        let maxChunk = 6
+        var result: [UInt32] = []
+        if bytes.count <= maxChunk {
+            let chunk = pad(bytes, to: maxChunk)
+            result.append(contentsOf: packSysEx7(status: 0x0, count: UInt8(bytes.count), chunk: chunk, group: group))
+            return result
+        }
+        var index = 0
+        let startChunk = pad(Array(bytes[0..<maxChunk]), to: maxChunk)
+        result.append(contentsOf: packSysEx7(status: 0x1, count: UInt8(maxChunk), chunk: startChunk, group: group))
+        index += maxChunk
+        while bytes.count - index > maxChunk {
+            let chunk = Array(bytes[index..<(index + maxChunk)])
+            result.append(contentsOf: packSysEx7(status: 0x2, count: UInt8(maxChunk), chunk: chunk, group: group))
+            index += maxChunk
+        }
+        let remaining = Array(bytes[index..<bytes.count])
+        let endChunk = pad(remaining, to: maxChunk)
+        result.append(contentsOf: packSysEx7(status: 0x3, count: UInt8(remaining.count), chunk: endChunk, group: group))
+        return result
+    }
+
+    /// Encodes a SysEx8 message which can contain arbitrary 8-bit data.
+    /// Follows the segmentation rules of M2-104-UM v1-1-2.
+    private static func encodeSysEx8(_ data: Data, group: UInt8) -> [UInt32] {
+        let bytes = [UInt8](data)
+        let maxChunk = 10
+        var result: [UInt32] = []
+        if bytes.count <= maxChunk {
+            let chunk = pad(bytes, to: maxChunk)
+            result.append(contentsOf: packSysEx8(status: 0x0, count: UInt8(bytes.count), chunk: chunk, group: group))
+            return result
+        }
+        var index = 0
+        let startChunk = pad(Array(bytes[0..<maxChunk]), to: maxChunk)
+        result.append(contentsOf: packSysEx8(status: 0x1, count: UInt8(maxChunk), chunk: startChunk, group: group))
+        index += maxChunk
+        while bytes.count - index > maxChunk {
+            let chunk = Array(bytes[index..<(index + maxChunk)])
+            result.append(contentsOf: packSysEx8(status: 0x2, count: UInt8(maxChunk), chunk: chunk, group: group))
+            index += maxChunk
+        }
+        let remaining = Array(bytes[index..<bytes.count])
+        let endChunk = pad(remaining, to: maxChunk)
+        result.append(contentsOf: packSysEx8(status: 0x3, count: UInt8(remaining.count), chunk: endChunk, group: group))
+        return result
+    }
+
+    /// Pads `bytes` with zeros up to `size` elements.
+    private static func pad(_ bytes: [UInt8], to size: Int) -> [UInt8] {
+        if bytes.count >= size { return Array(bytes[0..<size]) }
+        return bytes + Array(repeating: 0, count: size - bytes.count)
+    }
+
+    /// Packs a SysEx7 chunk into two UMP words.
+    private static func packSysEx7(status: UInt8, count: UInt8, chunk: [UInt8], group: UInt8) -> [UInt32] {
+        let word1 = (UInt32(0x5) << 28)
             | (UInt32(group & 0xF) << 24)
-            | (UInt32(bytes[0]) << 16)
-            | (UInt32(bytes[1]) << 8)
-            | UInt32(bytes[2])
-        let word2 = (UInt32(bytes[3]) << 24)
-            | (UInt32(bytes[4]) << 16)
-            | (UInt32(bytes[5]) << 8)
-            | 0
+            | (UInt32(status) << 20)
+            | (UInt32(count) << 16)
+            | (UInt32(chunk[0]) << 8)
+            | UInt32(chunk[1])
+        let word2 = (UInt32(chunk[2]) << 24)
+            | (UInt32(chunk[3]) << 16)
+            | (UInt32(chunk[4]) << 8)
+            | UInt32(chunk[5])
         return [word1, word2]
+    }
+
+    /// Packs a SysEx8 chunk into three UMP words.
+    private static func packSysEx8(status: UInt8, count: UInt8, chunk: [UInt8], group: UInt8) -> [UInt32] {
+        let word1 = (UInt32(0x6) << 28)
+            | (UInt32(group & 0xF) << 24)
+            | (UInt32(status) << 20)
+            | (UInt32(count) << 16)
+            | (UInt32(chunk[0]) << 8)
+            | UInt32(chunk[1])
+        let word2 = (UInt32(chunk[2]) << 24)
+            | (UInt32(chunk[3]) << 16)
+            | (UInt32(chunk[4]) << 8)
+            | UInt32(chunk[5])
+        let word3 = (UInt32(chunk[6]) << 24)
+            | (UInt32(chunk[7]) << 16)
+            | (UInt32(chunk[8]) << 8)
+            | UInt32(chunk[9])
+        return [word1, word2, word3]
     }
 }
 

@@ -18,13 +18,25 @@ final class UMPParserTests: XCTestCase {
     }
 
     func testSysEx7EventDecoding() throws {
-        let bytes: [UInt8] = [
-            0x50, 0x00, 0x12, 0x34,
-            0x56, 0x78, 0x9A, 0xBC
-        ]
-        let events = try UMPParser.parse(data: Data(bytes))
+        let message = Data([0xF0, 0x01, 0x02, 0xF7])
+        let event = SysExEvent(timestamp: 0, data: message, group: 0)
+        let words = UMPEncoder.encodeEvent(event)
+        var data = Data()
+        for w in words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let events = try UMPParser.parse(data: data)
         XCTAssertEqual(events.count, 1)
-        XCTAssertTrue(events.first is SysExEvent)
+        XCTAssertEqual((events.first as? SysExEvent)?.rawData, message)
+    }
+
+    func testLongSysExEventDecoding() throws {
+        let message = Data([0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0xF7])
+        let event = SysExEvent(timestamp: 0, data: message, group: 0)
+        let words = UMPEncoder.encodeEvent(event)
+        var data = Data()
+        for w in words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let events = try UMPParser.parse(data: data)
+        XCTAssertEqual(events.count, 1)
+        XCTAssertEqual((events.first as? SysExEvent)?.rawData, message)
     }
 
     func test32BitVelocityDecoding() throws {

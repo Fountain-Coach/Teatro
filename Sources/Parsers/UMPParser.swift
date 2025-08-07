@@ -19,6 +19,9 @@ public struct UMPParser {
         var events: [any MidiEventProtocol] = []
         var index = 0
         var currentTimestamp: UInt32 = 0
+        var sysExBuffer: [UInt8] = []
+        var sysExGroup: UInt8 = 0
+        var sysExActive = false
         while index < data.count {
             let word = data[index..<(index + 4)].withUnsafeBytes { ptr -> UInt32 in
                 UInt32(bigEndian: ptr.load(as: UInt32.self))
@@ -40,6 +43,29 @@ public struct UMPParser {
                 let value = words[0] & 0xFFFFFF
                 events.append(JRTimestampEvent(timestamp: 0, group: group, value: value))
                 currentTimestamp = value
+            } else if messageType == 0x5 || messageType == 0x6 {
+                let status = UInt8((words[0] >> 20) & 0xF)
+                let count = Int((words[0] >> 16) & 0xF)
+                let payload = extractSysExPayload(words: words, count: count, isEightBit: messageType == 0x6)
+                switch status {
+                case 0x0: // complete
+                    events.append(SysExEvent(timestamp: currentTimestamp, data: Data(payload), group: group))
+                case 0x1: // start
+                    sysExBuffer = payload
+                    sysExGroup = group
+                    sysExActive = true
+                case 0x2: // continue
+                    if sysExActive { sysExBuffer.append(contentsOf: payload) }
+                case 0x3: // end
+                    if sysExActive {
+                        sysExBuffer.append(contentsOf: payload)
+                        events.append(SysExEvent(timestamp: currentTimestamp, data: Data(sysExBuffer), group: sysExGroup))
+                        sysExBuffer = []
+                        sysExActive = false
+                    }
+                default:
+                    events.append(UnknownEvent(timestamp: currentTimestamp, data: rawData(from: words), group: group))
+                }
             } else {
                 events.append(decode(messageType: messageType, group: group, words: words, timestamp: currentTimestamp))
             }
@@ -195,8 +221,8 @@ public struct UMPParser {
             default:
                 return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
             }
-        case 0x5, 0x6: // SysEx7 and SysEx8
-            return SysExEvent(timestamp: timestamp, data: rawData(from: words), group: group)
+        case 0x5, 0x6:
+            return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
         default:
             return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
         }
@@ -212,6 +238,37 @@ public struct UMPParser {
             bytes.append(UInt8(word & 0xFF))
         }
         return Data(bytes)
+    }
+
+    /// Extracts the payload bytes from SysEx7 or SysEx8 packets.
+    private static func extractSysExPayload(words: [UInt32], count: Int, isEightBit: Bool) -> [UInt8] {
+        var data: [UInt8] = []
+        if isEightBit {
+            let bytes: [UInt8] = [
+                UInt8((words[0] >> 8) & 0xFF),
+                UInt8(words[0] & 0xFF),
+                UInt8((words[1] >> 24) & 0xFF),
+                UInt8((words[1] >> 16) & 0xFF),
+                UInt8((words[1] >> 8) & 0xFF),
+                UInt8(words[1] & 0xFF),
+                UInt8((words[2] >> 24) & 0xFF),
+                UInt8((words[2] >> 16) & 0xFF),
+                UInt8((words[2] >> 8) & 0xFF),
+                UInt8(words[2] & 0xFF)
+            ]
+            data.append(contentsOf: bytes.prefix(count))
+        } else {
+            let bytes: [UInt8] = [
+                UInt8((words[0] >> 8) & 0xFF),
+                UInt8(words[0] & 0xFF),
+                UInt8((words[1] >> 24) & 0xFF),
+                UInt8((words[1] >> 16) & 0xFF),
+                UInt8((words[1] >> 8) & 0xFF),
+                UInt8(words[1] & 0xFF)
+            ]
+            data.append(contentsOf: bytes.prefix(count))
+        }
+        return data
     }
 }
 

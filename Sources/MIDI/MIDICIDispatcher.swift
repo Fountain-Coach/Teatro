@@ -8,10 +8,7 @@ public struct MIDICIDispatcher {
     public static func dispatch(event: any MidiEventProtocol) -> MIDICIMessage? {
         guard event.type == .sysEx, let raw = event.rawData else { return nil }
         let bytes = [UInt8](raw)
-        guard let start = bytes.firstIndex(of: 0xF0),
-              let end = bytes.lastIndex(of: 0xF7),
-              start < end else { return nil }
-        let payload = Data(bytes[start...end])
-        return MIDICI.parse(sysEx: payload)
+        guard bytes.first == 0xF0, bytes.last == 0xF7 else { return nil }
+        return MIDICI.parse(sysEx: raw)
     }
 }
