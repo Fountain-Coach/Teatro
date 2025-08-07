@@ -29,6 +29,18 @@ final class UMPEncoderCoverageTests: XCTestCase {
         let noChannel = ChannelVoiceEvent(timestamp: 0, type: .noteOn, group: nil, channel: nil, noteNumber: 60, velocity: 64, controllerValue: nil)
         XCTAssertTrue(UMPEncoder.encodeEvent(noChannel).isEmpty)
     }
+
+    func testLongSysExEncoding() {
+        let sysEx7 = Data([0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0xF7])
+        let event7 = SysExEvent(timestamp: 0, data: sysEx7, group: 0)
+        let words7 = UMPEncoder.encodeEvent(event7)
+        XCTAssertEqual(words7, [0x5016F001, 0x02030405, 0x50360607, 0x08090AF7])
+
+        let sysEx8 = Data([0xF0, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0xF7])
+        let event8 = SysExEvent(timestamp: 0, data: sysEx8, group: 0)
+        let words8 = UMPEncoder.encodeEvent(event8)
+        XCTAssertEqual(words8, [0x601AF080, 0x81828384, 0x85868788, 0x6035898A, 0x8B8CF700, 0x00000000])
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

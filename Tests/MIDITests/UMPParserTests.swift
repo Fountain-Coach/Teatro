@@ -159,28 +159,49 @@ final class UMPParserTests: XCTestCase {
     }
 
     func testSysEx7Decoding() throws {
-        let bytes: [UInt8] = [
-            0x50, 0x00, 0x12, 0x34,
-            0x56, 0x78, 0x9A, 0xBC
-        ]
-        let events = try UMPParser.parse(data: Data(bytes))
-        guard let event = events.first as? SysExEvent else {
+        let message = Data([0xF0, 0x01, 0x02, 0xF7])
+        let event = SysExEvent(timestamp: 0, data: message, group: 0)
+        let words = UMPEncoder.encodeEvent(event)
+        var data = Data()
+        for w in words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let events = try UMPParser.parse(data: data)
+        guard let parsed = events.first as? SysExEvent else {
             return XCTFail("Expected SysExEvent")
         }
-        XCTAssertEqual(event.rawData, Data(bytes))
+        XCTAssertEqual(parsed.rawData, message)
     }
 
     func testSysEx8Decoding() throws {
-        let bytes: [UInt8] = [
-            0x60, 0x00, 0x12, 0x34,
-            0x56, 0x78, 0x9A, 0xBC,
-            0xDE, 0xF0, 0x00, 0x00
-        ]
-        let events = try UMPParser.parse(data: Data(bytes))
-        guard let event = events.first as? SysExEvent else {
+        let message = Data([0xF0, 0x80, 0x81, 0xF7])
+        let event = SysExEvent(timestamp: 0, data: message, group: 0)
+        let words = UMPEncoder.encodeEvent(event)
+        var data = Data()
+        for w in words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let events = try UMPParser.parse(data: data)
+        guard let parsed = events.first as? SysExEvent else {
             return XCTFail("Expected SysExEvent")
         }
-        XCTAssertEqual(event.rawData, Data(bytes))
+        XCTAssertEqual(parsed.rawData, message)
+    }
+
+    func testLongSysExDecoding() throws {
+        let words7: [UInt32] = [0x5016F001, 0x02030405, 0x50360607, 0x08090AF7]
+        var data7 = Data()
+        for w in words7 { var be = w.bigEndian; withUnsafeBytes(of: &be) { data7.append(contentsOf: $0) } }
+        let events7 = try UMPParser.parse(data: data7)
+        guard let e7 = events7.first as? SysExEvent else {
+            return XCTFail("Expected SysExEvent")
+        }
+        XCTAssertEqual(e7.rawData, Data([0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0xF7]))
+
+        let words8: [UInt32] = [0x601AF080, 0x81828384, 0x85868788, 0x6035898A, 0x8B8CF700, 0x00000000]
+        var data8 = Data()
+        for w in words8 { var be = w.bigEndian; withUnsafeBytes(of: &be) { data8.append(contentsOf: $0) } }
+        let events8 = try UMPParser.parse(data: data8)
+        guard let e8 = events8.first as? SysExEvent else {
+            return XCTFail("Expected SysExEvent")
+        }
+        XCTAssertEqual(e8.rawData, Data([0xF0, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0xF7]))
     }
 
     func testGroupChannelMapping() throws {

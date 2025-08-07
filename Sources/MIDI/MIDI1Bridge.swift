@@ -15,13 +15,7 @@ public enum MIDI1Bridge {
             guard let ch = event.channel else {
                 // SysEx messages have no channel and are handled separately
                 if event.type == .sysEx, let raw = event.rawData {
-                    // Raw UMP SysEx7 packets start with mt/group byte.
-                    // Drop that byte and any trailing padding zeros.
-                    var payload = Array(raw.dropFirst())
-                    while payload.last == 0 { payload.removeLast() }
-                    bytes.append(0xF0)
-                    bytes.append(contentsOf: payload)
-                    bytes.append(0xF7)
+                    bytes.append(contentsOf: raw)
                 }
                 continue
             }
@@ -185,12 +179,15 @@ public enum MIDI1Bridge {
             case 0xF0:
                 if status == 0xF0 {
                     // SysEx message
-                    var payload: [UInt8] = []
+                    var payload: [UInt8] = [0xF0]
                     while i < bytes.count && bytes[i] != 0xF7 {
                         payload.append(bytes[i])
                         i += 1
                     }
-                    if i < bytes.count && bytes[i] == 0xF7 { i += 1 }
+                    if i < bytes.count && bytes[i] == 0xF7 {
+                        payload.append(0xF7)
+                        i += 1
+                    }
                     let event = SysExEvent(timestamp: 0, data: Data(payload), group: group)
                     events.append(event)
                 } else {
