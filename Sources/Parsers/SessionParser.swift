@@ -22,8 +22,8 @@ public struct Session: Renderable {
     }
 
     /// Renders the session as plain text.
-    public func render() -> String {
-        text
+    public func layout() -> LayoutNode {
+        .raw(text)
     }
 }
 

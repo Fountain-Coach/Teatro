@@ -13,7 +13,7 @@ public struct Panel: Renderable {
         self.content = content()
     }
 
-    public func render() -> String {
-        "[Panel \(width)x\(height) r:\(cornerRadius)]\n" + content.map { $0.render() }.joined(separator: "\n")
+    public func layout() -> LayoutNode {
+        .panel(width: width, height: height, cornerRadius: cornerRadius, children: content.map { $0.layout() })
     }
 }

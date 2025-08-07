@@ -286,8 +286,8 @@ public struct RenderCLI: ParsableCommand {
 struct MidiEventView: Renderable {
     let events: [any MidiEventProtocol]
 
-    func render() -> String {
-        events.map { event in
+    func layout() -> LayoutNode {
+        let lines = events.map { event -> String in
             var parts: [String] = ["t\(event.timestamp)"]
             if let ch = event.channel { parts.append("ch\(ch)") }
             switch event.type {
@@ -315,6 +315,7 @@ struct MidiEventView: Renderable {
             }
             return parts.joined(separator: " ")
         }.joined(separator: "\n")
+        return .raw(lines)
     }
 }
 

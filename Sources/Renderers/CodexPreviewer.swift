@@ -7,7 +7,7 @@ public struct CodexPreviewer {
         /// \(String(describing: type(of: view)))
         ///
         /// Output:
-        \(view.render())
+        \(view.layout().toText())
         """
     }
 }

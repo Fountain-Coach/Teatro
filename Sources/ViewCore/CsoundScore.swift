@@ -9,8 +9,8 @@ public struct CsoundScore: Renderable {
         self.score = score
     }
 
-    public func render() -> String {
-        """
+    public func layout() -> LayoutNode {
+        .raw("""
         <CsoundSynthesizer>
         <Orchestra>
         \(orchestra)
@@ -19,6 +19,6 @@ public struct CsoundScore: Renderable {
         \(score)
         </Score>
         </CsoundSynthesizer>
-        """
+        """)
     }
 }

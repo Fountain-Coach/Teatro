@@ -9,8 +9,7 @@ public struct HStack: Layouting {
         self.children = content()
     }
 
-    public func render() -> String {
-        let indent = String(repeating: " ", count: padding)
-        return indent + children.map { $0.render() }.joined(separator: " ")
+    public func layout() -> LayoutNode {
+        .hStack(alignment: alignment, padding: padding, children: children.map { $0.layout() })
     }
 }

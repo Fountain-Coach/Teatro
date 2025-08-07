@@ -9,7 +9,7 @@ public struct Dot: Renderable {
         self.diameter = diameter
     }
 
-    public func render() -> String {
-        "\u{25CF}" // ●
+    public func layout() -> LayoutNode {
+        .raw("\u{25CF}")
     }
 }

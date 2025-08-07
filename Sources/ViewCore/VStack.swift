@@ -9,8 +9,7 @@ public struct VStack: Layouting {
         self.children = content()
     }
 
-    public func render() -> String {
-        let indent = String(repeating: " ", count: padding)
-        return children.map { indent + $0.render() }.joined(separator: "\n")
+    public func layout() -> LayoutNode {
+        .vStack(alignment: alignment, padding: padding, children: children.map { $0.layout() })
     }
 }

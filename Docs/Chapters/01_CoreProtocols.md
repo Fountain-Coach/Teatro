@@ -3,11 +3,15 @@ _A foundation for building every view type._
 
 ### 1.1 Renderable
 
-The foundational protocol of the Teatro View Engine. All visual, narrative, or musical view types conform to `Renderable`, ensuring a consistent `.render()` interface for Codex control, preview rendering, or export.
+The foundational protocol of the Teatro View Engine. All visual, narrative, or musical view types conform to `Renderable`, exposing a structured layout tree via `layout()`. A default `render()` method remains for legacy text-based workflows.
 
 ```swift
 public protocol Renderable {
-    func render() -> String
+    func layout() -> LayoutNode
+}
+
+public extension Renderable {
+    func render() -> String { layout().toText() }
 }
 ```
 

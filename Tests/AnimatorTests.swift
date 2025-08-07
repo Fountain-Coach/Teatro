@@ -4,7 +4,7 @@ import XCTest
 final class AnimatorTests: XCTestCase {
     func testRenderFramesCreatesFiles() async {
         struct Dummy: Renderable {
-            func render() -> String { "Hello" }
+            func layout() -> LayoutNode { .text("Hello", style: .plain) }
         }
         let base = "test_frame"
         let fileManager = FileManager.default
