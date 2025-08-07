@@ -1,0 +1,20 @@
+# SwiftLint configuration for Teatro
+included:
+  - Sources
+  - Tests
+excluded:
+  - .build
+  - Docs
+  - assets
+  - scripts
+
+line_length:
+  warning: 120
+  error: 200
+
+identifier_name:
+  allowed_symbols: ["_"]
+
+disabled_rules:
+  - todo
+  - trailing_whitespace

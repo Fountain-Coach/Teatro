@@ -25,6 +25,10 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 
 Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
 
+## Continuous Integration
+
+A GitHub Actions workflow runs [SwiftLint](.swiftlint.yml) and `swift test` on every push and pull request to ensure code quality and style consistency.
+
 ## Installation
 Add the package to your `Package.swift` dependencies:
 ```swift
