@@ -4,6 +4,14 @@ set -euo pipefail
 # Always operate from the script's directory
 cd "$(dirname "$0")"
 
+# Ensure all required tools are available before proceeding
+for cmd in pdftotext pdfimages convert tesseract ocrmypdf kraken pandoc; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Missing required command: $cmd" >&2
+    exit 1
+  fi
+done
+
 # Initialize directories and failure log
 mkdir -p text images ocr_t1 ocr_t2 ocr_k ocr_final
 : > ocr_failures.txt
@@ -78,8 +86,16 @@ for pdf in *.pdf; do
     done
   } | pandoc -f markdown -t gfm -s -o "$md_file"
 
+  # Verify Markdown output exists
+  if [ ! -s "$md_file" ]; then
+    echo "Failed to generate $md_file" >&2
+    exit 1
+  fi
+
   # Cleanup: remove trailing whitespace
   sed -i 's/[ \t]*$//' "$md_file"
+  echo "Generated $md_file"
+
 done
 
 # 5. OCR failure summary
