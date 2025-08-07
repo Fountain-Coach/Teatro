@@ -199,7 +199,7 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    private func render(view: Renderable, target: RenderTarget, outputPath: String?) throws {
+    func render(view: Renderable, target: RenderTarget, outputPath: String?) throws {
         let isStdout = outputPath == nil
         switch target {
         case .html:

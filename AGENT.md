@@ -16,11 +16,13 @@ apis:
     path: openapi.yaml
     description: CLI rendering operations
 
-tasks:
+  tasks:
   - name: self-document
     description: keep Docs/ and openapi.yaml synchronized with code changes
+    completed: true
   - name: run-tests
     description: execute `swift test` after each modification
+    completed: true
   - name: propose-improvements
     description: suggest refactorings or new features when gaps or bugs are detected
 
