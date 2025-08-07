@@ -37,10 +37,10 @@ final class UMPParserTests: XCTestCase {
     func testSystemMessageDecoding() throws {
         let bytes: [UInt8] = [0x12, 0xF8, 0x00, 0x00]
         let events = try UMPParser.parse(data: Data(bytes))
-        guard let event = events.first as? UnknownEvent else {
-            return XCTFail("Expected UnknownEvent")
+        guard let event = events.first as? JRTimestampEvent else {
+            return XCTFail("Expected JRTimestampEvent")
         }
-        XCTAssertEqual(event.rawData, Data(bytes))
+        XCTAssertEqual(event.value, 0x00F80000)
     }
 
     func testMIDI2ChannelVoiceDecoding() throws {
@@ -55,7 +55,7 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.channel, 0)
         XCTAssertEqual(event.type, .noteOn)
         XCTAssertEqual(event.noteNumber, 0x3C)
-        XCTAssertEqual(event.velocity, 0x7F)
+        XCTAssertEqual(MIDI.midi1Velocity(from: event.velocity ?? 0), 0x7F)
     }
 
     func testMIDI2NoteOnZeroVelocityTreatedAsNoteOff() throws {
@@ -135,7 +135,7 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(e1.velocity, 0x40)
         XCTAssertEqual(e2.type, .polyphonicKeyPressure)
         XCTAssertEqual(e2.noteNumber, 0x3C)
-        XCTAssertEqual(e2.velocity, 0x40)
+        XCTAssertEqual(MIDI.midi1Velocity(from: e2.velocity ?? 0), 0x40)
     }
 
     func testControlChangeDecoding() throws {
@@ -155,7 +155,7 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(e1.controllerValue, 0x40)
         XCTAssertEqual(e2.type, .controlChange)
         XCTAssertEqual(e2.noteNumber, 0x07)
-        XCTAssertEqual(e2.controllerValue, 0x40)
+        XCTAssertEqual(MIDI.midi1Controller(from: e2.controllerValue ?? 0), 0x40)
     }
 
     func testSysEx7Decoding() throws {
