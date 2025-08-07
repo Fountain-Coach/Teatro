@@ -1,5 +1,6 @@
 public struct HTMLRenderer {
     public static func render(_ view: Renderable) -> String {
-        "<html><body><pre>\n" + view.layout().toText() + "\n</pre></body></html>"
+        let body = view.layout().lines().map { StyleExpander.html($0) }.joined(separator: "\n")
+        return "<html><body><pre>\n" + body + "\n</pre></body></html>"
     }
 }

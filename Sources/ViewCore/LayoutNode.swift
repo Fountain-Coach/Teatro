@@ -95,9 +95,7 @@ public extension LayoutNode {
     }
 
     func toText() -> String {
-        lines().map { line in
-            line.map { $0.style.apply(to: $0.text) }.joined()
-        }.joined(separator: "\n")
+        lines().map { StyleExpander.markdown($0) }.joined(separator: "\n")
     }
 
     static func legacy(_ text: String) -> LayoutNode {
