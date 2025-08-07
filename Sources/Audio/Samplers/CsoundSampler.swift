@@ -22,7 +22,7 @@ public actor CsoundSampler: SampleSource {
     /// Loads a Csound orchestra file and prepares the engine.
     public func loadInstrument(_ path: String) async throws {
         await stopAll()
-        let orc = try String(contentsOfFile: path)
+        let orc = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
         let cs = csoundCreate(nil)
         csoundSetOption(cs, "-d")             // no displays
         csoundSetOption(cs, "-odac")          // output to device
