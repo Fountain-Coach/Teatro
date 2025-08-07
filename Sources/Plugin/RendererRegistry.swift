@@ -19,6 +19,7 @@ public final class RendererRegistry: @unchecked Sendable {
         register(MIDIRenderer.self)
         register(SVGAnimatedRenderer.self)
         register(UMPRenderer.self)
+        register(FountainRenderer.self)
     }
 
     public func register(_ plugin: RendererPlugin.Type) {

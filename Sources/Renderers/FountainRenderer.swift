@@ -16,7 +16,10 @@ public enum FountainElement: Renderable {
     }
 }
 
-public struct FountainRenderer {
+public struct FountainRenderer: RendererPlugin {
+    public static let identifier = "fountain"
+    public static let fileExtensions = ["fountain"]
+
     public static func parse(_ text: String) -> [FountainElement] {
         let parser = FountainParser()
         let nodes = parser.parse(text)
@@ -34,6 +37,11 @@ public struct FountainRenderer {
                 return nil
             }
         }
+    }
+
+    public static func render(view: Renderable, output: String?) throws {
+        let result = view.layout().toText()
+        try write(result, to: output, defaultName: "output.fountain")
     }
 }
 
