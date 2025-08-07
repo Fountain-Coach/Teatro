@@ -52,3 +52,20 @@ public struct MIDIRenderer: RendererPlugin {
         renderToFile(seq, to: output ?? "output.mid")
     }
 }
+
+/// Convenience helpers for working with MIDI-CI SysEx messages.
+public enum MIDI {
+    /// Parses a MIDI-CI message from raw SysEx data.
+    /// - Parameter data: Complete SysEx byte stream including `F0` and `F7`.
+    /// - Returns: A typed `MIDICIMessage` if the packet conforms to MIDI-CI.
+    public static func parseCIMessage(from data: Data) -> MIDICIMessage? {
+        MIDICI.parse(sysEx: data)
+    }
+
+    /// Serializes a MIDI-CI message into a SysEx byte stream.
+    /// - Parameter message: The message to encode.
+    /// - Returns: Raw SysEx data including start/end markers.
+    public static func sysEx(for message: MIDICIMessage) -> Data {
+        MIDICI.serialize(message)
+    }
+}

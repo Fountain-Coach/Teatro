@@ -5,6 +5,14 @@
 
 Teatro is centered on **MIDI 2.0** for sequencing and timing. MIDI 1.0 is supported only as a fallback for legacy export.
 
+## MIDI-CI Discovery
+
+Teatro includes basic support for the MIDI Capability Inquiry (MIDI-CI) protocol.
+`MIDICI` types generate SysEx packets for discovery, profile negotiation and
+property exchange. These packets can be encoded with `UMPEncoder` and parsed
+from `UMPParser` output using `MIDICIDispatcher` to obtain strongly typed
+messages for application workflows.
+
 The long-form documentation lives under `Docs/Chapters`. Start with the timeline and progress through each chapter.
 
 ## Documentation
