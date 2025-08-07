@@ -28,14 +28,19 @@ public struct UMPEncoder {
             }
         }
 
-        let attrPair = note.attributes?.first
-        let attrType = UInt32(attrPair?.key.rawValue ?? 0)
-        let attrData = UInt32((attrPair?.value ?? 0) & 0xFFFF)
+        if let attrs = note.attributes {
+            for (attr, value) in attrs {
+                let status: UInt32 = 0xF << 20
+                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(attr.rawValue)
+                words.append(word1)
+                words.append(value)
+            }
+        }
 
         let status: UInt32 = 0x9 << 20 // Note On opcode
-        let word1 = messageType | groupBits | status | channelBits | noteBits | attrType
+        let word1 = messageType | groupBits | status | channelBits | noteBits
         let vel16 = (note.velocity >> 16) & 0xFFFF
-        let word2 = (vel16 << 16) | attrData
+        let word2 = (vel16 << 16)
         words.append(contentsOf: [word1, word2])
         return words
     }

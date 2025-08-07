@@ -18,6 +18,7 @@ public struct UMPParser {
         guard data.count % 4 == 0 else { throw UMPParserError.misaligned }
         var events: [any MidiEventProtocol] = []
         var index = 0
+        var currentTimestamp: UInt32 = 0
         while index < data.count {
             let word = data[index..<(index + 4)].withUnsafeBytes { ptr -> UInt32 in
                 UInt32(bigEndian: ptr.load(as: UInt32.self))
@@ -35,7 +36,13 @@ public struct UMPParser {
                 }
                 words.append(w)
             }
-            events.append(decode(messageType: messageType, group: group, words: words))
+            if messageType == 0x1 {
+                let value = words[0] & 0xFFFFFF
+                events.append(JRTimestampEvent(timestamp: 0, group: group, value: value))
+                currentTimestamp = value
+            } else {
+                events.append(decode(messageType: messageType, group: group, words: words, timestamp: currentTimestamp))
+            }
             index += wordCount * 4
         }
         return events
@@ -53,7 +60,7 @@ public struct UMPParser {
     }
 
     /// Decodes a packet into a `MidiEventProtocol`.
-    private static func decode(messageType: UInt8, group: UInt8, words: [UInt32]) -> any MidiEventProtocol {
+    private static func decode(messageType: UInt8, group: UInt8, words: [UInt32], timestamp: UInt32) -> any MidiEventProtocol {
         switch messageType {
         case 0x2: // MIDI 1.0 Channel Voice Messages
             let word = words[0]
@@ -63,23 +70,23 @@ public struct UMPParser {
             let data2 = UInt8(word & 0x7F)
             switch status {
             case 0x80:
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .noteOff, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
             case 0x90:
                 let eventType: MidiEventType = data2 == 0 ? .noteOff : .noteOn
-                return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: timestamp, type: eventType, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
             case 0xA0:
-                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: data1, velocity: UInt32(data2), controllerValue: nil)
             case 0xB0:
-                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, group: group, channel: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
+                return ChannelVoiceEvent(timestamp: timestamp, type: .controlChange, group: group, channel: channel, noteNumber: data1, velocity: nil, controllerValue: UInt32(data2))
             case 0xC0:
-                return ChannelVoiceEvent(timestamp: 0, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
+                return ChannelVoiceEvent(timestamp: timestamp, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
             case 0xE0:
                 let value = UInt32((UInt16(data2) << 7) | UInt16(data1))
-                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: value)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: value)
             case 0xD0:
-                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
+                return ChannelVoiceEvent(timestamp: timestamp, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(data1))
             default:
-                return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
             }
         case 0x4: // MIDI 2.0 Channel Voice Messages
             let word1 = words[0]
@@ -94,10 +101,10 @@ public struct UMPParser {
                 let attrData = UInt16(data2 & 0xFFFF)
                 if attr == 0 && attrData == 0 {
                     let vel = data2
-                    return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                    return ChannelVoiceEvent(timestamp: timestamp, type: .noteOff, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
                 } else {
                     let vel = UInt32((data2 >> 16) & 0xFFFF) << 16
-                    return NoteOffWithAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
+                    return NoteOffWithAttributeEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
                 }
             case 0x90:
                 let note = UInt8((data1 >> 8) & 0xFF)
@@ -106,27 +113,27 @@ public struct UMPParser {
                 if attr == 0 && attrData == 0 {
                     let vel = data2
                     let eventType: MidiEventType = vel == 0 ? .noteOff : .noteOn
-                    return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                    return ChannelVoiceEvent(timestamp: timestamp, type: eventType, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
                 } else {
                     let vel = UInt32((data2 >> 16) & 0xFFFF) << 16
-                    return NoteOnWithAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
+                    return NoteOnWithAttributeEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
                 }
             case 0xA0:
                 let note = UInt8((data1 >> 8) & 0xFF)
-                return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: note, velocity: data2, controllerValue: nil)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: note, velocity: data2, controllerValue: nil)
             case 0xB0:
                 let controller = UInt8((data1 >> 8) & 0xFF)
-                return ChannelVoiceEvent(timestamp: 0, type: .controlChange, group: group, channel: channel, noteNumber: controller, velocity: nil, controllerValue: data2)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .controlChange, group: group, channel: channel, noteNumber: controller, velocity: nil, controllerValue: data2)
             case 0xC0:
                 let program = UInt8((data2 >> 24) & 0x7F)
-                return ChannelVoiceEvent(timestamp: 0, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program))
+                return ChannelVoiceEvent(timestamp: timestamp, type: .programChange, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: UInt32(program))
             case 0xD0:
-                return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0xE0:
-                return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+                return ChannelVoiceEvent(timestamp: timestamp, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0x10:
                 guard words.count > 1 else {
-                    return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                    return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
                 }
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let attr = UInt8(data1 & 0xFF)
@@ -137,7 +144,7 @@ public struct UMPParser {
                     let velocity = UInt32((word2 >> 16) & 0xFFFF) << 16
                     let attributeData = UInt16(word2 & 0xFFFF)
                     return NoteEndEvent(
-                        timestamp: 0,
+                        timestamp: timestamp,
                         group: group,
                         channel: channel,
                         noteNumber: note,
@@ -148,7 +155,7 @@ public struct UMPParser {
                 case 0x2:
                     let pitch = word2 & 0x0FFFFFFF
                     return PitchClampEvent(
-                        timestamp: 0,
+                        timestamp: timestamp,
                         group: group,
                         channel: channel,
                         noteNumber: note,
@@ -156,28 +163,29 @@ public struct UMPParser {
                     )
                 case 0x3:
                     return PitchReleaseEvent(
-                        timestamp: 0,
+                        timestamp: timestamp,
                         group: group,
                         channel: channel,
                         noteNumber: note
                     )
                 default:
-                    return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                    return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
                 }
             case 0x00:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let index = UInt8(data1 & 0xFF)
-                return PerNoteControllerEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, controllerIndex: index, controllerValue: data2)
+                return PerNoteControllerEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, controllerIndex: index, controllerValue: data2)
+            case 0xF0:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let index = UInt8(data1 & 0xFF)
+                return NoteAttributeEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, attributeIndex: index, attributeValue: data2)
             default:
-                return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+                return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
             }
-        case 0x1: // JR Timestamp
-            let value = words[0] & 0xFFFFFF
-            return JRTimestampEvent(timestamp: 0, group: group, value: value)
         case 0x5, 0x6: // SysEx7 and SysEx8
-            return SysExEvent(timestamp: 0, data: rawData(from: words), group: group)
+            return SysExEvent(timestamp: timestamp, data: rawData(from: words), group: group)
         default:
-            return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
+            return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)
         }
     }
 

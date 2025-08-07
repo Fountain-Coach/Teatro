@@ -53,9 +53,15 @@ public struct MIDI2Note: Sendable, Equatable {
         attributes?[attribute]
     }
 
-    /// Validates that all attributes use supported identifiers.
+    /// Convenience accessors for common attribute types.
+    public var manufacturerSpecificData: UInt32? { attributes?[.manufacturerSpecific] }
+    public var profileSpecificData: UInt32? { attributes?[.profileSpecific] }
+    public var pitch7_9Data: UInt32? { attributes?[.pitch7_9] }
+
+    /// Validates that all attributes use supported identifiers and avoid `.none`.
     public func validateAttributes() -> Bool {
         guard let attrs = attributes else { return true }
+        if attrs.keys.contains(.none) { return false }
         return attrs.keys.allSatisfy { MIDI2NoteAttribute.allCases.contains($0) }
     }
 }
