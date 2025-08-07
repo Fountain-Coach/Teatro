@@ -106,6 +106,16 @@ final class RendererTests: XCTestCase {
         unsetenv("TEATRO_SVG_WIDTH")
         unsetenv("TEATRO_SVG_HEIGHT")
     }
+
+    func testSVGRendererCachesRenderedViews() {
+        let view = Text("CacheTest")
+        let first = SVGRenderer.render(view)
+        setenv("TEATRO_SVG_WIDTH", "1234", 1)
+        let second = SVGRenderer.render(view)
+        XCTAssertEqual(first, second)
+        XCTAssertFalse(second.contains("1234"))
+        unsetenv("TEATRO_SVG_WIDTH")
+    }
 }
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

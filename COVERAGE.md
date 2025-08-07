@@ -18,11 +18,11 @@ llvm-cov show .build/debug/TeatroPackageTests.xctest/Contents/MacOS/TeatroPackag
 
 ## Current Summary
 
-As of 2025-08-04 the test suite reports:
+As of 2025-08-07 the test suite reports:
 
-- **Regions:** 47.24% (4204 total, 2218 missed)
-- **Functions:** 56.07% (2044 total, 898 missed)
-- **Lines:** 44.16% (12011 total, 6707 missed)
+- **Regions:** 58.36% (5062 total, 2108 missed)
+- **Functions:** 66.91% (2602 total, 861 missed)
+- **Lines:** 54.26% (13964 total, 6387 missed)
 
 ---
 © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
