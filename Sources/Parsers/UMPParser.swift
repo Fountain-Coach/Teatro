@@ -134,7 +134,7 @@ public struct UMPParser {
                 let subtype = UInt8((word2 >> 28) & 0xF)
                 switch subtype {
                 case 0x0:
-                    let velocity = UInt32((word2 >> 16) & 0xFFFF)
+                    let velocity = UInt32((word2 >> 16) & 0xFFFF) << 16
                     let attributeData = UInt16(word2 & 0xFFFF)
                     return NoteEndEvent(
                         timestamp: 0,

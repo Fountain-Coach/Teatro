@@ -109,16 +109,18 @@ public struct UMPEncoder {
             let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
             let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
-            let word1 = messageType | groupBits | (0x2 << 20) | channelBits | noteBits
-            return [word1, p.pitch]
+            let word1 = messageType | groupBits | (0x1 << 20) | channelBits | noteBits
+            let word2 = (0x2 << 28) | (p.pitch & 0x0FFFFFFF)
+            return [word1, word2]
         case .pitchRelease:
             guard let _ = event as? PitchReleaseEvent else { return [] }
             let messageType: UInt32 = 0x4 << 28
             let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
             let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
-            let word1 = messageType | groupBits | (0x3 << 20) | channelBits | noteBits
-            return [word1, 0]
+            let word1 = messageType | groupBits | (0x1 << 20) | channelBits | noteBits
+            let word2: UInt32 = 0x3 << 28
+            return [word1, word2]
         case .noteAttribute:
             guard let attr = event as? NoteAttributeEvent else { return [] }
             let messageType: UInt32 = 0x4 << 28
