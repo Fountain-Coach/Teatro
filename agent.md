@@ -16,6 +16,10 @@ apis:
     path: openapi.yaml
     description: CLI rendering operations
 
+workflows:
+  - name: ci
+    description: GitHub Actions runs `swiftlint` and `swift test` on each push and pull request
+
 tasks:
   - name: self-document
     description: keep Docs/ and openapi.yaml synchronized with code changes
