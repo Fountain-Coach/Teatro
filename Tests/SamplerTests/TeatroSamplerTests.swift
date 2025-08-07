@@ -19,7 +19,7 @@ final class TeatroSamplerTests: XCTestCase {
     func testTriggerDelegates() async throws {
         let mock = MockSource()
         let sampler = TeatroSampler(implementation: mock)
-        let note = MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0)
+        let note = MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0)
         await sampler.trigger(note)
         let triggered = await mock.notes()
         XCTAssertEqual(triggered.first, note)

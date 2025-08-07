@@ -11,7 +11,8 @@ final class EventNormalizationTests: XCTestCase {
         guard let event = events.first as? ChannelVoiceEvent else {
             return XCTFail("Expected ChannelVoiceEvent")
         }
-        XCTAssertEqual(event.velocity, 0xFF)
+        XCTAssertEqual(event.velocity, 0xFFFF0000)
+        XCTAssertEqual(MIDI.midi1Velocity(from: event.velocity ?? 0), 0x7F)
     }
 
     func testControllerNormalization() throws {
@@ -23,13 +24,14 @@ final class EventNormalizationTests: XCTestCase {
         guard let event = events.first as? ChannelVoiceEvent else {
             return XCTFail("Expected ChannelVoiceEvent")
         }
-        XCTAssertEqual(event.controllerValue, UInt32(0xFF))
+        XCTAssertEqual(event.controllerValue, 0xFFFFFFFF)
+        XCTAssertEqual(MIDI.midi1Controller(from: event.controllerValue ?? 0), 0x7F)
     }
 
     func testNormalizeControllerFunction() {
         let value: UInt32 = 0x12345678
-        let normalized = ChannelVoiceEvent.normalizeController(value)
-        XCTAssertEqual(normalized, 0x12)
+        let normalized = MIDI.midi1Controller(from: value)
+        XCTAssertEqual(normalized, 0x09)
     }
 }
 

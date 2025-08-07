@@ -41,7 +41,7 @@ public actor FluidSynthSampler: SampleSource {
     /// Plays a note by sending MIDI events to the synth.
     public func trigger(_ note: MIDI2Note) async {
         guard let syn = synth else { return }
-        fluid_synth_noteon(syn, Int32(note.channel), Int32(note.note), Int32(note.velocity * 127))
+        fluid_synth_noteon(syn, Int32(note.channel), Int32(note.note), Int32(MIDI.midi1Velocity(from: note.velocity)))
         if note.duration > 0 {
             Task.detached { [weak self] in
                 try? await Task.sleep(nanoseconds: UInt64(note.duration * 1_000_000_000))

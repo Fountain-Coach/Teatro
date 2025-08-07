@@ -38,7 +38,7 @@ public actor CsoundSampler: SampleSource {
     public func trigger(_ note: MIDI2Note) async {
         guard let cs = csound else { return }
         let freq = 440.0 * pow(2.0, (Double(note.note) - 69.0) / 12.0)
-        let amp = Double(note.velocity)
+        let amp = Double(MIDI.normalizedFloat(from: note.velocity))
         let dur = note.duration
         let msg = String(format: "i1 0 %.3f %.3f %.3f", dur, amp, freq)
         csoundInputMessage(cs, msg)

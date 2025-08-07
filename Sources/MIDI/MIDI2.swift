@@ -1,22 +1,39 @@
 import Foundation
 
+/// Lightweight representation of a MIDI 2.0 note event.
 public struct MIDI2Note: Sendable, Equatable {
     public let channel: Int
     public let note: Int
-    public let velocity: Float // 0.0 - 1.0
+    /// 32-bit velocity value.
+    public let velocity: UInt32
     public let duration: Double
-    public let pitchBend: Float?
+    public let pitchBend: UInt32?
     public let articulation: String?
-    public let perNoteCC: [Int: Float]?
+    /// Optional per-note controllers.
+    public let perNoteControllers: [PerNoteController]?
+    /// Optional JR Timestamp preceding the note message.
+    public let jrTimestamp: UInt32?
+    /// Placeholder for future per-note attribute data.
+    public let attributes: [String: UInt32]?
 
-    public init(channel: Int, note: Int, velocity: Float, duration: Double, pitchBend: Float? = nil, articulation: String? = nil, perNoteCC: [Int: Float]? = nil) {
+    public init(channel: Int,
+                note: Int,
+                velocity: UInt32,
+                duration: Double,
+                pitchBend: UInt32? = nil,
+                articulation: String? = nil,
+                perNoteControllers: [PerNoteController]? = nil,
+                jrTimestamp: UInt32? = nil,
+                attributes: [String: UInt32]? = nil) {
         self.channel = channel
         self.note = note
         self.velocity = velocity
         self.duration = duration
         self.pitchBend = pitchBend
         self.articulation = articulation
-        self.perNoteCC = perNoteCC
+        self.perNoteControllers = perNoteControllers
+        self.jrTimestamp = jrTimestamp
+        self.attributes = attributes
     }
 }
 

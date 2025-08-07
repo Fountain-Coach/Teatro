@@ -3,8 +3,8 @@ import XCTest
 
 final class CompatibilityBridgeTests: XCTestCase {
     func testCompatibilityBridgeDowncasts() {
-        let event = MIDI2Note(channel: 0, note: 64, velocity: 1.0, duration: 1.0)
-        let midi1 = MIDICompatibilityBridge.toMIDINote(MIDI2NoteEvent(channel: event.channel, note: event.note, velocity: event.velocity, pitch: Float(event.note), timbre: .zero, articulation: "legato", timestamp: 0))
+        let event = MIDI2Note(channel: 0, note: 64, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0)
+        let midi1 = MIDICompatibilityBridge.toMIDINote(MIDI2NoteEvent(channel: event.channel, note: event.note, velocity: MIDI.normalizedFloat(from: event.velocity), pitch: Float(event.note), timbre: .zero, articulation: "legato", timestamp: 0))
         XCTAssertEqual(midi1.note, 64)
         XCTAssertEqual(midi1.velocity, 127)
     }

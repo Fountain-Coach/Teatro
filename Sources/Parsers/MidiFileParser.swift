@@ -68,13 +68,13 @@ public struct MidiFileParser {
             case 0x80: // Note Off
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
-                let velocity = data[index + 1]
+                let velocity = UInt32(data[index + 1])
                 events.append(ChannelVoiceEvent(timestamp: currentTime, type: .noteOff, group: nil, channel: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
             case 0x90: // Note On (velocity 0 treated as Note Off)
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
-                let velocity = data[index + 1]
+                let velocity = UInt32(data[index + 1])
                 let eventType: MidiEventType = velocity == 0 ? .noteOff : .noteOn
                 events.append(ChannelVoiceEvent(timestamp: currentTime, type: eventType, group: nil, channel: channel, noteNumber: note, velocity: velocity, controllerValue: nil))
                 index += 2
@@ -99,7 +99,7 @@ public struct MidiFileParser {
             case 0xA0: // Polyphonic Key Pressure
                 guard index + 1 < end else { throw MidiFileParserError.invalidEvent }
                 let note = data[index]
-                let pressure = data[index + 1]
+                let pressure = UInt32(data[index + 1])
                 events.append(ChannelVoiceEvent(timestamp: currentTime, type: .polyphonicKeyPressure, group: nil, channel: channel, noteNumber: note, velocity: pressure, controllerValue: nil))
                 index += 2
             case 0xD0: // Channel Pressure

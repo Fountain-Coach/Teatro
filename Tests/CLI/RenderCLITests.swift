@@ -143,7 +143,7 @@ final class RenderCLITests: XCTestCase {
     }
 
     func testUMPFileParses() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
         var data = Data()
         for word in packets {
             var be = word.bigEndian
@@ -160,7 +160,7 @@ final class RenderCLITests: XCTestCase {
     }
 
     func testUMPOutputEncodesInput() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: 1.0, duration: 1.0))
+        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
         var inputData = Data()
         for word in packets {
             var be = word.bigEndian

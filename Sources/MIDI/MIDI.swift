@@ -68,4 +68,25 @@ public enum MIDI {
     public static func sysEx(for message: MIDICIMessage) -> Data {
         MIDICI.serialize(message)
     }
+
+    /// Converts a 32-bit MIDI 2.0 value to a MIDI 1.0 velocity (0-127).
+    public static func midi1Velocity(from value: UInt32) -> UInt8 {
+        UInt8(truncatingIfNeeded: value >> 25)
+    }
+
+    /// Converts a 32-bit MIDI 2.0 controller value to a MIDI 1.0 7-bit value.
+    public static func midi1Controller(from value: UInt32) -> UInt8 {
+        UInt8(truncatingIfNeeded: value >> 25)
+    }
+
+    /// Normalizes a 32-bit MIDI 2.0 value to a floating point range 0.0-1.0.
+    public static func normalizedFloat(from value: UInt32) -> Float {
+        Float(value) / Float(UInt32.max)
+    }
+
+    /// Convenience to scale a unit float into a 32-bit MIDI 2.0 value.
+    public static func fromUnitFloat(_ value: Float) -> UInt32 {
+        let clamped = max(0.0, min(1.0, value))
+        return UInt32(clamped * Float(UInt32.max))
+    }
 }

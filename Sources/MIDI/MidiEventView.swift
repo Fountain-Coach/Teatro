@@ -26,6 +26,11 @@ public struct MidiEventView: Renderable {
                 parts.append("pressure \(event.controllerValue ?? 0)")
             case .polyphonicKeyPressure:
                 parts.append("polyPressure \(event.noteNumber ?? 0) v\(event.velocity ?? 0)")
+            case .perNoteController:
+                let ctrl = (event as? PerNoteControllerEvent)?.controllerIndex ?? 0
+                parts.append("pnc \(event.noteNumber ?? 0) c\(ctrl) \(event.controllerValue ?? 0)")
+            case .jrTimestamp:
+                parts.append("jr \(event.controllerValue ?? 0)")
             case .meta:
                 let meta = event.metaType.map { String(format: "%02X", $0) } ?? "??"
                 parts.append("meta \(meta)")
