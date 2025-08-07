@@ -1,7 +1,7 @@
 ## 3. Rendering Backends
 _Translating views into HTML, SVG, and more._
 
-The Teatro View Engine supports multiple rendering targets, each implemented as a standalone `Renderer` struct. All accept a `Renderable` view and return a format-specific string or file output.
+The Teatro View Engine supports multiple rendering targets via a plugin system. Each renderer is a `RendererPlugin` conforming type that accepts a `Renderable` view and either prints to standard output or writes a format-specific file. Renderers register themselves with the global `RendererRegistry` so that clients like the CLI can discover them at runtime.
 
 ---
 
@@ -144,29 +144,21 @@ swift run RenderCLI --input demo.storyboard --format svgAnimated --output anim.s
 ---
 ### 3.7 Registering Custom Renderers
 
-Third-party packages can hook into the registry and provide additional render targets. Conform to `RenderTargetPlugin` and register it during module initialization:
+Third-party packages can hook into the registry and provide additional render targets by conforming to `RendererPlugin` and registering the type:
 
 ```swift
-import RenderCLI
 import Teatro
 
-struct MyTarget: RenderTargetProtocol {
-    static let name = "myTarget"
-    static let aliases: [String] = []
+struct MyRenderer: RendererPlugin {
+    static let identifier = "myTarget"
+    static let fileExtensions: [String] = ["my"]
     static func render(view: Renderable, output: String?) throws {
-        try write("custom output", to: output, defaultName: "out.txt")
+        try write("custom output", to: output, defaultName: "out.my")
     }
 }
 
-enum MyPlugin: RenderTargetPlugin {
-    static func registerTargets(in registry: RenderTargetRegistry) {
-        registry.register(MyTarget.self)
-    }
-}
-
-private let _pluginRegistration: Void = {
-    RenderTargetRegistry.register(plugin: MyPlugin.self)
-}()
+// Registration makes the renderer discoverable by the CLI and other tools.
+RendererRegistry.register(MyRenderer.self)
 ```
 
 After importing the module containing this code, the new target becomes available to the CLI:

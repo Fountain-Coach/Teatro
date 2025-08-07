@@ -8,7 +8,7 @@ final class RenderCLIRenderTests: XCTestCase {
         let cli = RenderCLI()
         let view = Text("Render Test")
         let output = try captureStdout {
-            try cli.render(view: view, target: SVGTarget.self, outputPath: nil)
+            try cli.render(view: view, target: SVGRenderer.self, outputPath: nil)
         }
         XCTAssertTrue(output.contains("<svg"))
         XCTAssertTrue(output.contains("Render Test"))

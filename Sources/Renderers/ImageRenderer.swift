@@ -4,7 +4,9 @@ import Cairo
 
 import Foundation
 
-public struct ImageRenderer {
+public struct ImageRenderer: RendererPlugin {
+    public static let identifier = "png"
+    public static let fileExtensions = ["png"]
     // Default image width in points. Override with `TEATRO_IMAGE_WIDTH`.
     static var width: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_IMAGE_WIDTH"] ?? "800") ?? 800
@@ -48,6 +50,14 @@ public struct ImageRenderer {
         let svg = SVGRenderer.render(view)
         try? svg.write(toFile: svgURL.path, atomically: true, encoding: .utf8)
 #endif
+    }
+
+    public static func render(view: Renderable, output: String?) throws {
+        let path = output ?? "output.png"
+        renderToPNG(view, to: path)
+        if output != nil {
+            print("Wrote \(path)")
+        }
     }
 }
 

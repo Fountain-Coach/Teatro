@@ -4,39 +4,63 @@ import XCTest
 final class RendererTests: XCTestCase {
     func testHTMLRenderer() {
         let text = Text("Hi")
-        let html = HTMLRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "html") as? HTMLRenderer.Type else {
+            XCTFail("HTML renderer not registered")
+            return
+        }
+        let html = renderer.render(text)
         XCTAssertTrue(html.contains("<pre>\nHi\n</pre>"))
     }
 
     func testHTMLRendererStyles() {
         let text = Text("B", style: .bold)
-        let html = HTMLRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "html") as? HTMLRenderer.Type else {
+            XCTFail("HTML renderer not registered")
+            return
+        }
+        let html = renderer.render(text)
         XCTAssertTrue(html.contains("<strong>B</strong>"))
     }
 
     func testSVGRenderer() {
         let text = Text("Hi")
-        let svg = SVGRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "svg") as? SVGRenderer.Type else {
+            XCTFail("SVG renderer not registered")
+            return
+        }
+        let svg = renderer.render(text)
         XCTAssertTrue(svg.contains("<svg"))
         XCTAssertTrue(svg.contains("Hi"))
     }
 
     func testSVGRendererStyles() {
         let text = Text("U", style: .underline)
-        let svg = SVGRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "svg") as? SVGRenderer.Type else {
+            XCTFail("SVG renderer not registered")
+            return
+        }
+        let svg = renderer.render(text)
         XCTAssertTrue(svg.contains("text-decoration=\"underline\""))
     }
 
     func testMarkdownRenderer() {
         let text = Text("Hi")
-        let md = MarkdownRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "markdown") as? MarkdownRenderer.Type else {
+            XCTFail("Markdown renderer not registered")
+            return
+        }
+        let md = renderer.render(text)
         XCTAssertTrue(md.contains("```"))
         XCTAssertTrue(md.contains("Hi"))
     }
 
     func testMarkdownRendererStyles() {
         let text = Text("I", style: .italic)
-        let md = MarkdownRenderer.render(text)
+        guard let renderer = RendererRegistry.shared.plugin(for: "markdown") as? MarkdownRenderer.Type else {
+            XCTFail("Markdown renderer not registered")
+            return
+        }
+        let md = renderer.render(text)
         XCTAssertTrue(md.contains("*I*"))
     }
 

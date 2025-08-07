@@ -4,9 +4,12 @@ import XCTest
 final class RendererFileTests: XCTestCase {
     func testSVGRendererWritesFile() throws {
         let view = Text("Hi")
-        let svg = SVGRenderer.render(view)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("svg")
-        try svg.write(to: url, atomically: true, encoding: .utf8)
+        guard let renderer = RendererRegistry.shared.plugin(for: "svg") else {
+            XCTFail("SVG renderer missing")
+            return
+        }
+        try renderer.render(view: view, output: url.path)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let content = try String(contentsOf: url, encoding: .utf8)
         XCTAssertTrue(content.contains("<svg"))
@@ -15,7 +18,11 @@ final class RendererFileTests: XCTestCase {
     func testImageRendererProducesFile() throws {
         let view = Text("Img")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("png")
-        ImageRenderer.renderToPNG(view, to: url.path)
+        guard let renderer = RendererRegistry.shared.plugin(for: "png") as? ImageRenderer.Type else {
+            XCTFail("PNG renderer missing")
+            return
+        }
+        try renderer.render(view: view, output: url.path)
         if FileManager.default.fileExists(atPath: url.path) {
             let data = try Data(contentsOf: url)
             XCTAssertFalse(data.isEmpty)
@@ -30,7 +37,11 @@ final class RendererFileTests: XCTestCase {
     func testImageRendererFallbackWithoutPNGExtension() throws {
         let view = Text("Plain")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        ImageRenderer.renderToPNG(view, to: url.path)
+        guard let renderer = RendererRegistry.shared.plugin(for: "png") as? ImageRenderer.Type else {
+            XCTFail("PNG renderer missing")
+            return
+        }
+        try renderer.render(view: view, output: url.path)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let content = try String(contentsOf: url, encoding: .utf8)
         XCTAssertTrue(content.contains("<svg"))

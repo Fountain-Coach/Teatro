@@ -1,6 +1,8 @@
 import Foundation
 
-public struct SVGRenderer {
+public struct SVGRenderer: RendererPlugin {
+    public static let identifier = "svg"
+    public static let fileExtensions = ["svg"]
     // Default canvas width in points. Override with `TEATRO_SVG_WIDTH`.
     private static var canvasWidth: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_SVG_WIDTH"] ?? "600") ?? 600
@@ -32,5 +34,10 @@ public struct SVGRenderer {
 
         cache[key] = svg
         return svg
+    }
+
+    public static func render(view: Renderable, output: String?) throws {
+        let result = render(view)
+        try write(result, to: output, defaultName: "output.svg")
     }
 }

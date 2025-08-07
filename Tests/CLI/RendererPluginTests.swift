@@ -2,35 +2,28 @@ import XCTest
 @testable import RenderCLI
 import Teatro
 
-// A fake render target used to verify plugin-based registration.
-private struct FakeTarget: RenderTargetProtocol {
-    static let name = "fake"
-    static let aliases: [String] = []
+// A fake renderer used to verify plugin-based registration.
+private struct FakeRenderer: RendererPlugin {
+    static let identifier = "fake"
+    static let fileExtensions: [String] = []
     static func render(view: Renderable, output: String?) throws {
         try write("FAKE:" + view.render(), to: output, defaultName: "fake.txt")
     }
 }
 
-// Plugin that registers the fake target.
-private enum FakePlugin: RenderTargetPlugin {
-    static func registerTargets(in registry: RenderTargetRegistry) {
-        registry.register(FakeTarget.self)
-    }
-}
-
-final class RenderTargetPluginTests: XCTestCase {
+final class RendererPluginTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        RenderTargetRegistry.register(plugin: FakePlugin.self)
+        RendererRegistry.register(FakeRenderer.self)
     }
 
     func testDynamicPluginRegistration() {
-        let target = RenderTargetRegistry.shared.lookup("fake")
+        let target = RendererRegistry.shared.plugin(for: "fake")
         XCTAssertNotNil(target)
     }
 
     func testRenderingWithPluginTarget() throws {
-        guard let target = RenderTargetRegistry.shared.lookup("fake") else {
+        guard let target = RendererRegistry.shared.plugin(for: "fake") else {
             XCTFail("target not registered")
             return
         }
