@@ -51,8 +51,8 @@ public extension Storyboard {
 }
 
 extension Storyboard: Renderable {
-    public func render() -> String {
-        CodexStoryboardPreviewer.prompt(self)
+    public func layout() -> LayoutNode {
+        .raw(CodexStoryboardPreviewer.prompt(self))
     }
 }
 

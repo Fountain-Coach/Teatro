@@ -7,7 +7,7 @@ public struct Text: Renderable {
         self.style = style
     }
 
-    public func render() -> String {
-        style.apply(to: content)
+    public func layout() -> LayoutNode {
+        .text(content, style: style)
     }
 }

@@ -5,13 +5,13 @@ public enum FountainElement: Renderable {
     case action(String)
     case transition(String)
 
-    public func render() -> String {
+    public func layout() -> LayoutNode {
         switch self {
-        case .sceneHeading(let txt): return "# \(txt)"
-        case .characterCue(let txt): return "\n\(txt.uppercased())"
-        case .dialogue(let txt): return "\t\(txt)"
-        case .action(let txt): return txt
-        case .transition(let txt): return "\(txt) >>"
+        case .sceneHeading(let txt): return .raw("# \(txt)")
+        case .characterCue(let txt): return .raw("\n\(txt.uppercased())")
+        case .dialogue(let txt): return .raw("\t\(txt)")
+        case .action(let txt): return .raw(txt)
+        case .transition(let txt): return .raw("\(txt) >>")
         }
     }
 }
@@ -44,7 +44,7 @@ public struct FountainSceneView: Renderable {
         self.elements = FountainRenderer.parse(fountainText)
     }
 
-    public func render() -> String {
-        elements.map { $0.render() }.joined(separator: "\n")
+    public func layout() -> LayoutNode {
+        .raw(elements.map { $0.layout().toText() }.joined(separator: "\n"))
     }
 }

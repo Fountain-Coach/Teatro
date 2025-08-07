@@ -3,7 +3,7 @@ import Foundation
 public struct Rule: Renderable {
     public init() {}
 
-    public func render() -> String {
-        String(repeating: "-", count: 10)
+    public func layout() -> LayoutNode {
+        .raw(String(repeating: "-", count: 10))
     }
 }

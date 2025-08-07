@@ -1,7 +1,11 @@
 import Foundation
 
 public protocol Renderable {
-    func render() -> String
+    func layout() -> LayoutNode
+}
+
+public extension Renderable {
+    func render() -> String { layout().toText() }
 }
 
 public protocol Layouting: Renderable {

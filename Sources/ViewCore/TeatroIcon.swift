@@ -5,7 +5,7 @@ public struct TeatroIcon: Renderable {
         self.symbol = symbol
     }
 
-    public func render() -> String {
-        "\u{25C9} \(symbol)" // use ◉ (U+25C9)
+    public func layout() -> LayoutNode {
+        .raw("\u{25C9} \(symbol)")
     }
 }

@@ -7,7 +7,7 @@ public struct Stage: Renderable {
         self.content = content()
     }
 
-    public func render() -> String {
-        "[Stage: \(title)]\n" + content.render()
+    public func layout() -> LayoutNode {
+        .stage(title: title, child: content.layout())
     }
 }

@@ -7,8 +7,8 @@ public struct LilyScore: Renderable {
         self.content = content
     }
 
-    public func render() -> String {
-        content
+    public func layout() -> LayoutNode {
+        .raw(content)
     }
 
     public func renderToPDF(filename: String = "score") {
