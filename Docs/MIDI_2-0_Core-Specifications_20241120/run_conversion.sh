@@ -95,6 +95,7 @@ for pdf in *.pdf; do
   # Cleanup: remove trailing whitespace
   sed -i 's/[ \t]*$//' "$md_file"
   echo "Generated $md_file"
+
 done
 
 # 5. OCR failure summary
