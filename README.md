@@ -13,6 +13,20 @@ property exchange. These packets can be encoded with `UMPEncoder` and parsed
 from `UMPParser` output using `MIDICIDispatcher` to obtain strongly typed
 messages for application workflows.
 
+## MIDI 1.0 Bridge
+
+`MIDI1Bridge` converts between Universal MIDI Packets and traditional MIDI 1.0
+byte streams. This makes it possible to route UMP data to legacy devices or
+perform round‑trip tests.
+
+```bash
+swift run RenderCLI song.ump --midi1-bridge > song.midi
+```
+
+The command above reads a UMP file, translates it to MIDI 1.0 bytes, and writes
+the result to standard output (or the file specified with `--output`).
+`MIDI1Bridge.midi1ToUMP(_:)` performs the inverse conversion when needed.
+
 The long-form documentation lives under `Docs/Chapters`. Start with the timeline and progress through each chapter.
 
 ## Documentation

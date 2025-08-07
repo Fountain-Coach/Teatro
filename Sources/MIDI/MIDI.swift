@@ -71,12 +71,58 @@ public enum MIDI {
 
     /// Converts a 32-bit MIDI 2.0 value to a MIDI 1.0 velocity (0-127).
     public static func midi1Velocity(from value: UInt32) -> UInt8 {
-        UInt8(truncatingIfNeeded: value >> 25)
+        if value <= 0x7F { return UInt8(truncatingIfNeeded: value) }
+        if (value & 0x00FF_0000) != 0 {
+            return UInt8(truncatingIfNeeded: value >> 25)
+        } else {
+            return UInt8(truncatingIfNeeded: value >> 24)
+        }
     }
 
     /// Converts a 32-bit MIDI 2.0 controller value to a MIDI 1.0 7-bit value.
     public static func midi1Controller(from value: UInt32) -> UInt8 {
-        UInt8(truncatingIfNeeded: value >> 25)
+        if value <= 0x7F { return UInt8(truncatingIfNeeded: value) }
+        if (value & 0x00FF_0000) != 0 {
+            return UInt8(truncatingIfNeeded: value >> 25)
+        } else {
+            return UInt8(truncatingIfNeeded: value >> 24)
+        }
+    }
+
+    /// Maps a MIDI 1.0 velocity byte into a 32-bit MIDI 2.0 value.
+    public static func midi2Velocity(from value: UInt8) -> UInt32 {
+        UInt32(value) << 25
+    }
+
+    /// Maps a MIDI 1.0 controller byte into a 32-bit MIDI 2.0 value.
+    public static func midi2Controller(from value: UInt8) -> UInt32 {
+        UInt32(value) << 25
+    }
+
+    /// Converts a 32-bit MIDI 2.0 pitch bend into the 14-bit MIDI 1.0 domain.
+    public static func midi1PitchBend(from value: UInt32) -> UInt16 {
+        UInt16(truncatingIfNeeded: value >> 18)
+    }
+
+    /// Expands a 14-bit MIDI 1.0 pitch bend value to 32-bit MIDI 2.0.
+    public static func midi2PitchBend(from value: UInt16) -> UInt32 {
+        UInt32(value) << 18
+    }
+
+    /// Wraps a raw SysEx payload with start/end markers for MIDI 1.0.
+    public static func midi1SysEx(from payload: Data) -> Data {
+        var bytes: [UInt8] = [0xF0]
+        bytes.append(contentsOf: payload)
+        bytes.append(0xF7)
+        return Data(bytes)
+    }
+
+    /// Extracts the payload from a MIDI 1.0 SysEx message.
+    public static func midi2SysExPayload(from data: Data) -> Data {
+        var bytes = Array(data)
+        if bytes.first == 0xF0 { bytes.removeFirst() }
+        if bytes.last == 0xF7 { bytes.removeLast() }
+        return Data(bytes)
     }
 
     /// Normalizes a 32-bit MIDI 2.0 value to a floating point range 0.0-1.0.
@@ -87,6 +133,8 @@ public enum MIDI {
     /// Convenience to scale a unit float into a 32-bit MIDI 2.0 value.
     public static func fromUnitFloat(_ value: Float) -> UInt32 {
         let clamped = max(0.0, min(1.0, value))
-        return UInt32(clamped * Float(UInt32.max))
+        if clamped >= 1.0 { return UInt32.max }
+        let scaled = Double(clamped) * Double(UInt32.max)
+        return UInt32(scaled)
     }
 }

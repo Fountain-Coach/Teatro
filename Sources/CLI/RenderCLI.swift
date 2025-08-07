@@ -36,6 +36,9 @@ public struct RenderCLI: ParsableCommand {
     @Flag(name: .long, help: "Ignore mismatched output extension and format")
     public var forceFormat: Bool = false
 
+    @Flag(name: .long, help: "Bridge UMP input to MIDI 1.0 byte stream for legacy devices")
+    public var midi1Bridge: Bool = false
+
     @Option(name: [.customShort("W"), .long], help: "Override output width")
     public var width: Int?
 
@@ -46,6 +49,25 @@ public struct RenderCLI: ParsableCommand {
 
     public func run() throws {
         let inputPath = input ?? positionalInput
+
+        if midi1Bridge {
+            guard let path = inputPath else {
+                throw ValidationError("MIDI1 bridge requires an input file")
+            }
+            let url = URL(fileURLWithPath: path)
+            let fileData = try Data(contentsOf: url)
+            guard fileData.count % 4 == 0 else {
+                throw ValidationError("MIDI1 bridge requires UMP input")
+            }
+            let midi1Data = try MIDI1Bridge.umpToMIDI1(fileData)
+            if let out = output {
+                try midi1Data.write(to: URL(fileURLWithPath: out))
+            } else {
+                FileHandle.standardOutput.write(midi1Data)
+            }
+            return
+        }
+
         var view: Renderable = defaultView()
         if let path = inputPath {
             view = try loadInput(path: path)
