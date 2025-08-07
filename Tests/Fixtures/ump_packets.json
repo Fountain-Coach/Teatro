@@ -1,0 +1,5 @@
+{
+  "noteOn32Velocity": [64, 144, 60, 0, 18, 52, 86, 120],
+  "perNoteController": [64, 0, 60, 1, 1, 2, 3, 4],
+  "jrTimestamp": [16, 0, 0, 1]
+}
