@@ -2,6 +2,34 @@ import XCTest
 @testable import Teatro
 
 final class RendererFileTests: XCTestCase {
+    func testHTMLRendererWritesFile() throws {
+        let view = Text("Hi")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("html")
+        guard let renderer = RendererRegistry.shared.plugin(for: "html") else {
+            XCTFail("HTML renderer missing")
+            return
+        }
+        try renderer.render(view: view, output: url.path)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        let content = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(content.contains("<html"))
+        XCTAssertTrue(content.contains("Hi"))
+    }
+
+    func testMarkdownRendererWritesFile() throws {
+        let view = Text("Hi")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("md")
+        guard let renderer = RendererRegistry.shared.plugin(for: "markdown") else {
+            XCTFail("Markdown renderer missing")
+            return
+        }
+        try renderer.render(view: view, output: url.path)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        let content = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(content.contains("```"))
+        XCTAssertTrue(content.contains("Hi"))
+    }
+
     func testSVGRendererWritesFile() throws {
         let view = Text("Hi")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("svg")
