@@ -128,6 +128,42 @@ final class MIDI2Tests: XCTestCase {
         XCTAssertEqual(encoded, words)
     }
 
+    func testRoundTripPerNotePitchBendFromSpec() throws {
+        let words: [UInt32] = [0x40203C00, 0x12345678]
+        let events = try UMPParser.parse(data: Data(bytes(from: words)))
+        guard let bend = events.first as? PerNotePitchBendEvent else {
+            return XCTFail("Expected PerNotePitchBendEvent")
+        }
+        XCTAssertEqual(bend.noteNumber, 0x3C)
+        XCTAssertEqual(bend.pitch, 0x12345678)
+        let encoded = UMPEncoder.encodeEvents(events)
+        XCTAssertEqual(encoded, words)
+    }
+
+    func testRoundTripRPNFromSpec() throws {
+        let words: [UInt32] = [0x40600223, 0x11223344]
+        let events = try UMPParser.parse(data: Data(bytes(from: words)))
+        guard let rpn = events.first as? RegisteredParameterNumber else {
+            return XCTFail("Expected RegisteredParameterNumber")
+        }
+        XCTAssertEqual(rpn.parameter, 0x0123)
+        XCTAssertEqual(rpn.value, 0x11223344)
+        let encoded = UMPEncoder.encodeEvents(events)
+        XCTAssertEqual(encoded, words)
+    }
+
+    func testRoundTripNRPNFromSpec() throws {
+        let words: [UInt32] = [0x40700223, 0x55667788]
+        let events = try UMPParser.parse(data: Data(bytes(from: words)))
+        guard let nrpn = events.first as? NonRegisteredParameterNumber else {
+            return XCTFail("Expected NonRegisteredParameterNumber")
+        }
+        XCTAssertEqual(nrpn.parameter, 0x0123)
+        XCTAssertEqual(nrpn.value, 0x55667788)
+        let encoded = UMPEncoder.encodeEvents(events)
+        XCTAssertEqual(encoded, words)
+    }
+
     func testCompleteNoteLifecycleSequence() throws {
         let words: [UInt32] = [
             0x40903C02, 0x12345678, // Note On with attribute
