@@ -4,6 +4,8 @@
 
 Render Teatro views from scripts, scores, and storyboards.
 
+See [Render Target Plugins](../RenderTargets.md) for guidance on adding custom output formats.
+
 ```
 render-cli [<positional-input>] [--input=<input>] [--format=<format>] [--output=<output>] [--watch] [--force-format] [--width=<width>] [--height=<height>] [--version] [--help]
 ```
