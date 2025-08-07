@@ -11,6 +11,11 @@ public enum MidiEventType {
     case polyphonicKeyPressure
     case perNoteController
     case noteAttribute
+    case noteOnWithAttribute
+    case noteOffWithAttribute
+    case noteEnd
+    case pitchClamp
+    case pitchRelease
     case jrTimestamp
     case meta
     case sysEx
@@ -73,6 +78,150 @@ struct NoteAttributeEvent: MidiEventProtocol {
     let attributeValue: UInt32
     var velocity: UInt32? { nil }
     var controllerValue: UInt32? { attributeValue }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+}
+
+/// Defined attribute types for extended note messages.
+enum NoteAttributeType: UInt8 {
+    case none = 0x00
+    case manufacturerSpecific = 0x01
+    case profileSpecific = 0x02
+    case pitch7_9 = 0x03
+    case unknown = 0xFF
+
+    init(rawValue: UInt8) {
+        switch rawValue {
+        case 0x00: self = .none
+        case 0x01: self = .manufacturerSpecific
+        case 0x02: self = .profileSpecific
+        case 0x03: self = .pitch7_9
+        default: self = .unknown
+        }
+    }
+}
+
+/// Represents MIDI 2.0 Note On message carrying attribute data.
+struct NoteOnWithAttributeEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let velocity: UInt32?
+    let attributeType: NoteAttributeType
+    let attributeData: UInt16
+
+    var type: MidiEventType { attributeType == .unknown ? .unknown : .noteOnWithAttribute }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+
+    init(timestamp: UInt32,
+         group: UInt8?,
+         channel: UInt8?,
+         noteNumber: UInt8?,
+         velocity: UInt32,
+         attributeType: UInt8,
+         attributeData: UInt16) {
+        self.timestamp = timestamp
+        self.group = group
+        self.channel = channel
+        self.noteNumber = noteNumber
+        self.velocity = velocity
+        self.attributeType = NoteAttributeType(rawValue: attributeType)
+        self.attributeData = attributeData
+    }
+}
+
+/// Represents MIDI 2.0 Note Off message carrying attribute data.
+struct NoteOffWithAttributeEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let velocity: UInt32?
+    let attributeType: NoteAttributeType
+    let attributeData: UInt16
+
+    var type: MidiEventType { attributeType == .unknown ? .unknown : .noteOffWithAttribute }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+
+    init(timestamp: UInt32,
+         group: UInt8?,
+         channel: UInt8?,
+         noteNumber: UInt8?,
+         velocity: UInt32,
+         attributeType: UInt8,
+         attributeData: UInt16) {
+        self.timestamp = timestamp
+        self.group = group
+        self.channel = channel
+        self.noteNumber = noteNumber
+        self.velocity = velocity
+        self.attributeType = NoteAttributeType(rawValue: attributeType)
+        self.attributeData = attributeData
+    }
+}
+
+/// Represents a Note End message.
+struct NoteEndEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let velocity: UInt32?
+    let attributeType: NoteAttributeType
+    let attributeData: UInt16
+
+    var type: MidiEventType { attributeType == .unknown ? .unknown : .noteEnd }
+    var controllerValue: UInt32? { nil }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+
+    init(timestamp: UInt32,
+         group: UInt8?,
+         channel: UInt8?,
+         noteNumber: UInt8?,
+         velocity: UInt32,
+         attributeType: UInt8,
+         attributeData: UInt16) {
+        self.timestamp = timestamp
+        self.group = group
+        self.channel = channel
+        self.noteNumber = noteNumber
+        self.velocity = velocity
+        self.attributeType = NoteAttributeType(rawValue: attributeType)
+        self.attributeData = attributeData
+    }
+}
+
+/// Represents a Pitch Clamp message.
+struct PitchClampEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+    let pitch: UInt32
+
+    var type: MidiEventType { .pitchClamp }
+    var velocity: UInt32? { nil }
+    var controllerValue: UInt32? { pitch }
+    var metaType: UInt8? { nil }
+    var rawData: Data? { nil }
+}
+
+/// Represents a Pitch Release message.
+struct PitchReleaseEvent: MidiEventProtocol {
+    let timestamp: UInt32
+    let group: UInt8?
+    let channel: UInt8?
+    let noteNumber: UInt8?
+
+    var type: MidiEventType { .pitchRelease }
+    var velocity: UInt32? { nil }
+    var controllerValue: UInt32? { nil }
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }
 }

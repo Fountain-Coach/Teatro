@@ -32,6 +32,23 @@ public struct MidiEventView: Renderable {
             case .noteAttribute:
                 let attr = (event as? NoteAttributeEvent)?.attributeIndex ?? 0
                 parts.append("attr \(event.noteNumber ?? 0) a\(attr) \(event.controllerValue ?? 0)")
+            case .noteOnWithAttribute:
+                if let e = event as? NoteOnWithAttributeEvent {
+                    parts.append("noteOnAttr \(event.noteNumber ?? 0) v\(event.velocity ?? 0) a\(e.attributeType.rawValue) d\(e.attributeData)")
+                }
+            case .noteOffWithAttribute:
+                if let e = event as? NoteOffWithAttributeEvent {
+                    parts.append("noteOffAttr \(event.noteNumber ?? 0) v\(event.velocity ?? 0) a\(e.attributeType.rawValue) d\(e.attributeData)")
+                }
+            case .noteEnd:
+                if let e = event as? NoteEndEvent {
+                    parts.append("noteEnd \(event.noteNumber ?? 0) v\(event.velocity ?? 0) a\(e.attributeType.rawValue) d\(e.attributeData)")
+                }
+            case .pitchClamp:
+                let val = (event as? PitchClampEvent)?.pitch ?? 0
+                parts.append("pitchClamp \(event.noteNumber ?? 0) \(val)")
+            case .pitchRelease:
+                parts.append("pitchRelease \(event.noteNumber ?? 0)")
             case .jrTimestamp:
                 parts.append("jr \(event.controllerValue ?? 0)")
             case .meta:

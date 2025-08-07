@@ -90,13 +90,27 @@ public struct UMPParser {
             switch status {
             case 0x80:
                 let note = UInt8((data1 >> 8) & 0xFF)
-                let vel = data2
-                return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                let attr = UInt8(data1 & 0xFF)
+                let attrData = UInt16(data2 & 0xFFFF)
+                if attr == 0 && attrData == 0 {
+                    let vel = data2
+                    return ChannelVoiceEvent(timestamp: 0, type: .noteOff, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                } else {
+                    let vel = UInt32((data2 >> 16) & 0xFFFF) << 16
+                    return NoteOffWithAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
+                }
             case 0x90:
                 let note = UInt8((data1 >> 8) & 0xFF)
-                let vel = data2
-                let eventType: MidiEventType = vel == 0 ? .noteOff : .noteOn
-                return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                let attr = UInt8(data1 & 0xFF)
+                let attrData = UInt16(data2 & 0xFFFF)
+                if attr == 0 && attrData == 0 {
+                    let vel = data2
+                    let eventType: MidiEventType = vel == 0 ? .noteOff : .noteOn
+                    return ChannelVoiceEvent(timestamp: 0, type: eventType, group: group, channel: channel, noteNumber: note, velocity: vel, controllerValue: nil)
+                } else {
+                    let vel = UInt32((data2 >> 16) & 0xFFFF) << 16
+                    return NoteOnWithAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
+                }
             case 0xA0:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 return ChannelVoiceEvent(timestamp: 0, type: .polyphonicKeyPressure, group: group, channel: channel, noteNumber: note, velocity: data2, controllerValue: nil)
@@ -110,14 +124,22 @@ public struct UMPParser {
                 return ChannelVoiceEvent(timestamp: 0, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0xE0:
                 return ChannelVoiceEvent(timestamp: 0, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+            case 0x10:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let attr = UInt8(data1 & 0xFF)
+                let vel = UInt32((data2 >> 16) & 0xFFFF)
+                let attrData = UInt16(data2 & 0xFFFF)
+                return NoteEndEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, velocity: vel, attributeType: attr, attributeData: attrData)
+            case 0x20:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                return PitchClampEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, pitch: data2)
+            case 0x30:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                return PitchReleaseEvent(timestamp: 0, group: group, channel: channel, noteNumber: note)
             case 0x00:
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let index = UInt8(data1 & 0xFF)
                 return PerNoteControllerEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, controllerIndex: index, controllerValue: data2)
-            case 0xF0:
-                let note = UInt8((data1 >> 8) & 0xFF)
-                let attr = UInt8(data1 & 0xFF)
-                return NoteAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, attributeIndex: attr, attributeValue: data2)
             default:
                 return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
             }

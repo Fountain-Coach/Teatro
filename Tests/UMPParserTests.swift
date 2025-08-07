@@ -34,10 +34,12 @@ final class UMPParserTests: XCTestCase {
         ]
         let events = try UMPParser.parse(data: Data(bytes))
         XCTAssertEqual(events.count, 1)
-        guard let event = events.first as? ChannelVoiceEvent else {
-            return XCTFail("Expected ChannelVoiceEvent")
+        guard let event = events.first as? NoteOnWithAttributeEvent else {
+            return XCTFail("Expected NoteOnWithAttributeEvent")
         }
-        XCTAssertEqual(event.velocity, 0x12345678)
+        XCTAssertEqual(event.velocity, 0x12340000)
+        XCTAssertEqual(event.attributeType.rawValue, 0x00)
+        XCTAssertEqual(event.attributeData, 0x5678)
     }
 
     func testPerNoteControllerDecoding() throws {
@@ -64,7 +66,7 @@ final class UMPParserTests: XCTestCase {
         let events = try UMPParser.parse(data: Data(bytes))
         XCTAssertEqual(events.count, 2)
         XCTAssertTrue(events.first is JRTimestampEvent)
-        XCTAssertTrue(events.last is ChannelVoiceEvent)
+        XCTAssertTrue(events.last is NoteOnWithAttributeEvent)
     }
 
     func testTruncatedPacketThrows() {

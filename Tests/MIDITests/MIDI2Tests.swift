@@ -5,7 +5,7 @@ final class MIDI2Tests: XCTestCase {
     func testUMPEncoderProducesWords() {
         let note = MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(0.5), duration: 0.1)
         let packets = UMPEncoder.encode(note)
-        XCTAssertEqual(packets, [0x40903C00, MIDI.fromUnitFloat(0.5)])
+        XCTAssertEqual(packets, [0x40903C00, 0x7FFF0000])
     }
 
     func testCSDRendererWritesFile() throws {
@@ -26,10 +26,12 @@ final class MIDI2Tests: XCTestCase {
             return XCTFail("Missing fixture")
         }
         let events = try UMPParser.parse(data: Data(bytes))
-        guard let event = events.first as? ChannelVoiceEvent else {
-            return XCTFail("Expected ChannelVoiceEvent")
+        guard let event = events.first as? NoteOnWithAttributeEvent else {
+            return XCTFail("Expected NoteOnWithAttributeEvent")
         }
-        XCTAssertEqual(event.velocity, 0x12345678)
+        XCTAssertEqual(event.velocity, 0x12340000)
+        XCTAssertEqual(event.attributeType.rawValue, 0x00)
+        XCTAssertEqual(event.attributeData, 0x5678)
     }
 
     func testPerNoteControllerParsingFromFixture() throws {

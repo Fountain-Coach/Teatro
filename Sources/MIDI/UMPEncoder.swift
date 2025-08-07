@@ -28,18 +28,14 @@ public struct UMPEncoder {
             }
         }
 
-        if let attrs = note.attributes {
-            for (attr, value) in attrs {
-                let status: UInt32 = 0xF << 20
-                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(attr.rawValue)
-                words.append(word1)
-                words.append(value)
-            }
-        }
+        let attrPair = note.attributes?.first
+        let attrType = UInt32(attrPair?.key.rawValue ?? 0)
+        let attrData = UInt32((attrPair?.value ?? 0) & 0xFFFF)
 
         let status: UInt32 = 0x9 << 20 // Note On opcode
-        let word1 = messageType | groupBits | status | channelBits | noteBits
-        let word2 = note.velocity
+        let word1 = messageType | groupBits | status | channelBits | noteBits | attrType
+        let vel16 = (note.velocity >> 16) & 0xFFFF
+        let word2 = (vel16 << 16) | attrData
         words.append(contentsOf: [word1, word2])
         return words
     }
@@ -77,6 +73,52 @@ public struct UMPEncoder {
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
             let word1 = messageType | groupBits | (0x0 << 20) | channelBits | noteBits | UInt32(ctrl.controllerIndex)
             return [word1, ctrl.controllerValue ?? 0]
+        case .noteOnWithAttribute:
+            guard let n = event as? NoteOnWithAttributeEvent, n.type != .unknown else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x9 << 20) | channelBits | noteBits | UInt32(n.attributeType.rawValue)
+            let velocity = ((n.velocity ?? 0) >> 16) & 0xFFFF
+            let word2 = (velocity << 16) | UInt32(n.attributeData)
+            return [word1, word2]
+        case .noteOffWithAttribute:
+            guard let n = event as? NoteOffWithAttributeEvent, n.type != .unknown else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x8 << 20) | channelBits | noteBits | UInt32(n.attributeType.rawValue)
+            let velocity = ((n.velocity ?? 0) >> 16) & 0xFFFF
+            let word2 = (velocity << 16) | UInt32(n.attributeData)
+            return [word1, word2]
+        case .noteEnd:
+            guard let n = event as? NoteEndEvent, n.type != .unknown else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x1 << 20) | channelBits | noteBits | UInt32(n.attributeType.rawValue)
+            let velocity = ((n.velocity ?? 0) >> 16) & 0xFFFF
+            let word2 = (velocity << 16) | UInt32(n.attributeData)
+            return [word1, word2]
+        case .pitchClamp:
+            guard let p = event as? PitchClampEvent else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x2 << 20) | channelBits | noteBits
+            return [word1, p.pitch]
+        case .pitchRelease:
+            guard let _ = event as? PitchReleaseEvent else { return [] }
+            let messageType: UInt32 = 0x4 << 28
+            let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
+            let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
+            let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
+            let word1 = messageType | groupBits | (0x3 << 20) | channelBits | noteBits
+            return [word1, 0]
         case .noteAttribute:
             guard let attr = event as? NoteAttributeEvent else { return [] }
             let messageType: UInt32 = 0x4 << 28

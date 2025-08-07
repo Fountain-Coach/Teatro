@@ -2,10 +2,14 @@ import Foundation
 
 /// Supported per-note attribute identifiers.
 public enum MIDI2NoteAttribute: UInt8, CaseIterable, Sendable {
+    /// No attribute data.
+    case none = 0x00
     /// Manufacturer specific attribute data.
     case manufacturerSpecific = 0x01
     /// Profile specific attribute data.
     case profileSpecific = 0x02
+    /// Pitch 7.9 attribute data.
+    case pitch7_9 = 0x03
 }
 
 /// Lightweight representation of a MIDI 2.0 note event.
