@@ -8,6 +8,12 @@ final class RendererTests: XCTestCase {
         XCTAssertTrue(html.contains("<pre>\nHi\n</pre>"))
     }
 
+    func testHTMLRendererStyles() {
+        let text = Text("B", style: .bold)
+        let html = HTMLRenderer.render(text)
+        XCTAssertTrue(html.contains("<strong>B</strong>"))
+    }
+
     func testSVGRenderer() {
         let text = Text("Hi")
         let svg = SVGRenderer.render(text)
@@ -15,11 +21,23 @@ final class RendererTests: XCTestCase {
         XCTAssertTrue(svg.contains("Hi"))
     }
 
+    func testSVGRendererStyles() {
+        let text = Text("U", style: .underline)
+        let svg = SVGRenderer.render(text)
+        XCTAssertTrue(svg.contains("text-decoration=\"underline\""))
+    }
+
     func testMarkdownRenderer() {
         let text = Text("Hi")
         let md = MarkdownRenderer.render(text)
         XCTAssertTrue(md.contains("```"))
         XCTAssertTrue(md.contains("Hi"))
+    }
+
+    func testMarkdownRendererStyles() {
+        let text = Text("I", style: .italic)
+        let md = MarkdownRenderer.render(text)
+        XCTAssertTrue(md.contains("*I*"))
     }
 
     func testAnimatedSVGRenderer() {

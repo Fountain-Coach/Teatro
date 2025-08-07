@@ -20,18 +20,7 @@ public struct SVGRenderer {
         var y = 20
         let rendered = view.layout().lines().map { line -> String in
             defer { y += 20 }
-            let styled = line.map { span -> String in
-                switch span.style {
-                case .bold:
-                    return "<tspan font-weight=\"bold\">\(span.text)</tspan>"
-                case .italic:
-                    return "<tspan font-style=\"italic\">\(span.text)</tspan>"
-                case .underline:
-                    return "<tspan text-decoration=\"underline\">\(span.text)</tspan>"
-                case .plain:
-                    return span.text
-                }
-            }.joined()
+            let styled = StyleExpander.svg(line)
             return "<text x=\"10\" y=\"\(y)\" font-family=\"monospace\" font-size=\"14\">\(styled)</text>"
         }.joined(separator: "\n")
 
