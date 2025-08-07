@@ -208,6 +208,26 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(event.rawData, Data(bytes))
     }
 
+    func testRoundTripPerNoteControllerAndAttribute() throws {
+        let words: [UInt32] = [
+            0x10000001,
+            0x40003C02, 0x0A0B0C0D,
+            0x40F03C01, 0x11223344,
+            0x40903C00, 0x01020304
+        ]
+        var bytes: [UInt8] = []
+        for w in words {
+            bytes.append(UInt8((w >> 24) & 0xFF))
+            bytes.append(UInt8((w >> 16) & 0xFF))
+            bytes.append(UInt8((w >> 8) & 0xFF))
+            bytes.append(UInt8(w & 0xFF))
+        }
+        let events = try UMPParser.parse(data: Data(bytes))
+        XCTAssertEqual(events.count, 4)
+        let encoded = UMPEncoder.encodeEvents(events)
+        XCTAssertEqual(encoded, words)
+    }
+
     func testMisalignedDataThrows() {
         let bytes: [UInt8] = [0x00]
         XCTAssertThrowsError(try UMPParser.parse(data: Data(bytes))) { error in

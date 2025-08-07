@@ -114,6 +114,10 @@ public struct UMPParser {
                 let note = UInt8((data1 >> 8) & 0xFF)
                 let index = UInt8(data1 & 0xFF)
                 return PerNoteControllerEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, controllerIndex: index, controllerValue: data2)
+            case 0xF0:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                let attr = UInt8(data1 & 0xFF)
+                return NoteAttributeEvent(timestamp: 0, group: group, channel: channel, noteNumber: note, attributeIndex: attr, attributeValue: data2)
             default:
                 return UnknownEvent(timestamp: 0, data: rawData(from: words), group: group)
             }

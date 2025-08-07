@@ -1,5 +1,13 @@
 import Foundation
 
+/// Supported per-note attribute identifiers.
+public enum MIDI2NoteAttribute: UInt8, CaseIterable, Sendable {
+    /// Manufacturer specific attribute data.
+    case manufacturerSpecific = 0x01
+    /// Profile specific attribute data.
+    case profileSpecific = 0x02
+}
+
 /// Lightweight representation of a MIDI 2.0 note event.
 public struct MIDI2Note: Sendable, Equatable {
     public let channel: Int
@@ -13,8 +21,8 @@ public struct MIDI2Note: Sendable, Equatable {
     public let perNoteControllers: [PerNoteController]?
     /// Optional JR Timestamp preceding the note message.
     public let jrTimestamp: UInt32?
-    /// Placeholder for future per-note attribute data.
-    public let attributes: [String: UInt32]?
+    /// Optional typed per-note attribute data.
+    public let attributes: [MIDI2NoteAttribute: UInt32]?
 
     public init(channel: Int,
                 note: Int,
@@ -24,7 +32,7 @@ public struct MIDI2Note: Sendable, Equatable {
                 articulation: String? = nil,
                 perNoteControllers: [PerNoteController]? = nil,
                 jrTimestamp: UInt32? = nil,
-                attributes: [String: UInt32]? = nil) {
+                attributes: [MIDI2NoteAttribute: UInt32]? = nil) {
         self.channel = channel
         self.note = note
         self.velocity = velocity
@@ -34,6 +42,17 @@ public struct MIDI2Note: Sendable, Equatable {
         self.perNoteControllers = perNoteControllers
         self.jrTimestamp = jrTimestamp
         self.attributes = attributes
+    }
+
+    /// Returns the attribute value for a given identifier.
+    public func attribute(_ attribute: MIDI2NoteAttribute) -> UInt32? {
+        attributes?[attribute]
+    }
+
+    /// Validates that all attributes use supported identifiers.
+    public func validateAttributes() -> Bool {
+        guard let attrs = attributes else { return true }
+        return attrs.keys.allSatisfy { MIDI2NoteAttribute.allCases.contains($0) }
     }
 }
 
