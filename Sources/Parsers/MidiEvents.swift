@@ -16,6 +16,9 @@ public enum MidiEventType {
     case noteEnd
     case pitchClamp
     case pitchRelease
+    case perNotePitchBend
+    case rpn
+    case nrpn
     case jrTimestamp
     case meta
     case sysEx
@@ -66,6 +69,7 @@ struct PerNoteControllerEvent: MidiEventProtocol {
     var metaType: UInt8? { nil }
     var rawData: Data? { nil }
 }
+
 
 /// Represents per-note attribute messages in MIDI 2.0.
 struct NoteAttributeEvent: MidiEventProtocol {

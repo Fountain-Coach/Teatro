@@ -131,6 +131,19 @@ public struct UMPParser {
                 return ChannelVoiceEvent(timestamp: timestamp, type: .channelPressure, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0xE0:
                 return ChannelVoiceEvent(timestamp: timestamp, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
+            case 0x20:
+                let note = UInt8((data1 >> 8) & 0xFF)
+                return PerNotePitchBendEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, pitch: data2)
+            case 0x60:
+                let msb = UInt8((data1 >> 8) & 0x7F)
+                let lsb = UInt8(data1 & 0x7F)
+                let parameter = UInt16(msb) << 7 | UInt16(lsb)
+                return RegisteredParameterNumber(timestamp: timestamp, group: group, channel: channel, parameter: parameter, value: data2)
+            case 0x70:
+                let msb = UInt8((data1 >> 8) & 0x7F)
+                let lsb = UInt8(data1 & 0x7F)
+                let parameter = UInt16(msb) << 7 | UInt16(lsb)
+                return NonRegisteredParameterNumber(timestamp: timestamp, group: group, channel: channel, parameter: parameter, value: data2)
             case let s where (s & 0xF0) == 0x10:
                 guard words.count > 1 else {
                     return UnknownEvent(timestamp: timestamp, data: rawData(from: words), group: group)

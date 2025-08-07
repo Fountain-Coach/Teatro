@@ -67,6 +67,39 @@ public enum MIDI1Bridge {
                     bytes.append(UInt8(truncatingIfNeeded: bend & 0x7F))
                     bytes.append(UInt8(truncatingIfNeeded: bend >> 7))
                 }
+            case .perNotePitchBend:
+                if let value = event.controllerValue {
+                    let bend = MIDI.midi1PitchBend(from: value)
+                    bytes.append(0xE0 | ch)
+                    bytes.append(UInt8(truncatingIfNeeded: bend & 0x7F))
+                    bytes.append(UInt8(truncatingIfNeeded: bend >> 7))
+                }
+            case .rpn:
+                if let r = event as? RegisteredParameterNumber {
+                    let msb = UInt8((r.parameter >> 7) & 0x7F)
+                    let lsb = UInt8(r.parameter & 0x7F)
+                    let dataMSB = MIDI.midi1Controller(from: r.value)
+                    let dataLSB = MIDI.midi1Controller(from: r.value >> 16)
+                    bytes.append(contentsOf: [
+                        0xB0 | ch, 0x65, msb,
+                        0xB0 | ch, 0x64, lsb,
+                        0xB0 | ch, 0x06, dataMSB,
+                        0xB0 | ch, 0x26, dataLSB
+                    ])
+                }
+            case .nrpn:
+                if let n = event as? NonRegisteredParameterNumber {
+                    let msb = UInt8((n.parameter >> 7) & 0x7F)
+                    let lsb = UInt8(n.parameter & 0x7F)
+                    let dataMSB = MIDI.midi1Controller(from: n.value)
+                    let dataLSB = MIDI.midi1Controller(from: n.value >> 16)
+                    bytes.append(contentsOf: [
+                        0xB0 | ch, 0x63, msb,
+                        0xB0 | ch, 0x62, lsb,
+                        0xB0 | ch, 0x06, dataMSB,
+                        0xB0 | ch, 0x26, dataLSB
+                    ])
+                }
             case .sysEx:
                 // SysEx handled above when channel is nil
                 continue

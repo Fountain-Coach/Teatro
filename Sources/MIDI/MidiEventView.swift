@@ -29,6 +29,16 @@ public struct MidiEventView: Renderable {
             case .perNoteController:
                 let ctrl = (event as? PerNoteControllerEvent)?.controllerIndex ?? 0
                 parts.append("pnc \(event.noteNumber ?? 0) c\(ctrl) \(event.controllerValue ?? 0)")
+            case .perNotePitchBend:
+                parts.append("pnpb \(event.noteNumber ?? 0) \(event.controllerValue ?? 0)")
+            case .rpn:
+                if let e = event as? RegisteredParameterNumber {
+                    parts.append("rpn \(e.parameter) \(e.value)")
+                }
+            case .nrpn:
+                if let e = event as? NonRegisteredParameterNumber {
+                    parts.append("nrpn \(e.parameter) \(e.value)")
+                }
             case .noteAttribute:
                 let attr = (event as? NoteAttributeEvent)?.attributeIndex ?? 0
                 parts.append("attr \(event.noteNumber ?? 0) a\(attr) \(event.controllerValue ?? 0)")
