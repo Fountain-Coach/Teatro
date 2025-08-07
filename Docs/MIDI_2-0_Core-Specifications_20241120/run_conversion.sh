@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Always operate from the script's directory
+cd "$(dirname "$0")"
+
 # Initialize directories and failure log
 mkdir -p text images ocr_t1 ocr_t2 ocr_k ocr_final
 : > ocr_failures.txt
@@ -17,19 +20,21 @@ for pdf in *.pdf; do
   pdfimages -png "$pdf" "images/$base/table"
 
   # 3. Multi-pass OCR pipeline
-  find "images/$base" -name 'table-*.png' | while read img; do
+  find "images/$base" -name 'table-*.png' | while IFS= read -r img; do
     proc="${img%.png}-proc.png"
     # Pre-process: deskew, upscale, binarize
     convert "$img" -deskew 40% -resize 200% -threshold 50% "$proc"
 
     # Tesseract first pass
-    t1="ocr_t1/${base}-$(basename "$img" .png).txt"
-    tesseract "$proc" "$t1" --psm 6 txt >/dev/null 2>&1 || true
+    t1_base="ocr_t1/${base}-$(basename "$img" .png)"
+    tesseract "$proc" "$t1_base" --psm 6 txt >/dev/null 2>&1 || true
+    t1="${t1_base}.txt"
 
     # OCRmyPDF second pass
     t2_pdf="ocr_t2/${base}-$(basename "$img" .png)-ocr.pdf"
+    t2="ocr_t2/${base}-$(basename "$img" .png).txt"
     ocrmypdf --force-ocr "$proc" "$t2_pdf" >/dev/null 2>&1 || true
-    pdftotext "$t2_pdf" "ocr_t2/${base}-$(basename "$img" .png).txt" >/dev/null 2>&1 || true
+    pdftotext "$t2_pdf" "$t2" >/dev/null 2>&1 || true
 
     # Kraken third pass
     t3="ocr_k/${base}-$(basename "$img" .png).txt"
@@ -37,7 +42,7 @@ for pdf in *.pdf; do
 
     # Consolidate: pick first non-empty
     final="ocr_final/${base}-$(basename "$img" .png).txt"
-    for src in "$t1" "ocr_t2/${base}-$(basename "$img" .png).txt" "$t3"; do
+    for src in "$t1" "$t2" "$t3"; do
       if [ -s "$src" ]; then
         cp "$src" "$final"
         break
@@ -57,7 +62,7 @@ for pdf in *.pdf; do
     cat "text/$base.txt"
     echo
     echo "## Tables & OCR Results"
-    find "images/$base" -name 'table-*.png' | while read img; do
+    find "images/$base" -name 'table-*.png' | while IFS= read -r img; do
       echo
       echo "### $(basename "$img")"
       echo "![Table]($img)"
