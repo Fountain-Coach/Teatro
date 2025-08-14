@@ -14,14 +14,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
-        .package(url: "https://github.com/swiftlang/swift-tools-support-core", from: "0.6.0")
+        .package(url: "https://github.com/swiftlang/swift-tools-support-core", from: "0.6.0"),
+        .package(url: "https://github.com/Fountain-Coach/midi2", from: "0.2.0")
     ],
     targets: [
         .target(
             name: "Teatro",
-            dependencies: ["CCsound", "CFluidSynth"],
+            dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth"]
+            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"]
         ),
         .executableTarget(
             name: "RenderCLI",
