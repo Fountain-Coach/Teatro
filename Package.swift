@@ -10,7 +10,8 @@ let package = Package(
             targets: ["Teatro"]
         ),
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
-        .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"])
+        .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"]),
+        .executable(name: "teatro-play", targets: ["TeatroPlay"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
@@ -22,7 +23,7 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"],
+            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"],
             linkerSettings: [
                 .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
             ]
@@ -44,6 +45,14 @@ let package = Package(
                 .copy("../../assets/sine.orc"),
                 .copy("../../assets/example.sf2")
             ]
+        ),
+        .executableTarget(
+            name: "TeatroPlay",
+            dependencies: [
+                "Teatro",
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ],
+            path: "Sources/TeatroPlay"
         ),
         .testTarget(
             name: "TeatroTests",
