@@ -22,7 +22,10 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"]
+            exclude: ["CLI", "TeatroSamplerDemo", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"],
+            linkerSettings: [
+                .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
+            ]
         ),
         .executableTarget(
             name: "RenderCLI",
