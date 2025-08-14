@@ -1,28 +1,77 @@
 import XCTest
+import MIDI2
 @testable import Teatro
 
+// Refs: teatro-root
+
 final class MIDI1BridgeTests: XCTestCase {
-    func testRoundTripConversion() throws {
-        let event = ChannelVoiceEvent(timestamp: 0, type: .noteOn, group: 0, channel: 0, noteNumber: 60, velocity: 100, controllerValue: nil)
-        let words = UMPEncoder.encodeEvents([event])
-        var umpData = Data()
-        for word in words {
-            var be = word.bigEndian
-            withUnsafeBytes(of: &be) { umpData.append(contentsOf: $0) }
-        }
-        let midi1 = try MIDI1Bridge.umpToMIDI1(umpData)
-        let roundTripWords = MIDI1Bridge.midi1ToUMP(midi1)
-        var roundTripData = Data()
-        for word in roundTripWords {
-            var be = word.bigEndian
-            withUnsafeBytes(of: &be) { roundTripData.append(contentsOf: $0) }
-        }
-        let parsed = try UMPParser.parse(data: roundTripData)
-        guard let note = parsed.first as? ChannelVoiceEvent else {
-            return XCTFail("Expected ChannelVoiceEvent")
-        }
-        XCTAssertEqual(note.noteNumber, 60)
-        XCTAssertEqual(note.velocity, 100)
+    func testNoteOnRoundTripPreservesGroupChannel() throws {
+        let note = Midi2NoteOn(group: Uint4(2)!, channel: Uint4(3)!, note: Uint7(60)!, velocity: 0x7F00)
+        let packet = note.ump()
+        var data = Data()
+        for w in packet.words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let midi1 = try MIDI1Bridge.umpToMIDI1(data)
+        let round = MIDI1Bridge.midi1ToUMP(midi1, group: 2)
+        XCTAssertEqual(round.count, 1)
+        let word = round[0]
+        XCTAssertEqual(UInt8((word >> 24) & 0xF), 2)
+        XCTAssertEqual(UInt8((word >> 20) & 0xF), 0x9)
+        XCTAssertEqual(UInt8((word >> 16) & 0xF), 3)
+        XCTAssertEqual(UInt8((word >> 8) & 0x7F), 60)
+        let expected = MIDI.midi1Velocity(from: UInt32(note.velocity) << 16)
+        XCTAssertEqual(UInt8(word & 0x7F), expected)
+    }
+
+    func testNoteOffRoundTripPreservesGroupChannel() throws {
+        let off = NoteOff(group: Uint4(2)!, channel: Uint4(3)!, noteNumber: Uint7(60)!, velocity: 0x4000)
+        let packet = off.ump()
+        var data = Data()
+        for w in [packet.word0, packet.word1] { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let midi1 = try MIDI1Bridge.umpToMIDI1(data)
+        let round = MIDI1Bridge.midi1ToUMP(midi1, group: 2)
+        XCTAssertEqual(round.count, 1)
+        let word = round[0]
+        XCTAssertEqual(UInt8((word >> 24) & 0xF), 2)
+        XCTAssertEqual(UInt8((word >> 20) & 0xF), 0x8)
+        XCTAssertEqual(UInt8((word >> 16) & 0xF), 3)
+        XCTAssertEqual(UInt8((word >> 8) & 0x7F), 60)
+        let expected = MIDI.midi1Velocity(from: UInt32(off.velocity) << 16)
+        XCTAssertEqual(UInt8(word & 0x7F), expected)
+    }
+
+    func testControlChangeRoundTripPreservesGroupChannel() throws {
+        let cc = ControlChange(group: Uint4(1)!, channel: Uint4(5)!, control: Uint7(7)!, value: 0x12345678)
+        let packet = cc.ump()
+        var data = Data()
+        for w in packet.words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let midi1 = try MIDI1Bridge.umpToMIDI1(data)
+        let round = MIDI1Bridge.midi1ToUMP(midi1, group: 1)
+        XCTAssertEqual(round.count, 1)
+        let word = round[0]
+        XCTAssertEqual(UInt8((word >> 24) & 0xF), 1)
+        XCTAssertEqual(UInt8((word >> 20) & 0xF), 0xB)
+        XCTAssertEqual(UInt8((word >> 16) & 0xF), 5)
+        XCTAssertEqual(UInt8((word >> 8) & 0x7F), 7)
+        let expected = MIDI.midi1Controller(from: cc.value)
+        XCTAssertEqual(UInt8(word & 0x7F), expected)
+    }
+
+    func testPitchBendRoundTripPreservesGroupChannel() throws {
+        let pb = PitchBend(group: Uint4(0)!, channel: Uint4(4)!, value: 0x11223344)
+        let packet = pb.ump()
+        var data = Data()
+        for w in packet.words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let midi1 = try MIDI1Bridge.umpToMIDI1(data)
+        let round = MIDI1Bridge.midi1ToUMP(midi1, group: 0)
+        XCTAssertEqual(round.count, 1)
+        let word = round[0]
+        XCTAssertEqual(UInt8((word >> 24) & 0xF), 0)
+        XCTAssertEqual(UInt8((word >> 20) & 0xF), 0xE)
+        XCTAssertEqual(UInt8((word >> 16) & 0xF), 4)
+        let lsb = UInt8((word >> 8) & 0x7F)
+        let msb = UInt8(word & 0x7F)
+        let combined = UInt16(msb) << 7 | UInt16(lsb)
+        XCTAssertEqual(combined, MIDI.midi1PitchBend(from: pb.value))
     }
 
     func testUnsupportedMessagesGraceful() throws {
@@ -33,27 +82,20 @@ final class MIDI1BridgeTests: XCTestCase {
         XCTAssertTrue(words.isEmpty)
     }
 
-    func testRunningStatusConversion() throws {
+    func testRunningStatusConversion() {
         let midi1 = Data([0x90, 0x40, 0x7F, 0x41, 0x7F])
         let words = MIDI1Bridge.midi1ToUMP(midi1)
         XCTAssertEqual(words.count, 2)
-        var data = Data()
-        for word in words {
-            var be = word.bigEndian
-            withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+        for w in words {
+            XCTAssertEqual(UInt8((w >> 20) & 0xF), 0x9)
         }
-        let events = try UMPParser.parse(data: data)
-        XCTAssertEqual(events.count, 2)
     }
 
     func testPitchBendEdgeConversion() throws {
         let midi1 = Data([0xE0, 0x00, 0x00, 0xE0, 0x7F, 0x7F])
         let words = MIDI1Bridge.midi1ToUMP(midi1)
         var data = Data()
-        for word in words {
-            var be = word.bigEndian
-            withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
-        }
+        for word in words { var be = word.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
         let roundTrip = try MIDI1Bridge.umpToMIDI1(data)
         let bytes = [UInt8](roundTrip)
         XCTAssertEqual(bytes.count, 6)
@@ -61,5 +103,3 @@ final class MIDI1BridgeTests: XCTestCase {
         XCTAssertEqual(Array(bytes[3...5]), [0xE0, 0x00, 0x00])
     }
 }
-
-// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

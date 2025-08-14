@@ -1,4 +1,7 @@
 import Foundation
+import MIDI2
+
+// Refs: teatro-root
 
 /// Bridges between Universal MIDI Packets and MIDI 1.0 byte streams.
 /// Only channel voice and basic SysEx7 messages are translated. Other
@@ -9,94 +12,72 @@ public enum MIDI1Bridge {
     /// - Parameter data: Raw UMP word bytes (big-endian).
     /// - Returns: MIDI 1.0 bytes. Unsupported messages are discarded.
     public static func umpToMIDI1(_ data: Data) throws -> Data {
-        let events = try UMPParser.parse(data: data)
         var bytes: [UInt8] = []
-        for event in events {
-            guard let ch = event.channel else {
-                // SysEx messages have no channel and are handled separately
-                if event.type == .sysEx, let raw = event.rawData {
-                    bytes.append(contentsOf: raw)
-                }
-                continue
+        let raw = [UInt8](data)
+        var index = 0
+        while index + 4 <= raw.count {
+            let word0 = UInt32(raw[index]) << 24 |
+                        UInt32(raw[index + 1]) << 16 |
+                        UInt32(raw[index + 2]) << 8 |
+                        UInt32(raw[index + 3])
+            let mt = UInt8((word0 >> 28) & 0xF)
+            let count: Int
+            switch mt {
+            case 0x0, 0x1, 0x2: count = 1
+            case 0x4, 0x5: count = 2
+            case 0x6: count = 3
+            case 0x7: count = 4
+            default: count = 1
             }
-            switch event.type {
-            case .noteOn:
-                if let note = event.noteNumber, let vel = event.velocity {
-                    bytes.append(0x90 | ch)
-                    bytes.append(note)
-                    bytes.append(MIDI.midi1Velocity(from: vel))
-                }
-            case .noteOff:
-                if let note = event.noteNumber, let vel = event.velocity {
+            guard index + count * 4 <= raw.count else { break }
+            var words = [word0]
+            for i in 1..<count {
+                let base = index + i * 4
+                let w = UInt32(raw[base]) << 24 |
+                        UInt32(raw[base + 1]) << 16 |
+                        UInt32(raw[base + 2]) << 8 |
+                        UInt32(raw[base + 3])
+                words.append(w)
+            }
+            index += count * 4
+            guard let event = UMPEvent(words: words) else { continue }
+            switch event {
+            case .channelVoice(let body):
+                let ch = UInt8(body.channel.rawValue)
+                guard let variant = body.variant() else { continue }
+                switch variant {
+                case .noteOn(let msg):
+                    let note = UInt8(msg.note.rawValue)
+                    let vel32 = UInt32(msg.velocity) << 16
+                    let vel7 = MIDI.midi1Velocity(from: vel32)
+                    if vel7 == 0 {
+                        bytes.append(0x80 | ch)
+                        bytes.append(note)
+                        bytes.append(0)
+                    } else {
+                        bytes.append(0x90 | ch)
+                        bytes.append(note)
+                        bytes.append(vel7)
+                    }
+                case .noteOff(let msg):
+                    let note = UInt8(msg.noteNumber.rawValue)
+                    let vel32 = UInt32(msg.velocity) << 16
+                    let vel7 = MIDI.midi1Velocity(from: vel32)
                     bytes.append(0x80 | ch)
                     bytes.append(note)
-                    bytes.append(MIDI.midi1Velocity(from: vel))
-                }
-            case .polyphonicKeyPressure:
-                if let note = event.noteNumber, let vel = event.velocity {
-                    bytes.append(0xA0 | ch)
-                    bytes.append(note)
-                    bytes.append(MIDI.midi1Velocity(from: vel))
-                }
-            case .controlChange:
-                if let controller = event.noteNumber, let val = event.controllerValue {
+                    bytes.append(vel7)
+                case .controlChange(let msg):
                     bytes.append(0xB0 | ch)
-                    bytes.append(controller)
-                    bytes.append(MIDI.midi1Controller(from: val))
-                }
-            case .programChange:
-                if let program = event.controllerValue {
-                    bytes.append(0xC0 | ch)
-                    bytes.append(UInt8(truncatingIfNeeded: program))
-                }
-            case .channelPressure:
-                if let pressure = event.controllerValue {
-                    bytes.append(0xD0 | ch)
-                    bytes.append(MIDI.midi1Controller(from: pressure))
-                }
-            case .pitchBend:
-                if let value = event.controllerValue {
-                    let bend = MIDI.midi1PitchBend(from: value)
+                    bytes.append(UInt8(msg.control.rawValue))
+                    bytes.append(MIDI.midi1Controller(from: msg.value))
+                case .pitchBend(let msg):
+                    let bend = MIDI.midi1PitchBend(from: msg.value)
                     bytes.append(0xE0 | ch)
                     bytes.append(UInt8(truncatingIfNeeded: bend & 0x7F))
                     bytes.append(UInt8(truncatingIfNeeded: bend >> 7))
+                default:
+                    continue
                 }
-            case .perNotePitchBend:
-                if let value = event.controllerValue {
-                    let bend = MIDI.midi1PitchBend(from: value)
-                    bytes.append(0xE0 | ch)
-                    bytes.append(UInt8(truncatingIfNeeded: bend & 0x7F))
-                    bytes.append(UInt8(truncatingIfNeeded: bend >> 7))
-                }
-            case .rpn:
-                if let r = event as? RegisteredParameterNumber {
-                    let msb = UInt8((r.parameter >> 7) & 0x7F)
-                    let lsb = UInt8(r.parameter & 0x7F)
-                    let dataMSB = MIDI.midi1Controller(from: r.value)
-                    let dataLSB = MIDI.midi1Controller(from: r.value >> 16)
-                    bytes.append(contentsOf: [
-                        0xB0 | ch, 0x65, msb,
-                        0xB0 | ch, 0x64, lsb,
-                        0xB0 | ch, 0x06, dataMSB,
-                        0xB0 | ch, 0x26, dataLSB
-                    ])
-                }
-            case .nrpn:
-                if let n = event as? NonRegisteredParameterNumber {
-                    let msb = UInt8((n.parameter >> 7) & 0x7F)
-                    let lsb = UInt8(n.parameter & 0x7F)
-                    let dataMSB = MIDI.midi1Controller(from: n.value)
-                    let dataLSB = MIDI.midi1Controller(from: n.value >> 16)
-                    bytes.append(contentsOf: [
-                        0xB0 | ch, 0x63, msb,
-                        0xB0 | ch, 0x62, lsb,
-                        0xB0 | ch, 0x06, dataMSB,
-                        0xB0 | ch, 0x26, dataLSB
-                    ])
-                }
-            case .sysEx:
-                // SysEx handled above when channel is nil
-                continue
             default:
                 continue
             }
