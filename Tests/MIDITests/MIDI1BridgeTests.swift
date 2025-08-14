@@ -102,4 +102,26 @@ final class MIDI1BridgeTests: XCTestCase {
         XCTAssertEqual(Array(bytes[0...2]), [0xE0, 0x00, 0x00])
         XCTAssertEqual(Array(bytes[3...5]), [0xE0, 0x00, 0x00])
     }
+
+    func testBridgeToAudioSink() throws {
+        final class MockSink: MIDIAudioSink {
+            var calls: [(String, UInt8, UInt8, UInt8)] = []
+            func noteOn(note: UInt8, vel: UInt8, ch: UInt8) { calls.append(("on", note, vel, ch)) }
+            func noteOff(note: UInt8, ch: UInt8) { calls.append(("off", note, 0, ch)) }
+            func controlChange(cc: UInt8, value: UInt8, ch: UInt8) { calls.append(("cc", cc, value, ch)) }
+        }
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(1)!, note: Uint7(60)!, velocity: 0x7F00)
+        let packet = note.ump()
+        var data = Data()
+        for w in packet.words { var be = w.bigEndian; withUnsafeBytes(of: &be) { data.append(contentsOf: $0) } }
+        let sink = MockSink()
+        try MIDI1Bridge.umpToMIDI1(data, sink: sink)
+        XCTAssertEqual(sink.calls.count, 1)
+        if let first = sink.calls.first {
+            XCTAssertEqual(first.0, "on")
+            XCTAssertEqual(first.1, 60)
+            XCTAssertEqual(first.2, 127)
+            XCTAssertEqual(first.3, 1)
+        }
+    }
 }

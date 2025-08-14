@@ -8,11 +8,9 @@ import MIDI2
 /// packet types are silently ignored so that unsupported data does not
 /// terminate the conversion.
 public enum MIDI1Bridge {
-    /// Converts a stream of UMP data into a MIDI 1.0 byte sequence.
-    /// - Parameter data: Raw UMP word bytes (big-endian).
-    /// - Returns: MIDI 1.0 bytes. Unsupported messages are discarded.
-    public static func umpToMIDI1(_ data: Data) throws -> Data {
-        var bytes: [UInt8] = []
+    /// Internal helper extracting UMP events from raw data.
+    private static func extractEvents(_ data: Data) -> [UMPEvent] {
+        var events: [UMPEvent] = []
         let raw = [UInt8](data)
         var index = 0
         while index + 4 <= raw.count {
@@ -40,7 +38,19 @@ public enum MIDI1Bridge {
                 words.append(w)
             }
             index += count * 4
-            guard let event = UMPEvent(words: words) else { continue }
+            if let event = UMPEvent(words: words) {
+                events.append(event)
+            }
+        }
+        return events
+    }
+
+    /// Converts a stream of UMP data into a MIDI 1.0 byte sequence.
+    /// - Parameter data: Raw UMP word bytes (big-endian).
+    /// - Returns: MIDI 1.0 bytes. Unsupported messages are discarded.
+    public static func umpToMIDI1(_ data: Data) throws -> Data {
+        var bytes: [UInt8] = []
+        for event in extractEvents(data) {
             switch event {
             case .channelVoice(let body):
                 let ch = UInt8(body.channel.rawValue)
@@ -83,6 +93,42 @@ public enum MIDI1Bridge {
             }
         }
         return Data(bytes)
+    }
+
+    /// Bridges UMP data directly into an audio sink.
+    /// - Parameters:
+    ///   - data: Raw UMP word bytes (big-endian).
+    ///   - sink: Destination implementing `MIDIAudioSink`.
+    public static func umpToMIDI1(_ data: Data, sink: MIDIAudioSink) throws {
+        for event in extractEvents(data) {
+            switch event {
+            case .channelVoice(let body):
+                let ch = UInt8(body.channel.rawValue)
+                guard let variant = body.variant() else { continue }
+                switch variant {
+                case .noteOn(let msg):
+                    let note = UInt8(msg.note.rawValue)
+                    let vel32 = UInt32(msg.velocity) << 16
+                    let vel7 = MIDI.midi1Velocity(from: vel32)
+                    if vel7 == 0 {
+                        sink.noteOff(note: note, ch: ch)
+                    } else {
+                        sink.noteOn(note: note, vel: vel7, ch: ch)
+                    }
+                case .noteOff(let msg):
+                    let note = UInt8(msg.noteNumber.rawValue)
+                    sink.noteOff(note: note, ch: ch)
+                case .controlChange(let msg):
+                    sink.controlChange(cc: UInt8(msg.control.rawValue),
+                                      value: MIDI.midi1Controller(from: msg.value),
+                                      ch: ch)
+                default:
+                    continue
+                }
+            default:
+                continue
+            }
+        }
     }
 
     /// Converts a MIDI 1.0 byte stream into UMP packets.
