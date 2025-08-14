@@ -27,6 +27,16 @@ The command above reads a UMP file, translates it to MIDI 1.0 bytes, and writes
 the result to standard output (or the file specified with `--output`).
 `MIDI1Bridge.midi1ToUMP(_:)` performs the inverse conversion when needed.
 
+### Command-line Playback
+
+Pipe bridged MIDI data into the `teatro-play` utility to hear it through
+FluidSynth on Linux or the Apple sampler on macOS:
+
+```bash
+swift run RenderCLI song.ump --midi1-bridge | \
+    swift run teatro-play --from-stdin --sink fluidsynth --sf2 ./GeneralUser.sf2
+```
+
 The long-form documentation lives under `Docs/Chapters`. Start with the timeline and progress through each chapter.
 
 ## Documentation
