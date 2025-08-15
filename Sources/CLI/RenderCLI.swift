@@ -15,7 +15,7 @@ import Darwin
 public struct RenderCLI: ParsableCommand {
     public static let configuration = CommandConfiguration(
         abstract: "Render Teatro views from scripts, scores, and storyboards.",
-        version: "0.1.0"
+        version: "0.2.0"
     )
 
     @Argument(help: "Input file path. Supported: .fountain, .ly, .mid/.midi, .ump, .csd, .storyboard, .session")

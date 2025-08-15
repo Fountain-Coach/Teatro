@@ -303,7 +303,7 @@ final class RenderCLICoverageTests: XCTestCase {
         process.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(decoding: data, as: UTF8.self)
-        XCTAssertTrue(output.contains("0.1.0"))
+        XCTAssertTrue(output.contains("0.2.0"))
     }
 }
 
