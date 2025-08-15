@@ -87,16 +87,16 @@ public protocol MIDIAudioSink {
 - Wire the **MIDI‑1 bridge** callback to the sampler.  
 - Load a default SF2 and play a major scale via CLI to verify.
 
-**PR‑4 — Audible MIDI‑1 bridge (Linux)**  
-- Add `FluidSynthSink` (default) and optional `SfizzSink` with a simple preset loader.  
+**PR‑4 — Audible MIDI‑1 bridge (Linux)**
+- Add `FluidSynthSink` (default) and optional `SfizzSink` with a simple preset loader.
 - `teatro-play` can accept UMP or MIDI‑1 bytes from stdin and route to sink.
 
-**PR‑5 — CLI & examples**  
-- `swift run RenderCLI song.ump --midi1-bridge | swift run teatro-play --from-stdin --sink fluidsynth --sf2 ./GeneralUser.sf2`  
-- Include demo assets and a headless CI test using JACK/ALSA loopback.
+**PR‑5 — CLI & examples** — completed
+- `teatro-play` streams bridged UMP or MIDI‑1 into FluidSynth or Sfizz sinks.
+- Headless CI uses JACK/ALSA loopback with demo assets.
 
-**PR‑6 — Cleanup & deprecations**  
-- Remove duplicate/legacy MIDI types; public surface points to the midi2 facade.  
+**PR‑6 — Cleanup & deprecations**
+- Remove duplicate/legacy MIDI types; public surface points to the midi2 facade.
 - Keep typealiases and deprecation shims for one release to preserve API stability.
 
 ---
