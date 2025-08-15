@@ -5,6 +5,10 @@
 
 Teatro is centered on **MIDI 2.0** for sequencing and timing. MIDI 1.0 is supported only as a fallback for legacy export.
 
+## Render API
+
+The `TeatroRenderAPI` module exposes deterministic rendering helpers and a SwiftUI `TeatroPlayerView` for quick previews. See [Docs/RenderAPI.md](Docs/RenderAPI.md) for usage examples.
+
 ## MIDI-CI Discovery
 
 Teatro includes basic support for the MIDI Capability Inquiry (MIDI-CI) protocol.
@@ -41,6 +45,7 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 
 ## Documentation
 
+- [Render API](Docs/RenderAPI.md)
 - [1. Core Protocols](Docs/Chapters/01_CoreProtocols.md)
 - [2. View Types](Docs/Chapters/02_ViewTypes.md)
 - [3. Rendering Backends](Docs/Chapters/03_RenderingBackends.md)

@@ -2,7 +2,7 @@ import XCTest
 @testable import TeatroRenderAPI
 
 final class SessionRenderingTests: XCTestCase {
-    func testRenderSessionProducesMarkdownAndMarkers() throws {
+    func testRenderSessionMatchesSnapshot() throws {
         let log = """
 $ echo hi
 hi
@@ -11,10 +11,19 @@ file
 """
         let input = SimpleSessionInput(logText: log)
         let result = try TeatroRenderer.renderSession(input)
-        let markdown = try XCTUnwrap(result.markdown)
-        XCTAssertTrue(markdown.contains("```session"))
-        XCTAssertTrue(markdown.contains("$ echo hi"))
-        XCTAssertTrue(markdown.contains("\"line\" : 1"))
-        XCTAssertTrue(markdown.contains("\"command\" : \"echo hi\""))
+
+        let snapshots = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("__snapshots__", isDirectory: true)
+        try FileManager.default.createDirectory(at: snapshots, withIntermediateDirectories: true)
+        let mdURL = snapshots.appendingPathComponent("Session.md")
+
+        if !FileManager.default.fileExists(atPath: mdURL.path) {
+            try result.markdown?.write(to: mdURL, atomically: true, encoding: .utf8)
+            XCTFail("Snapshot file created; re-run tests")
+        } else {
+            let expected = try String(contentsOf: mdURL)
+            XCTAssertEqual(result.markdown, expected)
+        }
     }
 }

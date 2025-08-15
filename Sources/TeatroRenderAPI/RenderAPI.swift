@@ -94,7 +94,7 @@ public enum TeatroRenderer {
 
         var overlaySection = ""
         if !overlays.isEmpty {
-            let data = try JSONSerialization.data(withJSONObject: overlays, options: [.prettyPrinted])
+            let data = try JSONSerialization.data(withJSONObject: overlays, options: [.prettyPrinted, .sortedKeys])
             if let json = String(data: data, encoding: .utf8) {
                 overlaySection = "\n\n```json\n" + json + "\n```"
             }

@@ -35,4 +35,11 @@ final class APIConformanceTests: XCTestCase {
         let result = try TeatroRenderer.renderSearch(input)
         XCTAssertNotNil(result.markdown)
     }
+
+    func testRenderResultHasExpectedProperties() {
+        let result = RenderResult()
+        let mirror = Mirror(reflecting: result)
+        let names = Set(mirror.children.compactMap { $0.label })
+        XCTAssertEqual(names, ["svg", "markdown", "ump"])
+    }
 }
