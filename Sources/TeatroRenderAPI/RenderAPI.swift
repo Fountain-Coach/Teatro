@@ -46,10 +46,36 @@ public enum TeatroRenderer {
 
     /// .ump / storyboard DSL -> animated SVG + (re)emitted .ump
     public static func renderStoryboard(_ input: RenderStoryboardInput) throws -> RenderResult {
-        // 1) Parse UMP or Storyboard DSL
-        // 2) Layout to animated SVG
-        // 3) Return normalized UMP
-        throw RenderError.unsupported("stub")
+        var storyboard: Storyboard
+        var normalizedUMP: Data? = nil
+
+        if let dsl = input.storyboardDSL {
+            storyboard = try StoryboardParser.parse(dsl)
+            if let ump = input.umpData {
+                let events = try UMPParser.parse(data: ump)
+                let words = UMPEncoder.encodeEvents(events)
+                normalizedUMP = dataFromWords(words)
+            }
+        } else if let ump = input.umpData {
+            let events = try UMPParser.parse(data: ump)
+            let words = UMPEncoder.encodeEvents(events)
+            normalizedUMP = dataFromWords(words)
+            let hexLines = words.map { String(format: "%08X", $0) }
+            storyboard = Storyboard {
+                Scene("UMP") {
+                    Text(hexLines.joined(separator: "\n"))
+                }
+            }
+        } else {
+            throw RenderError.parse("no storyboard input provided")
+        }
+
+        let svgString = SVGAnimator.renderAnimatedSVG(storyboard: storyboard)
+        guard let svgData = svgString.data(using: .utf8) else {
+            throw RenderError.layout("unable to encode SVG")
+        }
+
+        return RenderResult(svg: svgData, markdown: nil, ump: normalizedUMP)
     }
 
     /// .session/log/markdown -> Markdown reflection + overlay markers
@@ -63,5 +89,16 @@ public enum TeatroRenderer {
     public static func renderSearch(_ input: RenderSearchInput) throws -> RenderResult {
         // 1) Search and layout
         throw RenderError.unsupported("stub")
+    }
+
+    private static func dataFromWords(_ words: [UInt32]) -> Data {
+        var data = Data(capacity: words.count * 4)
+        for word in words {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { buffer in
+                data.append(buffer.bindMemory(to: UInt8.self))
+            }
+        }
+        return data
     }
 }
