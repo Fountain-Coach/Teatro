@@ -9,6 +9,7 @@ let package = Package(
             name: "Teatro",
             targets: ["Teatro"]
         ),
+        .library(name: "TeatroRenderAPI", targets: ["TeatroRenderAPI"]),
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"]),
         .executable(name: "teatro-play", targets: ["TeatroPlay"])
@@ -23,7 +24,7 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md"],
+            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI"],
             linkerSettings: [
                 .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
             ]
@@ -54,11 +55,16 @@ let package = Package(
             ],
             path: "Sources/TeatroPlay"
         ),
+        .target(
+            name: "TeatroRenderAPI",
+            dependencies: ["Teatro"],
+            path: "Sources/TeatroRenderAPI"
+        ),
         .testTarget(
             name: "TeatroTests",
             dependencies: ["Teatro"],
             path: "Tests",
-            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI"],
+            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI", "TeatroRenderAPITests"],
             resources: [
                 .process("Fixtures")
             ]
@@ -87,6 +93,11 @@ let package = Package(
             name: "CLITests",
             dependencies: ["RenderCLI"],
             path: "Tests/CLI"
+        ),
+        .testTarget(
+            name: "TeatroRenderAPITests",
+            dependencies: ["TeatroRenderAPI"],
+            path: "Tests/TeatroRenderAPITests"
         ),
         .target(
             name: "CCsound",
