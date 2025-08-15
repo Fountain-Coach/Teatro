@@ -1,6 +1,7 @@
 import Foundation
 
 /// Rich MIDI 2.0 event representation used by compatibility helpers.
+@available(*, deprecated, message: "Use types from the MIDI2 module directly")
 public struct MIDI2NoteEvent: Sendable, Equatable {
     public var channel: Int
     public var note: Int

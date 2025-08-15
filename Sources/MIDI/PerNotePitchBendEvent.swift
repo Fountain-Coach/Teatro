@@ -1,6 +1,7 @@
 import Foundation
 
 /// Represents a per-note pitch bend in MIDI 2.0.
+@available(*, deprecated, message: "Use `PerNotePitch` from the MIDI2 module")
 public struct PerNotePitchBendEvent: MidiEventProtocol, Sendable, Equatable {
     public let timestamp: UInt32
     public let group: UInt8?
