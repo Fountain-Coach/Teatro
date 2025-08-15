@@ -25,6 +25,8 @@ tasks:
     completed: true
   - name: propose-improvements
     description: suggest refactorings or new features when gaps or bugs are detected
+  - name: expose-render-api
+    description: publish initial TeatroRenderAPI target
 
 policies:
   - ensure commits reference relevant AGENTS instructions
