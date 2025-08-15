@@ -106,8 +106,19 @@ public enum TeatroRenderer {
 
     /// lightweight search/plan -> Markdown or small SVG panels
     public static func renderSearch(_ input: RenderSearchInput) throws -> RenderResult {
-        // 1) Search and layout
-        throw RenderError.unsupported("stub")
+        let lines = input.query.split(separator: "\n", omittingEmptySubsequences: false)
+        var items: [String] = []
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty else { continue }
+            if trimmed.hasPrefix("- ") || trimmed.hasPrefix("* ") {
+                items.append(trimmed)
+            } else {
+                items.append("- \(trimmed)")
+            }
+        }
+        let markdown = items.joined(separator: "\n")
+        return RenderResult(markdown: markdown)
     }
 
     private static func dataFromWords(_ words: [UInt32]) -> Data {

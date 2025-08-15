@@ -30,8 +30,9 @@ final class APIConformanceTests: XCTestCase {
         XCTAssertNotNil(result.markdown)
     }
 
-    func testRenderSearchStub() {
-        let input = SimpleSearchInput(query: "")
-        XCTAssertThrowsError(try TeatroRenderer.renderSearch(input))
+    func testRenderSearchRenders() throws {
+        let input = SimpleSearchInput(query: "task one\n")
+        let result = try TeatroRenderer.renderSearch(input)
+        XCTAssertNotNil(result.markdown)
     }
 }
