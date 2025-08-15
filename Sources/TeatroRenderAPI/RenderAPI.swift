@@ -1,4 +1,5 @@
 import Foundation
+import Teatro
 
 public struct RenderResult {
     public let svg: Data?
@@ -15,11 +16,32 @@ public struct RenderResult {
 public enum TeatroRenderer {
     /// .fountain -> SVG (+ optional Markdown synopsis)
     public static func renderScript(_ input: RenderScriptInput) throws -> RenderResult {
-        // 1) Parse Fountain
-        // 2) Layout to SVG
-        // 3) Produce optional synopsis Markdown
-        // return RenderResult(svg: svgData, markdown: synopsis)
-        throw RenderError.unsupported("stub")
+        let text = input.fountainText
+
+        // Parse fountain to gather synopsis lines
+        let parser = FountainParser()
+        let nodes = parser.parse(text)
+        let synopsisLines = nodes.compactMap { node -> String? in
+            if case .synopsis = node.type {
+                var text = node.rawText.trimmingCharacters(in: .whitespaces)
+                if text.hasPrefix("=") {
+                    text.removeFirst()
+                    text = text.trimmingCharacters(in: .whitespaces)
+                }
+                return "- \(text)"
+            }
+            return nil
+        }
+        let synopsis = synopsisLines.isEmpty ? nil : synopsisLines.joined(separator: "\n")
+
+        // Layout to SVG using existing renderer
+        let view = FountainSceneView(fountainText: text)
+        let svgString = SVGRenderer.render(view)
+        guard let svgData = svgString.data(using: .utf8) else {
+            throw RenderError.layout("unable to encode SVG")
+        }
+
+        return RenderResult(svg: svgData, markdown: synopsis)
     }
 
     /// .ump / storyboard DSL -> animated SVG + (re)emitted .ump

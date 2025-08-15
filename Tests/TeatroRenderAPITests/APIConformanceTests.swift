@@ -2,9 +2,16 @@ import XCTest
 @testable import TeatroRenderAPI
 
 final class APIConformanceTests: XCTestCase {
-    func testRenderScriptStub() {
-        let input = SimpleScriptInput(fountainText: "INT. SCENE")
-        XCTAssertThrowsError(try TeatroRenderer.renderScript(input))
+    func testRenderScriptRenders() throws {
+        let script = """
+        INT. SCENE - DAY
+
+        JOHN
+        Hello.
+        """
+        let input = SimpleScriptInput(fountainText: script)
+        let result = try TeatroRenderer.renderScript(input)
+        XCTAssertNotNil(result.svg)
     }
 
     func testRenderStoryboardStub() {
