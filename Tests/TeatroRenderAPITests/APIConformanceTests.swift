@@ -24,9 +24,10 @@ final class APIConformanceTests: XCTestCase {
         XCTAssertNotNil(result.svg)
     }
 
-    func testRenderSessionStub() {
-        let input = SimpleSessionInput(logText: "")
-        XCTAssertThrowsError(try TeatroRenderer.renderSession(input))
+    func testRenderSessionRenders() throws {
+        let input = SimpleSessionInput(logText: "$ test\n")
+        let result = try TeatroRenderer.renderSession(input)
+        XCTAssertNotNil(result.markdown)
     }
 
     func testRenderSearchStub() {

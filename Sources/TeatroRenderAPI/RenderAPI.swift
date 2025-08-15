@@ -80,9 +80,28 @@ public enum TeatroRenderer {
 
     /// .session/log/markdown -> Markdown reflection + overlay markers
     public static func renderSession(_ input: RenderSessionInput) throws -> RenderResult {
-        // 1) Parse session log
-        // 2) Produce Markdown with overlays
-        throw RenderError.unsupported("stub")
+        let session = SessionParser.parse(input.logText)
+        let lines = session.text.split(separator: "\n", omittingEmptySubsequences: false)
+        var overlays: [[String: Any]] = []
+        for (idx, line) in lines.enumerated() {
+            if line.hasPrefix("$ ") {
+                overlays.append([
+                    "line": idx + 1,
+                    "command": String(line.dropFirst(2))
+                ])
+            }
+        }
+
+        var overlaySection = ""
+        if !overlays.isEmpty {
+            let data = try JSONSerialization.data(withJSONObject: overlays, options: [.prettyPrinted])
+            if let json = String(data: data, encoding: .utf8) {
+                overlaySection = "\n\n```json\n" + json + "\n```"
+            }
+        }
+
+        let markdown = "```session\n" + session.text + "\n```" + overlaySection
+        return RenderResult(markdown: markdown)
     }
 
     /// lightweight search/plan -> Markdown or small SVG panels
