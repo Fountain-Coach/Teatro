@@ -1,6 +1,7 @@
 import Foundation
 
 /// Supported per-note attribute identifiers.
+@available(*, deprecated, message: "Use `NoteAttributeType` from the MIDI2 module")
 public enum MIDI2NoteAttribute: UInt8, CaseIterable, Sendable {
     /// No attribute data.
     case none = 0x00
@@ -13,6 +14,7 @@ public enum MIDI2NoteAttribute: UInt8, CaseIterable, Sendable {
 }
 
 /// Lightweight representation of a MIDI 2.0 note event.
+@available(*, deprecated, message: "Use `Midi2NoteOn` from the MIDI2 module")
 public struct MIDI2Note: Sendable, Equatable {
     public let channel: Int
     public let note: Int

@@ -1,6 +1,7 @@
 import Foundation
 
 /// Represents a per-note controller value in MIDI 2.0.
+@available(*, deprecated, message: "Use `Midi2RegPerNoteController` from the MIDI2 module")
 public struct PerNoteController: Sendable, Equatable {
     /// Controller index as defined by the MIDI 2.0 specification.
     public let index: UInt8
