@@ -97,7 +97,10 @@ let package = Package(
         .testTarget(
             name: "TeatroRenderAPITests",
             dependencies: ["TeatroRenderAPI"],
-            path: "Tests/TeatroRenderAPITests"
+            path: "Tests/TeatroRenderAPITests",
+            resources: [
+                .process("__snapshots__")
+            ]
         ),
         .target(
             name: "CCsound",
