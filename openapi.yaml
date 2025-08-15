@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Teatro CLI
-  version: "0.1.0"
+  version: "0.2.0"
   description: |
     HTTP façade for the Teatro RenderCLI. Converts scripts, scores, or storyboards
     into various render targets (HTML, SVG, PNG, Markdown, Codex, animated SVG,

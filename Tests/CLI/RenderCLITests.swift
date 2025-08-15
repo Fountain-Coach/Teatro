@@ -41,7 +41,7 @@ final class RenderCLITests: XCTestCase {
     }
 
     func testVersionFlag() {
-        XCTAssertVersion(RenderCLI.self, "0.1.0")
+        XCTAssertVersion(RenderCLI.self, "0.2.0")
     }
 
     func testUnknownFlag() {
