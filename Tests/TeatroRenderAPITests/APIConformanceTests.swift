@@ -14,9 +14,14 @@ final class APIConformanceTests: XCTestCase {
         XCTAssertNotNil(result.svg)
     }
 
-    func testRenderStoryboardStub() {
-        let input = SimpleStoryboardInput()
-        XCTAssertThrowsError(try TeatroRenderer.renderStoryboard(input))
+    func testRenderStoryboardRenders() throws {
+        let dsl = """
+        Scene: Test
+        Text: Hi
+        """
+        let input = SimpleStoryboardInput(storyboardDSL: dsl)
+        let result = try TeatroRenderer.renderStoryboard(input)
+        XCTAssertNotNil(result.svg)
     }
 
     func testRenderSessionStub() {
