@@ -248,12 +248,12 @@ final class RenderCLICoverageTests: XCTestCase {
     }
 
     #if canImport(Darwin)
-    func testWatchFileDarwinReturnsSource() {
+    func testWatchFileDarwinReturnsSource() throws {
         let cli = RenderCLI()
         let url = tempURL("watch.txt")
         FileManager.default.createFile(atPath: url.path, contents: Data())
         defer { try? FileManager.default.removeItem(at: url) }
-        let source = cli.watchFile(path: url.path, target: MarkdownRenderer.self, outputPath: nil)
+        let source = try cli.watchFile(path: url.path, target: MarkdownRenderer.self, outputPath: nil)
         XCTAssertNotNil(source)
         source?.cancel()
     }
