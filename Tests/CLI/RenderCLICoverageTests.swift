@@ -253,9 +253,9 @@ final class RenderCLICoverageTests: XCTestCase {
         let url = tempURL("watch.txt")
         FileManager.default.createFile(atPath: url.path, contents: Data())
         defer { try? FileManager.default.removeItem(at: url) }
-        let source = try cli.watchFile(path: url.path, target: MarkdownRenderer.self, outputPath: nil)
-        XCTAssertNotNil(source)
-        source?.cancel()
+        let watcher = try cli.watchFile(path: url.path, target: MarkdownRenderer.self, outputPath: nil)
+        XCTAssertNotNil(watcher)
+        (watcher as? WatchToken)?.cancel()
     }
     #endif
 

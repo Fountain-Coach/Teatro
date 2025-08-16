@@ -47,14 +47,16 @@ final class TeatroSamplerTests: XCTestCase {
     }
 
     func testInitWithFluidSynthBackend() async throws {
-        let path = FileManager.default.currentDirectoryPath + "/assets/example.sf2"
-        let sampler = try await TeatroSampler(backend: .fluidsynth(sf2Path: path))
+        guard let url = TeatroResources.bundle.url(forResource: "example", withExtension: "sf2") else {
+            XCTFail("Missing example.sf2 in bundle")
+            return
+        }
+        let sampler = try await TeatroSampler(backend: .fluidsynth(sf2Path: url.path))
         await sampler.stopAll()
     }
 
     func testInitWithCsoundBackend() async throws {
-        let path = FileManager.default.currentDirectoryPath + "/assets/sine.orc"
-        let sampler = try await TeatroSampler(backend: .csound(orchestra: path))
+        let sampler = try await TeatroSampler(backend: .csound())
         await sampler.stopAll()
     }
 }

@@ -11,7 +11,7 @@ public protocol SampleSource: Sendable {
 /// Available backend options for the sampler.
 public enum SamplerBackend {
     case fluidsynth(sf2Path: String)
-    case csound(orchestra: String)
+    case csound(orchestra: String? = nil)
 }
 
 /// Main Teatro sampler actor routing note events to the selected backend.
@@ -27,7 +27,13 @@ public actor TeatroSampler: SampleSource {
             self.impl = f
         case .csound(let orc):
             let c = CsoundSampler()
-            try await c.loadInstrument(orc)
+            if let orc {
+                try await c.loadInstrument(orc)
+            } else if let url = TeatroResources.bundle.url(forResource: "sine", withExtension: "orc") {
+                try await c.loadInstrument(url.path)
+            } else {
+                throw NSError(domain: "TeatroSampler", code: 1, userInfo: [NSLocalizedDescriptionKey: "sine.orc not found in bundle"])
+            }
             self.impl = c
         }
     }
