@@ -1,4 +1,5 @@
 #if canImport(AVFoundation)
+import Foundation
 import AVFoundation
 
 /// Apple-specific audio engine backed by `AVAudioEngine` and `AVAudioUnitSampler`.
@@ -20,15 +21,15 @@ public final class TeatroAudioEngine: MIDIAudioSink {
     }
 
     public func noteOn(note: UInt8, vel: UInt8, ch: UInt8) {
-        sampler.startNote(MIDINoteNumber(note), withVelocity: MIDIVelocity(vel), onChannel: ch)
+        sampler.startNote(UInt8(note), withVelocity: UInt8(vel), onChannel: UInt8(ch))
     }
 
     public func noteOff(note: UInt8, ch: UInt8) {
-        sampler.stopNote(MIDINoteNumber(note), onChannel: ch)
+        sampler.stopNote(UInt8(note), onChannel: UInt8(ch))
     }
 
     public func controlChange(cc: UInt8, value: UInt8, ch: UInt8) {
-        sampler.sendController(MIDIController(cc), withValue: value, onChannel: ch)
+        sampler.sendController(UInt8(cc), withValue: UInt8(value), onChannel: UInt8(ch))
     }
 }
 #else
