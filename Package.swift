@@ -25,6 +25,9 @@ let package = Package(
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
             exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI"],
+            resources: [
+                .process("Audio/Resources")
+            ],
             swiftSettings: [
                 .unsafeFlags([
                     "-Xfrontend", "-strict-concurrency=complete",

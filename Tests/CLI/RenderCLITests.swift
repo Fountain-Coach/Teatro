@@ -252,21 +252,24 @@ final class RenderCLITests: XCTestCase {
             try? FileManager.default.removeItem(at: output)
         }
         let cli = RenderCLI()
-        let source = try cli.watchFile(path: input.path, target: MarkdownRenderer.self, outputPath: output.path)
         let exp = expectation(description: "rerender")
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
-            try? """
-            Scene: One
-            Text: Changed
-            """.write(to: input, atomically: true, encoding: .utf8)
+        let watcher = try cli.watchFile(
+            path: input.path,
+            target: MarkdownRenderer.self,
+            outputPath: output.path,
+            debounce: .milliseconds(150)
+        ) { _ in
+            exp.fulfill()
         }
-        DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
-            if let contents = try? String(contentsOf: output, encoding: .utf8), contents.contains("Changed") {
-                exp.fulfill()
-            }
+
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try "Scene: One\nText: Changed".write(to: temp, atomically: true, encoding: .utf8)
+        try FileManager.default.replaceItemAt(input, withItemAt: temp)
+
+        withExtendedLifetime(watcher) {
+            wait(for: [exp], timeout: 10)
         }
-        wait(for: [exp], timeout: 5)
-        source?.cancel()
+        (watcher as? WatchToken)?.cancel()
     }
 #endif
 
@@ -284,7 +287,7 @@ final class RenderCLITests: XCTestCase {
             try? FileManager.default.removeItem(at: output)
         }
         let cli = RenderCLI()
-        let source = try cli.watchFile(path: input.path, target: MarkdownRenderer.self, outputPath: output.path)
+        let watcher = try cli.watchFile(path: input.path, target: MarkdownRenderer.self, outputPath: output.path)
         let exp = expectation(description: "rerender")
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
             try? """
@@ -298,7 +301,7 @@ final class RenderCLITests: XCTestCase {
             }
         }
         wait(for: [exp], timeout: 6)
-        source?.cancel()
+        (watcher as? WatchToken)?.cancel()
     }
 #endif
 }

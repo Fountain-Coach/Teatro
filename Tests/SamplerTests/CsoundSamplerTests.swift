@@ -4,15 +4,11 @@ import MIDI2
 
 final class CsoundSamplerTests: XCTestCase {
     func testCsoundSamplerLifecycle() async throws {
-        let root = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // CsoundSamplerTests.swift
-            .deletingLastPathComponent() // SamplerTests
-            .deletingLastPathComponent() // Tests
-        let path = root.appendingPathComponent("assets/sine.orc").path
-        guard FileManager.default.fileExists(atPath: path) else {
-            XCTFail("Missing resource at \(path)")
+        guard let url = TeatroResources.bundle.url(forResource: "sine", withExtension: "orc") else {
+            XCTFail("Missing sine.orc in bundle")
             return
         }
+        let path = url.path
         weak var weakSampler: CsoundSampler?
         do {
             let sampler = CsoundSampler()
