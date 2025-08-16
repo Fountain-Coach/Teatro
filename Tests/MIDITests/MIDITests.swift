@@ -17,7 +17,7 @@ final class MIDITests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("mid")
         MIDIRenderer.renderToFile(seq, to: url.path)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
-        let content = try String(contentsOf: url)
+        let content = try String(contentsOf: url, encoding: .utf8)
         XCTAssertTrue(content.contains("NOTE"))
     }
 }

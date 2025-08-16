@@ -16,7 +16,7 @@ public enum MidiEventType {
     case noteEnd
     case pitchClamp
     case pitchRelease
-    case perNotePitchBend
+    case perNotePitch
     case rpn
     case nrpn
     case jrTimestamp

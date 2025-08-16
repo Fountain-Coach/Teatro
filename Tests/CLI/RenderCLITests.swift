@@ -118,7 +118,7 @@ final class RenderCLITests: XCTestCase {
 
     func testMidiFixtureFileParses() throws {
         let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures")
-        let base64 = try String(contentsOf: fixtures.appendingPathComponent("sample.mid")).components(separatedBy: "\n").first ?? ""
+        let base64 = try String(contentsOf: fixtures.appendingPathComponent("sample.mid"), encoding: .utf8).components(separatedBy: "\n").first ?? ""
         let data = Data(base64Encoded: base64)!
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("fixture.mid")
         try data.write(to: url)
@@ -261,7 +261,7 @@ final class RenderCLITests: XCTestCase {
             """.write(to: input, atomically: true, encoding: .utf8)
         }
         DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
-            if let contents = try? String(contentsOf: output), contents.contains("Changed") {
+            if let contents = try? String(contentsOf: output, encoding: .utf8), contents.contains("Changed") {
                 exp.fulfill()
             }
         }
@@ -293,7 +293,7 @@ final class RenderCLITests: XCTestCase {
             """.write(to: input, atomically: true, encoding: .utf8)
         }
         DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
-            if let contents = try? String(contentsOf: output), contents.contains("Changed") {
+            if let contents = try? String(contentsOf: output, encoding: .utf8), contents.contains("Changed") {
                 exp.fulfill()
             }
         }

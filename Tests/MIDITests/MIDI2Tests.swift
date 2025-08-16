@@ -130,11 +130,11 @@ final class MIDI2Tests: XCTestCase {
         XCTAssertEqual(encoded, words)
     }
 
-    func testRoundTripPerNotePitchBendFromSpec() throws {
+    func testRoundTripPerNotePitchFromSpec() throws {
         let words: [UInt32] = [0x40203C00, 0x12345678]
         let events = try UMPParser.parse(data: Data(bytes(from: words)))
-        guard let bend = events.first as? PerNotePitchBendEvent else {
-            return XCTFail("Expected PerNotePitchBendEvent")
+        guard let bend = events.first as? Teatro.PerNotePitch else {
+            return XCTFail("Expected PerNotePitch")
         }
         XCTAssertEqual(bend.noteNumber, 0x3C)
         XCTAssertEqual(bend.pitch, 0x12345678)

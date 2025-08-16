@@ -159,7 +159,7 @@ public struct UMPParser {
                 return ChannelVoiceEvent(timestamp: timestamp, type: .pitchBend, group: group, channel: channel, noteNumber: nil, velocity: nil, controllerValue: data2)
             case 0x20:
                 let note = UInt8((data1 >> 8) & 0xFF)
-                return PerNotePitchBendEvent(timestamp: timestamp, group: group, channel: channel, noteNumber: note, pitch: data2)
+                return PerNotePitch(timestamp: timestamp, group: group, channel: channel, noteNumber: note, pitch: data2)
             case 0x60:
                 let msb = UInt8((data1 >> 8) & 0x7F)
                 let lsb = UInt8(data1 & 0x7F)

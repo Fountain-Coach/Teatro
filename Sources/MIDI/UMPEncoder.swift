@@ -51,14 +51,14 @@ public struct UMPEncoder {
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
             let word1 = messageType | groupBits | (0x0 << 20) | channelBits | noteBits | UInt32(ctrl.controllerIndex)
             return [word1, ctrl.controllerValue ?? 0]
-        case .perNotePitchBend:
-            guard let bend = event as? PerNotePitchBendEvent else { return [] }
+        case .perNotePitch:
+            guard let pn = event as? PerNotePitch else { return [] }
             let messageType: UInt32 = 0x4 << 28
             let groupBits = UInt32((event.group ?? defaultGroup) & 0xF) << 24
             let channelBits = UInt32((event.channel ?? 0) & 0xF) << 16
             let noteBits = UInt32((event.noteNumber ?? 0) & 0x7F) << 8
             let word1 = messageType | groupBits | (0x2 << 20) | channelBits | noteBits
-            return [word1, bend.pitch]
+            return [word1, pn.pitch]
         case .rpn:
             guard let r = event as? RegisteredParameterNumber else { return [] }
             let messageType: UInt32 = 0x4 << 28
