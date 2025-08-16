@@ -2,7 +2,8 @@ import Foundation
 
 /// Shared protocol for all sampler implementations.
 public protocol SampleSource: Sendable {
-    func trigger(_ note: MIDI2Note) async
+    func noteOn(_ note: Midi2NoteOn) async throws
+    func noteOff(_ note: Midi2NoteOff) async throws
     func stopAll() async
     func loadInstrument(_ path: String) async throws
 }
@@ -36,8 +37,12 @@ public actor TeatroSampler: SampleSource {
         self.impl = implementation
     }
 
-    public func trigger(_ note: MIDI2Note) async {
-        await impl.trigger(note)
+    public func noteOn(_ note: Midi2NoteOn) async throws {
+        try await impl.noteOn(note)
+    }
+
+    public func noteOff(_ note: Midi2NoteOff) async throws {
+        try await impl.noteOff(note)
     }
 
     public func stopAll() async {

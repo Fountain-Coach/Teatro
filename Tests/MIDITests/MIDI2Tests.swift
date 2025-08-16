@@ -1,9 +1,11 @@
 import XCTest
+import MIDI2
 @testable import Teatro
 
 final class MIDI2Tests: XCTestCase {
     func testUMPEncoderProducesWords() {
-        let note = MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(0.5), duration: 0.1)
+        let vel = UInt16((MIDI.fromUnitFloat(0.5) >> 16) & 0xFFFF)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
         let packets = UMPEncoder.encode(note)
         XCTAssertEqual(packets, [0x40903C00, 0x7FFF0000])
     }

@@ -1,27 +1,25 @@
 import Foundation
 
-/// Provides downcasting of MIDI2NoteEvent to legacy formats for
+/// Provides downcasting of MIDI 2.0 note events to legacy formats for
 /// Csound and LilyPond while maintaining MIDI 2.0 expressiveness.
 public struct MIDICompatibilityBridge {
-    public static func toMIDINote(_ event: MIDI2NoteEvent) -> MIDINote {
+    public static func toMIDINote(_ event: Midi2NoteOn) -> MIDINote {
         MIDINote(
-            channel: event.channel,
-            note: event.note,
-            velocity: Int(event.velocity * 127),
+            channel: Int(event.channel.rawValue),
+            note: Int(event.note.rawValue),
+            velocity: Int(MIDI.midi1Velocity(from: UInt32(event.velocity) << 16)),
             duration: 0.1
         )
     }
 
-    public static func toCsoundScore(_ event: MIDI2NoteEvent) -> CsoundScore {
-        let frequency = 440.0 * pow(2.0, (Double(event.pitch) - 69.0) / 12.0)
-        let amplitude = max(0.0, min(1.0, Double(event.velocity)))
-        let start = Double(event.timestamp) / 1000.0
+    public static func toCsoundScore(_ event: Midi2NoteOn) -> CsoundScore {
+        let pitch = Double(event.note.rawValue)
+        let frequency = 440.0 * pow(2.0, (pitch - 69.0) / 12.0)
+        let amplitude = Double(event.velocity) / Double(UInt16.max)
         let scoreLine = String(
-            format: "i1 %.3f %.3f %.3f %.3f",
-            start,
-            0.1,
-            frequency,
-            amplitude
+            format: "i1 0.000 0.100 %.3f %.3f",
+            amplitude,
+            frequency
         )
 
         let orchestra = """
@@ -35,9 +33,9 @@ public struct MIDICompatibilityBridge {
         return CsoundScore(orchestra: orchestra, score: scoreLine)
     }
 
-    public static func toLilyScore(_ event: MIDI2NoteEvent) -> LilyScore {
+    public static func toLilyScore(_ event: Midi2NoteOn) -> LilyScore {
         let names = ["c", "cis", "d", "dis", "e", "f", "fis", "g", "gis", "a", "ais", "b"]
-        let value = Int(round(event.pitch))
+        let value = Int(event.note.rawValue)
         let name = names[value % 12]
         let octave = value / 12
         var note = name
@@ -49,8 +47,9 @@ public struct MIDICompatibilityBridge {
         }
         note += "4"
 
+        let vel = Double(event.velocity) / Double(UInt16.max)
         let dynamic: String
-        switch event.velocity {
+        switch vel {
         case let v where v >= 0.9: dynamic = "\\ff"
         case let v where v >= 0.7: dynamic = "\\f"
         case let v where v >= 0.5: dynamic = "\\mf"
@@ -66,3 +65,5 @@ public struct MIDICompatibilityBridge {
         return LilyScore(lily)
     }
 }
+
+// © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

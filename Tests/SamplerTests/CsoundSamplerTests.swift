@@ -1,4 +1,5 @@
 import XCTest
+import MIDI2
 @testable import Teatro
 
 final class CsoundSamplerTests: XCTestCase {
@@ -19,17 +20,20 @@ final class CsoundSamplerTests: XCTestCase {
             try await sampler.loadInstrument(path)
             // Allow the background performance loop to spin at least once
             try? await Task.sleep(nanoseconds: 1_000_000)
-            await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 0.1))
+            let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+            let on = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
+            try await sampler.noteOn(on)
             await sampler.stopAll()
         }
         await Task.yield()
         XCTAssertNil(weakSampler)
     }
 
-    func testTriggerWithoutLoadDoesNothing() async {
+    func testNoteOnWithoutLoadDoesNothing() async {
         let sampler = CsoundSampler()
-        // Should simply return as no instrument is loaded
-        await sampler.trigger(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 0.1))
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let on = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
+        try? await sampler.noteOn(on)
         await sampler.stopAll()
     }
 }

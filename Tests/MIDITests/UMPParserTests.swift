@@ -58,7 +58,7 @@ final class UMPParserTests: XCTestCase {
         XCTAssertEqual(MIDI.midi1Velocity(from: event.velocity ?? 0), 0x7F)
     }
 
-    func testMIDI2NoteOnZeroVelocityTreatedAsNoteOff() throws {
+    func testMidi2NoteOnZeroVelocityTreatedAsNoteOff() throws {
         let bytes: [UInt8] = [
             0x40, 0x90, 0x3C, 0x00,
             0x00, 0x00, 0x00, 0x00

@@ -1,30 +1,34 @@
 import XCTest
+import MIDI2
 @testable import Teatro
 
 final class CompatibilityBridgeTests: XCTestCase {
     func testCompatibilityBridgeDowncasts() {
-        let event = MIDI2Note(channel: 0, note: 64, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0)
-        let midi1 = MIDICompatibilityBridge.toMIDINote(MIDI2NoteEvent(channel: event.channel, note: event.note, velocity: MIDI.normalizedFloat(from: event.velocity), pitch: Float(event.note), timbre: .zero, articulation: "legato", timestamp: 0))
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(64)!, velocity: vel)
+        let midi1 = MIDICompatibilityBridge.toMIDINote(note)
         XCTAssertEqual(midi1.note, 64)
         XCTAssertEqual(midi1.velocity, 127)
     }
 
     func testCompatibilityBridgeCsound() {
-        let event = MIDI2NoteEvent(channel: 0, note: 60, velocity: 0.5, pitch: 60, timbre: .zero, articulation: "none", timestamp: 0)
-        let cs = MIDICompatibilityBridge.toCsoundScore(event)
+        let vel = UInt16(Double(UInt16.max) * 0.5)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
+        let cs = MIDICompatibilityBridge.toCsoundScore(note)
         let rendered = cs.render()
         XCTAssertTrue(rendered.contains("i1"))
     }
 
     func testCompatibilityBridgeLily() {
-        let event = MIDI2NoteEvent(channel: 0, note: 60, velocity: 0.8, pitch: 60, timbre: .zero, articulation: "none", timestamp: 0)
-        let lily = MIDICompatibilityBridge.toLilyScore(event)
+        let vel = UInt16(Double(UInt16.max) * 0.8)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
+        let lily = MIDICompatibilityBridge.toLilyScore(note)
         let content = lily.render()
         XCTAssertTrue(content.contains("c'4"))
     }
 
     func testLilyScoreDynamics() {
-        let cases: [(Float, String)] = [
+        let cases: [(Double, String)] = [
             (0.95, "\\ff"),
             (0.75, "\\f"),
             (0.55, "\\mf"),
@@ -32,15 +36,17 @@ final class CompatibilityBridgeTests: XCTestCase {
             (0.1, "\\pp")
         ]
         for (vel, dyn) in cases {
-            let event = MIDI2NoteEvent(channel: 0, note: 60, velocity: vel, pitch: 60, timbre: .zero, articulation: "none", timestamp: 0)
-            let content = MIDICompatibilityBridge.toLilyScore(event).render()
+            let v = UInt16((Double(UInt16.max) * vel).rounded())
+            let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: v)
+            let content = MIDICompatibilityBridge.toLilyScore(note).render()
             XCTAssertTrue(content.contains(dyn))
         }
     }
 
     func testLilyScoreLowerOctave() {
-        let event = MIDI2NoteEvent(channel: 0, note: 24, velocity: 0.5, pitch: 24, timbre: .zero, articulation: "none", timestamp: 0)
-        let content = MIDICompatibilityBridge.toLilyScore(event).render()
+        let vel = UInt16(Double(UInt16.max) * 0.5)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(24)!, velocity: vel)
+        let content = MIDICompatibilityBridge.toLilyScore(note).render()
         XCTAssertTrue(content.contains("c,,4"))
     }
 }

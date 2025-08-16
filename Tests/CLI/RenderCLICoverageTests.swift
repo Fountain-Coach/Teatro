@@ -3,6 +3,7 @@ import Foundation
 import ArgumentParser
 @testable import RenderCLI
 @testable import Teatro
+import MIDI2
 
 final class RenderCLICoverageTests: XCTestCase {
     private func tempURL(_ name: String) -> URL {
@@ -78,7 +79,8 @@ final class RenderCLICoverageTests: XCTestCase {
     }
 
     func testUMPDetectionByLength() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let packets = UMPEncoder.encode(Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel))
         var data = Data()
         for word in packets {
             var be = word.bigEndian
@@ -172,7 +174,8 @@ final class RenderCLICoverageTests: XCTestCase {
     }
 
     func testUMPOutputToStdoutHex() throws {
-        let packets = UMPEncoder.encode(MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0))
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let packets = UMPEncoder.encode(Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel))
         var data = Data()
         for word in packets {
             var be = word.bigEndian

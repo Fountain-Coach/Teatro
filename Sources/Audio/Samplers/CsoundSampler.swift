@@ -34,15 +34,17 @@ public actor CsoundSampler: SampleSource {
         }
     }
 
-    /// Triggers a single MIDI note using score events.
-    public func trigger(_ note: MIDI2Note) async {
+    /// Sends a note on event using Csound score messages.
+    public func noteOn(_ note: Midi2NoteOn) async throws {
         guard let cs = csound else { return }
-        let freq = 440.0 * pow(2.0, (Double(note.note) - 69.0) / 12.0)
-        let amp = Double(MIDI.normalizedFloat(from: note.velocity))
-        let dur = note.duration
-        let msg = String(format: "i1 0 %.3f %.3f %.3f", dur, amp, freq)
+        let freq = 440.0 * pow(2.0, (Double(note.note.rawValue) - 69.0) / 12.0)
+        let amp = Double(note.velocity) / Double(UInt16.max)
+        let msg = String(format: "i1 0 1 %.3f %.3f", amp, freq)
         csoundInputMessage(cs, msg)
     }
+
+    /// Csound notes terminate based on duration; explicit Note Off is a no-op.
+    public func noteOff(_ note: Midi2NoteOff) async throws { }
 
     /// Stops audio playback and resets the engine.
     public func stopAll() async {

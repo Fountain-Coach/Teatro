@@ -38,21 +38,26 @@ public actor FluidSynthSampler: SampleSource {
         self.driver = drv
     }
 
-    /// Plays a note by sending MIDI events to the synth.
-    public func trigger(_ note: MIDI2Note) async {
+    /// Sends a MIDI 2.0 Note On event to the synth.
+    public func noteOn(_ note: Midi2NoteOn) async throws {
         guard let syn = synth else { return }
-        fluid_synth_noteon(syn, Int32(note.channel), Int32(note.note), Int32(MIDI.midi1Velocity(from: note.velocity)))
-        if note.duration > 0 {
-            Task.detached { [weak self] in
-                try? await Task.sleep(nanoseconds: UInt64(note.duration * 1_000_000_000))
-                await self?.noteOff(note)
-            }
-        }
+        let vel32 = UInt32(note.velocity) << 16
+        fluid_synth_noteon(
+            syn,
+            Int32(note.channel.rawValue),
+            Int32(note.note.rawValue),
+            Int32(MIDI.midi1Velocity(from: vel32))
+        )
     }
 
-    private func noteOff(_ note: MIDI2Note) async {
+    /// Sends a MIDI 2.0 Note Off event to the synth.
+    public func noteOff(_ note: Midi2NoteOff) async throws {
         guard let syn = synth else { return }
-        fluid_synth_noteoff(syn, Int32(note.channel), Int32(note.note))
+        fluid_synth_noteoff(
+            syn,
+            Int32(note.channel.rawValue),
+            Int32(note.noteNumber.rawValue)
+        )
     }
 
     /// Stops all notes and shuts down the audio driver.

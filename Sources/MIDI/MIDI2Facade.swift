@@ -6,6 +6,7 @@ import MIDI2
 /// import `Teatro`.
 public typealias Midi2ChannelVoiceBody = MIDI2.Midi2ChannelVoiceBody
 public typealias Midi2NoteOn = MIDI2.Midi2NoteOn
+public typealias Midi2NoteOff = MIDI2.NoteOff
 public typealias UtilityBody = MIDI2.UtilityBody
 public typealias SysEx7Packet = MIDI2.SysEx7Packet
 public typealias UmpPacket32 = MIDI2.UmpPacket32
