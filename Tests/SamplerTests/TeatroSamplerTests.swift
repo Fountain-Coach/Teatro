@@ -1,27 +1,32 @@
 import XCTest
+import MIDI2
 @testable import Teatro
 
 final class TeatroSamplerTests: XCTestCase {
     actor MockSource: SampleSource {
-        private var triggered: [MIDI2Note] = []
+        private var ons: [Midi2NoteOn] = []
+        private var offs: [Midi2NoteOff] = []
         private var loaded: [String] = []
         private var stopped = false
 
-        func trigger(_ note: MIDI2Note) async { triggered.append(note) }
+        func noteOn(_ note: Midi2NoteOn) async throws { ons.append(note) }
+        func noteOff(_ note: Midi2NoteOff) async throws { offs.append(note) }
         func stopAll() async { stopped = true }
         func loadInstrument(_ path: String) async throws { loaded.append(path) }
 
-        func notes() async -> [MIDI2Note] { triggered }
+        func noteOns() async -> [Midi2NoteOn] { ons }
+        func noteOffs() async -> [Midi2NoteOff] { offs }
         func loadedPaths() async -> [String] { loaded }
         func didStop() async -> Bool { stopped }
     }
 
-    func testTriggerDelegates() async throws {
+    func testNoteOnDelegates() async throws {
         let mock = MockSource()
         let sampler = TeatroSampler(implementation: mock)
-        let note = MIDI2Note(channel: 0, note: 60, velocity: MIDI.fromUnitFloat(1.0), duration: 1.0)
-        await sampler.trigger(note)
-        let triggered = await mock.notes()
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let note = Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel)
+        try await sampler.noteOn(note)
+        let triggered = await mock.noteOns()
         XCTAssertEqual(triggered.first, note)
     }
 

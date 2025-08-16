@@ -1,63 +1,13 @@
 import Foundation
 
-/// Encodes `MIDI2Note` values into Universal MIDI Packet words.
+/// Encodes MIDI 2.0 note events into Universal MIDI Packet words.
 public struct UMPEncoder {
-    /// Encodes a single note as a MIDI 2.0 Note On packet.
-    /// If a JR Timestamp is present it is emitted before the note message.
-    /// - Parameters:
-    ///   - note: The note to encode with full 32-bit velocity.
-    ///   - group: Optional UMP group number (0-15). Defaults to 0.
-    /// - Returns: An array of 32-bit words representing the packet(s).
-    public static func encode(_ note: MIDI2Note, group: UInt8 = 0) -> [UInt32] {
-        var words: [UInt32] = []
-        if let ts = note.jrTimestamp {
-            let tsWord = (0x1 << 28) | UInt32(ts & 0xFFFFFF)
-            words.append(tsWord)
-        }
-        let messageType: UInt32 = 0x4 << 28 // MIDI 2.0 Channel Voice Message
-        let groupBits = UInt32(group & 0xF) << 24
-        let channelBits = UInt32(note.channel & 0xF) << 16
-        let noteBits = UInt32(note.note & 0x7F) << 8
-
-        if let controllers = note.perNoteControllers {
-            for ctrl in controllers {
-                let status: UInt32 = 0x0 << 20
-                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(ctrl.index)
-                words.append(word1)
-                words.append(ctrl.value)
-            }
-        }
-
-        var remainingAttributes = note.attributes ?? [:]
-        var primaryAttribute: (MIDI2NoteAttribute, UInt32)?
-        if let first = remainingAttributes.first {
-            primaryAttribute = first
-            remainingAttributes.removeValue(forKey: first.key)
-        }
-
-        if !remainingAttributes.isEmpty {
-            for (attr, value) in remainingAttributes {
-                let status: UInt32 = 0xF << 20
-                let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(attr.rawValue)
-                words.append(word1)
-                words.append(value)
-            }
-        }
-
-        let status: UInt32 = 0x9 << 20 // Note On opcode
-        if let primary = primaryAttribute {
-            let word1 = messageType | groupBits | status | channelBits | noteBits | UInt32(primary.0.rawValue)
-            let velocity = (note.velocity >> 16) & 0xFFFF
-            let attrData = UInt16(primary.1 & 0xFFFF)
-            let word2 = (velocity << 16) | UInt32(attrData)
-            words.append(contentsOf: [word1, word2])
-        } else {
-            let word1 = messageType | groupBits | status | channelBits | noteBits
-            let vel16 = (note.velocity >> 16) & 0xFFFF
-            let word2 = (vel16 << 16)
-            words.append(contentsOf: [word1, word2])
-        }
-        return words
+    /// Encodes a single Note On message.
+    /// - Parameter note: MIDI 2.0 Note On event.
+    /// - Returns: Two 32-bit words representing the packet.
+    public static func encode(_ note: Midi2NoteOn) -> [UInt32] {
+        let packet = note.ump()
+        return [packet.word0, packet.word1]
     }
 
     /// Encodes an array of `MidiEventProtocol` events into MIDI 1.0 channel voice
