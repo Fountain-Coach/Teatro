@@ -99,7 +99,7 @@ public struct RenderCLI: ParsableCommand {
         try render(view: view, target: target, outputPath: output)
 
         if watch, let path = inputPath {
-            _ = watchFile(path: path, target: target, outputPath: output)
+            _ = try watchFile(path: path, target: target, outputPath: output)
             dispatchMain()
         }
     }
@@ -221,11 +221,15 @@ public struct RenderCLI: ParsableCommand {
     }
 
     @discardableResult
-    func watchFile(path: String, target: RendererPlugin.Type, outputPath: String?, queue: DispatchQueue = .global()) -> WatchToken? {
+    func watchFile(path: String, target: RendererPlugin.Type, outputPath: String?, queue: DispatchQueue = .global()) throws -> WatchToken? {
         #if canImport(TSCBasic) && !os(Linux)
-        let cwd = localFileSystem.currentWorkingDirectory ?? AbsolutePath(FileManager.default.currentDirectoryPath)
+        let cwd = try localFileSystem.currentWorkingDirectory
+            ?? AbsolutePath(validating: FileManager.default.currentDirectoryPath)
         let fileURL = URL(fileURLWithPath: path)
-        let dirAbs = AbsolutePath(fileURL.deletingLastPathComponent().path, relativeTo: cwd)
+        let dirAbs = try AbsolutePath(
+            validating: fileURL.deletingLastPathComponent().path,
+            relativeTo: cwd
+        )
         let fileName = fileURL.lastPathComponent
         let watcher = FSWatch(paths: [dirAbs], latency: 1.0) { [self] paths in
             if paths.contains(where: { $0.basename == fileName }) {
