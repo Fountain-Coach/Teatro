@@ -28,7 +28,7 @@ final class ScriptRenderingTests: XCTestCase {
         } else {
             let expectedSVG = try Data(contentsOf: svgURL)
             XCTAssertEqual(result.svg, expectedSVG)
-            let expectedMD = try String(contentsOf: mdURL)
+            let expectedMD = try String(contentsOf: mdURL, encoding: .utf8)
             XCTAssertEqual(result.markdown, expectedMD)
         }
     }

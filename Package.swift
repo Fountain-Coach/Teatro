@@ -17,7 +17,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/swiftlang/swift-tools-support-core", from: "0.6.0"),
-        .package(url: "https://github.com/Fountain-Coach/midi2", from: "0.2.0")
+        .package(url: "https://github.com/Fountain-Coach/midi2", from: "0.3.0")
     ],
     targets: [
         .target(
@@ -25,6 +25,13 @@ let package = Package(
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources",
             exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI"],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ],
             linkerSettings: [
                 .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
             ]
@@ -53,7 +60,15 @@ let package = Package(
                 "Teatro",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
-            path: "Sources/TeatroPlay"
+            path: "Sources/TeatroPlay",
+            swiftSettings: [
+                .unsafeFlags([
+                    "-parse-as-library",
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ]
         ),
         .target(
             name: "TeatroRenderAPI",

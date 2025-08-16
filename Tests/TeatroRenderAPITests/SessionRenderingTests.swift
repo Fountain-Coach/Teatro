@@ -22,7 +22,7 @@ file
             try result.markdown?.write(to: mdURL, atomically: true, encoding: .utf8)
             XCTFail("Snapshot file created; re-run tests")
         } else {
-            let expected = try String(contentsOf: mdURL)
+            let expected = try String(contentsOf: mdURL, encoding: .utf8)
             XCTAssertEqual(result.markdown, expected)
         }
     }
