@@ -16,15 +16,15 @@ import SwiftCBOR
 ///   "data": "<payload or slice>"
 /// }
 /// ```
-public struct FountainSSEEnvelope: Codable, Equatable {
-    public enum Event: String, Codable {
+public struct FountainSSEEnvelope: Codable, Equatable, Sendable {
+    public enum Event: String, Codable, Sendable {
         case message
         case error
         case done
         case ctrl
     }
 
-    public struct Fragment: Codable, Equatable {
+    public struct Fragment: Codable, Equatable, Sendable {
         public var i: UInt32
         public var n: UInt32
         public init(i: UInt32, n: UInt32) {
