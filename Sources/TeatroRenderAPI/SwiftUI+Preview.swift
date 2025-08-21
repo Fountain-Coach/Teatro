@@ -2,43 +2,87 @@
 import SwiftUI
 import WebKit
 import Foundation
+import Teatro
 
-/// Minimal SwiftUI view that previews an SVG document (and future timeline data).
-///
-/// This hook is intentionally lightweight so downstream macOS apps can embed
-/// Teatro's renderer without depending on the full engine. Timeline playback
-/// will be wired up in subsequent iterations.
+/// SwiftUI based preview player that shows an SVG and overlays streaming
+/// diagnostics. It also exposes simple record and replay controls to prepare
+/// for future wiring of MIDI/SSE streams.
 @available(macOS 13, *)
-public struct TeatroPlayerView: NSViewRepresentable {
+public struct TeatroPlayerView: View {
     private let svg: Data
     private let timeline: Data?
 
-    /// Creates a preview view for the provided SVG data.
-    /// - Parameters:
-    ///   - svg: Rendered SVG bytes to display.
-    ///   - timeline: Optional timeline data for future animation support.
+    @State private var isRecording = false
+    @State private var isReplaying = false
+
     public init(svg: Data, timeline: Data? = nil) {
         self.svg = svg
         self.timeline = timeline
     }
 
-    public func makeNSView(context: Context) -> WKWebView {
+    public var body: some View {
+        ZStack(alignment: .topLeading) {
+            SVGWebView(svg: svg, timeline: timeline)
+
+            // Token output and stream status overlays.
+            VStack {
+                TokenStreamView()
+                Spacer()
+                StreamStatusView()
+            }
+            .padding()
+
+            // Record / replay controls placed at the bottom-right.
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        Button(isRecording ? "Stop" : "Record") {
+                            isRecording.toggle()
+                        }
+                        Button(isReplaying ? "Stop" : "Replay") {
+                            isReplaying.toggle()
+                        }
+                    }
+                    .font(.caption)
+                    .padding(6)
+                    .background(Color.black.opacity(0.1))
+                    .cornerRadius(6)
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+/// Internal `NSViewRepresentable` wrapper around `WKWebView` that renders the
+/// provided SVG data. Separated so the higher level `TeatroPlayerView` can be a
+/// pure SwiftUI container with overlays.
+@available(macOS 13, *)
+private struct SVGWebView: NSViewRepresentable {
+    let svg: Data
+    let timeline: Data?
+
+    func makeNSView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.setValue(false, forKey: "drawsBackground")
         loadSVG(into: webView)
         return webView
     }
 
-    public func updateNSView(_ nsView: WKWebView, context: Context) {
+    func updateNSView(_ nsView: WKWebView, context: Context) {
         loadSVG(into: nsView)
     }
 
     private func loadSVG(into webView: WKWebView) {
-        // Use a blank base URL to allow relative references if any.
-        webView.load(svg,
-                     mimeType: "image/svg+xml",
-                     characterEncodingName: "utf-8",
-                     baseURL: URL(fileURLWithPath: "/"))
+        webView.load(
+            svg,
+            mimeType: "image/svg+xml",
+            characterEncodingName: "utf-8",
+            baseURL: URL(fileURLWithPath: "/")
+        )
     }
 }
 #endif
+
