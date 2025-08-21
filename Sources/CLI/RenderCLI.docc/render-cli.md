@@ -5,7 +5,7 @@
 Render Teatro views from scripts, scores, and storyboards.
 
 ```
-render-cli [<positional-input>] [--input=<input>] [--format=<format>] [--output=<output>] [--watch] [--force-format] [--width=<width>] [--height=<height>] [--version] [--help]
+render-cli [<positional-input>] [--input=<input>] [--format=<format>] [--output=<output>] [--watch] [--force-format] [--midi1-bridge] [--watch-rtpmidi] [--sse-group=<sse-group>] [--save-ump=<save-ump>] [--replay-ump=<replay-ump>] [--width=<width>] [--height=<height>] [--version] [--help]
 ```
 
 **positional-input:**
@@ -37,6 +37,26 @@ render-cli [<positional-input>] [--input=<input>] [--format=<format>] [--output=
 
 *Ignore mismatched output extension and format*
 
+
+**--midi1-bridge:**
+
+*Bridge UMP input to MIDI 1.0 byte stream for legacy devices*
+
+**--watch-rtpmidi:**
+
+*Subscribe to RTP-MIDI UMP packets and forward them to stdout*
+
+**--sse-group=\<sse-group\>:**
+
+*Filter incoming UMP stream by group*
+
+**--save-ump=\<save-ump\>:**
+
+*Persist received UMP packets to the given file*
+
+**--replay-ump=\<replay-ump\>:**
+
+*Replay UMP packets from file*
 
 **--width=\<width\>:**
 

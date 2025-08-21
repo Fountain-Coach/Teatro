@@ -41,6 +41,18 @@ public struct RenderCLI: ParsableCommand {
     @Flag(name: .long, help: "Bridge UMP input to MIDI 1.0 byte stream for legacy devices")
     public var midi1Bridge: Bool = false
 
+    @Flag(name: .customLong("watch-rtpmidi"), help: "Subscribe to RTP-MIDI UMP packets and forward them to stdout")
+    public var watchRTPMIDI: Bool = false // Refs: teatro-root
+
+    @Option(name: .customLong("sse-group"), help: "Filter incoming UMP stream by group")
+    public var sseGroup: Int?
+
+    @Option(name: .customLong("save-ump"), help: "Persist received UMP packets to the given file")
+    public var saveUMP: String?
+
+    @Option(name: .customLong("replay-ump"), help: "Replay UMP packets from file")
+    public var replayUMP: String?
+
     @Option(name: [.customShort("W"), .long], help: "Override output width")
     public var width: Int?
 
@@ -51,6 +63,26 @@ public struct RenderCLI: ParsableCommand {
 
     public func run() throws {
         let inputPath = input ?? positionalInput
+
+        if let replay = replayUMP {
+            let url = URL(fileURLWithPath: replay)
+            let data = try Data(contentsOf: url)
+            if let save = saveUMP {
+                try data.write(to: URL(fileURLWithPath: save))
+            }
+            if midi1Bridge {
+                let bridged = try MIDI1Bridge.umpToMIDI1(data)
+                FileHandle.standardOutput.write(bridged)
+            } else {
+                FileHandle.standardOutput.write(data)
+            }
+            return
+        }
+
+        if watchRTPMIDI {
+            _ = try watchRTPMIDI(group: sseGroup ?? 0, savePath: saveUMP)
+            dispatchMain()
+        }
 
         if midi1Bridge {
             guard let path = inputPath else {
@@ -220,6 +252,60 @@ public struct RenderCLI: ParsableCommand {
         } catch RendererError.unsupportedInput(let msg) {
             throw ValidationError(msg)
         }
+    }
+
+    @discardableResult
+    func watchRTPMIDI(group: Int, savePath: String?) throws -> AnyObject {
+        #if os(Linux)
+        let sock = Glibc.socket(AF_INET, Int32(SOCK_DGRAM.rawValue), 0)
+        #else
+        let sock = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
+        #endif
+        guard sock >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
+
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = in_port_t(UInt16(5004).bigEndian)
+        addr.sin_addr = in_addr(s_addr: INADDR_ANY)
+        let bindRes = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { ptr in
+                bind(sock, ptr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        guard bindRes == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
+
+        let queue = DispatchQueue(label: "teatro.rtpmidi.\(UUID().uuidString)")
+        let source = DispatchSource.makeReadSource(fileDescriptor: sock, queue: queue)
+        var saveHandle: FileHandle?
+        if let path = savePath {
+            _ = FileManager.default.createFile(atPath: path, contents: nil)
+            saveHandle = FileHandle(forWritingAtPath: path)
+        }
+        source.setEventHandler { [self] in
+            var buffer = [UInt8](repeating: 0, count: 2048)
+            let n = read(sock, &buffer, buffer.count)
+            if n > 0 {
+                let data = Data(buffer[0..<n])
+                if Int(buffer[0] & 0x0F) == group {
+                    if let saveHandle = saveHandle {
+                        saveHandle.write(data)
+                    }
+                    if midi1Bridge {
+                        if let bridged = try? MIDI1Bridge.umpToMIDI1(data) {
+                            FileHandle.standardOutput.write(bridged)
+                        }
+                    } else {
+                        FileHandle.standardOutput.write(data)
+                    }
+                }
+            }
+        }
+        source.setCancelHandler {
+            close(sock)
+            saveHandle?.closeFile()
+        }
+        source.resume()
+        return source as AnyObject
     }
 
     @discardableResult
