@@ -38,3 +38,10 @@ struct Preview: View {
 }
 ```
 
+### Streaming Preview
+
+`StreamPreviewController` connects Universal MIDI Packet streams to
+`FountainSSEEnvelope` events and forwards the resulting tokens to the
+`TeatroPlayerView` overlays. The accompanying Render API exposes a `/watch`
+endpoint that mirrors the GUI preview by emitting `text/event-stream` updates.
+
