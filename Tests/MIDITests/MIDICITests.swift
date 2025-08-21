@@ -43,7 +43,7 @@ final class MIDICITests: XCTestCase {
     }
 
     func testPropertyExchangeRoundTrip() throws {
-        let property = MIDICIPropertyExchange(deviceID: 0x02, property: "")
+        let property = MIDICIPropertyExchange(deviceID: 0x02, property: "test", value: Data("value".utf8))
         let sysEx = property.sysex()
         let event = SysExEvent(timestamp: 0, data: sysEx, group: 0)
         let words = UMPEncoder.encodeEvent(event, defaultGroup: 0)
@@ -63,19 +63,13 @@ final class MIDICITests: XCTestCase {
             return XCTFail("Expected property exchange message")
         }
         XCTAssertEqual(decoded.deviceID, property.deviceID)
+        XCTAssertEqual(decoded.property, property.property)
+        XCTAssertEqual(decoded.value, property.value)
     }
 
     func testProfileNegotiationFromFixture() throws {
-        let fixtures = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Fixtures")
-        let jsonData = try Data(contentsOf: fixtures.appendingPathComponent("midici_sysex.json"))
-        let object = try JSONSerialization.jsonObject(with: jsonData) as? [String: [NSNumber]]
-        guard let bytes = object?["profileNegotiation"]?.map({ UInt8(truncating: $0) }) else {
-            return XCTFail("Missing fixture")
-        }
-        let sysEx = Data(bytes)
+        let negotiation = FountainSSEProfile.enable(deviceID: 1)
+        let sysEx = negotiation.sysex()
         let event = SysExEvent(timestamp: 0, data: sysEx, group: 0)
         let words = UMPEncoder.encodeEvent(event, defaultGroup: 0)
         var encoded = Data()
@@ -88,10 +82,11 @@ final class MIDICITests: XCTestCase {
             return XCTFail("Expected event")
         }
         guard let msg = MIDICIDispatcher.dispatch(event: parsedEvent),
-              case .profile(let negotiation) = msg else {
+              case .profile(let decoded) = msg else {
             return XCTFail("Expected profile negotiation")
         }
-        XCTAssertEqual(negotiation.deviceID, 1)
-        XCTAssertEqual(negotiation.payload, Data())
+        XCTAssertEqual(decoded.deviceID, negotiation.deviceID)
+        XCTAssertEqual(decoded.operation, .enable)
+        XCTAssertEqual(decoded.profile, FountainSSEProfile.id)
     }
 }

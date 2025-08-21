@@ -1,5 +1,7 @@
 import Foundation
 
+// Refs: teatro-root
+
 /// MIDI Capability Inquiry message container.
 public enum MIDICIMessage: Equatable {
     case discovery(MIDICIDiscovery)
@@ -28,17 +30,28 @@ public struct MIDICIDiscovery: Equatable {
 
 /// MIDI-CI Profile negotiation message.
 public struct MIDICIProfileNegotiation: Equatable {
-    public let deviceID: UInt8
-    public let payload: Data
+    public enum Operation: UInt8 {
+        case enable = 0x01
+        case disable = 0x02
+    }
 
-    public init(deviceID: UInt8, payload: Data = Data()) {
+    public let deviceID: UInt8
+    public let functionBlock: UInt8
+    public let operation: Operation
+    public let profile: String
+
+    public init(deviceID: UInt8, functionBlock: UInt8, operation: Operation, profile: String) {
         self.deviceID = deviceID
-        self.payload = payload
+        self.functionBlock = functionBlock
+        self.operation = operation
+        self.profile = profile
     }
 
     public func sysex() -> Data {
         var bytes: [UInt8] = [0xF0, 0x7E, deviceID, 0x0D, 0x72]
-        bytes.append(contentsOf: payload)
+        bytes.append(functionBlock)
+        bytes.append(operation.rawValue)
+        bytes.append(contentsOf: profile.utf8)
         bytes.append(0xF7)
         return Data(bytes)
     }
@@ -59,6 +72,7 @@ public struct MIDICIPropertyExchange: Equatable {
     public func sysex() -> Data {
         var bytes: [UInt8] = [0xF0, 0x7E, deviceID, 0x0D, 0x78]
         bytes.append(contentsOf: property.utf8)
+        bytes.append(0x00)
         if let v = value { bytes.append(contentsOf: v) }
         bytes.append(0xF7)
         return Data(bytes)
@@ -77,15 +91,27 @@ public enum MIDICI {
               bytes[3] == 0x0D else { return nil }
         let deviceID = bytes[2]
         let subID2 = bytes[4]
-        let payload = Data(bytes[5..<(bytes.count - 1)])
+        let payload = Array(bytes[5..<(bytes.count - 1)])
         switch subID2 {
         case 0x70:
-            return .discovery(MIDICIDiscovery(deviceID: deviceID, payload: payload))
+            return .discovery(MIDICIDiscovery(deviceID: deviceID, payload: Data(payload)))
         case 0x72:
-            return .profile(MIDICIProfileNegotiation(deviceID: deviceID, payload: payload))
+            guard payload.count >= 2 else { return nil }
+            let functionBlock = payload[0]
+            guard let op = MIDICIProfileNegotiation.Operation(rawValue: payload[1]) else { return nil }
+            let profile = String(bytes: payload.dropFirst(2), encoding: .utf8) ?? ""
+            return .profile(MIDICIProfileNegotiation(deviceID: deviceID, functionBlock: functionBlock, operation: op, profile: profile))
         case 0x78:
-            let prop = String(data: payload, encoding: .utf8) ?? ""
-            return .property(MIDICIPropertyExchange(deviceID: deviceID, property: prop, value: nil))
+            if let sep = payload.firstIndex(of: 0x00) {
+                let propBytes = payload[..<sep]
+                let valueBytes = payload[(sep + 1)...]
+                let prop = String(bytes: propBytes, encoding: .utf8) ?? ""
+                let val = valueBytes.isEmpty ? nil : Data(valueBytes)
+                return .property(MIDICIPropertyExchange(deviceID: deviceID, property: prop, value: val))
+            } else {
+                let prop = String(bytes: payload, encoding: .utf8) ?? ""
+                return .property(MIDICIPropertyExchange(deviceID: deviceID, property: prop, value: nil))
+            }
         default:
             return nil
         }
