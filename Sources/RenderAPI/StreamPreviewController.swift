@@ -28,15 +28,15 @@ public actor StreamPreviewController {
     }
 
     private func handle(_ env: FountainSSEEnvelope) async {
-        if env.ev == .message, let token = env.data {
+        if env.ev == .message,
+           let data = env.data,
+           let token = String(data: data, encoding: .utf8) {
             tokenBuffer.append(token)
-        } else if env.ev == .ctrl {
-            // Simple reliability hook for ACK messages.
-            if let payload = env.data?.data(using: .utf8),
-               let json = try? JSONSerialization.jsonObject(with: payload) as? [String: Any],
-               let ack = json["ack"] as? UInt64 {
-                await self.reliability.ack(ack)
-            }
+        } else if env.ev == .ctrl,
+                  let payload = env.data,
+                  let json = try? JSONSerialization.jsonObject(with: payload) as? [String: Any],
+                  let ack = json["ack"] as? UInt64 {
+            await self.reliability.ack(ack)
         }
         _ = await reliability.receive(env.seq)
     }

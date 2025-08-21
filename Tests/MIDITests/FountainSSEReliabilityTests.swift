@@ -18,9 +18,9 @@ final class FountainSSEReliabilityTests: XCTestCase {
 
         let receiver = FountainSSEReliability(windowSize: 8)
 
-        let env1 = FountainSSEEnvelope(ev: .message, seq: 1, data: "one")
-        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: "two")
-        let env3 = FountainSSEEnvelope(ev: .message, seq: 3, data: "three")
+        let env1 = FountainSSEEnvelope(ev: .message, seq: 1, data: "one".data(using: .utf8))
+        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: "two".data(using: .utf8))
+        let env3 = FountainSSEEnvelope(ev: .message, seq: 3, data: "three".data(using: .utf8))
 
         await sender.sent(env1, at: Date(timeIntervalSince1970: 0))
         await sender.sent(env2, at: Date(timeIntervalSince1970: 0))

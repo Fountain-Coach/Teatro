@@ -12,7 +12,7 @@ final class FountainSSEEnvelopeTests: XCTestCase {
             seq: 42,
             frag: .init(i: 0, n: 1),
             ts: 1.23,
-            data: "hello"
+            data: "hello".data(using: .utf8)
         )
         let encoded = try env.encodeJSON()
         let decoded = try FountainSSEEnvelope.decodeJSON(encoded)
@@ -23,7 +23,7 @@ final class FountainSSEEnvelopeTests: XCTestCase {
         let env = FountainSSEEnvelope(
             ev: .ctrl,
             seq: 7,
-            data: "{\"ack\":1}"
+            data: "{\"ack\":1}".data(using: .utf8)
         )
         let encoded = try env.encodeCBOR()
         let decoded = try FountainSSEEnvelope.decodeCBOR(encoded)

@@ -25,7 +25,7 @@ final class FountainSSELossIntegrationTests: XCTestCase {
         }
 
         for seq in 1...total {
-            let env = FountainSSEEnvelope(ev: .message, seq: UInt64(seq), data: "\(seq)")
+            let env = FountainSSEEnvelope(ev: .message, seq: UInt64(seq), data: "\(seq)".data(using: .utf8))
             await sender.sent(env)
             if !losses.contains(seq) {
                 try await deliver(env)
@@ -35,8 +35,9 @@ final class FountainSSELossIntegrationTests: XCTestCase {
         var iterator = dispatcher.events.makeAsyncIterator()
         var pieces: [String] = []
         for _ in 1...total {
-            if let env = await iterator.next() {
-                pieces.append(env.data ?? "")
+            if let env = await iterator.next(), let d = env.data,
+               let s = String(data: d, encoding: .utf8) {
+                pieces.append(s)
             }
         }
         let result = pieces.joined(separator: " ")

@@ -8,9 +8,13 @@ Teatro can consume Server‑Sent Events (SSE) that are transported inside Univer
 
 See `assets/sse-demo.ump` for a minimal capture.
 
+### Envelope Model
+
+`FountainSSEEnvelope` stores the payload in a `Data` field. This avoids extra string copies when reassembling large envelopes. The field encodes as UTF-8 text in the on-wire JSON or CBOR representation.
+
 ### Timing
 
-Every SSE envelope may carry a JR Timestamp. The player aligns frames using that timestamp and a small jitter buffer so live streams remain beat‑synchronized even across RTP‑MIDI links.
+Every SSE envelope may carry a JR Timestamp. The player aligns frames using that timestamp and a small jitter buffer so live streams remain beat‑synchronized even across RTP‑MIDI links. Wired LAN profiles default this buffer to approximately 3 ms to balance stability and latency.
 
 ### Reliability
 
