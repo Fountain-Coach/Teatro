@@ -31,6 +31,10 @@ The command above reads a UMP file, translates it to MIDI 1.0 bytes, and writes
 the result to standard output (or the file specified with `--output`).
 `MIDI1Bridge.midi1ToUMP(_:)` performs the inverse conversion when needed.
 
+## SSE over MIDI 2.0
+
+Teatro can ingest **Server-Sent Events** streamed inside MIDI 2.0 UMP. Flex Data carries short envelopes while SysEx8 handles larger payloads. Streams honor JR Timestamps with a small jitter buffer so live tokens stay beat‑aligned. The player shows reliability stats and tokens in real time. A minimal capture lives at `assets/sse-demo.ump`.
+
 ### Command-line Playback
 
 Pipe bridged MIDI data into the `teatro-play` utility to hear it through
@@ -57,7 +61,8 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 - [9. Fountain Parser Implementation](Docs/Chapters/09_FountainParserImplementationPlan.md)
 - [10. Storyboard DSL](Docs/Chapters/10_StoryboardDSL.md)
 - [11. TeatroPlayerView Usage](Docs/Chapters/11_TeatroPlayer.md)
-- [15. TeatroSampler](Docs/Chapters/12_TeatroSampler.md)
+- [12. SSE over MIDI 2.0](Docs/Chapters/12_SSE_Over_MIDI2.md)
+- [13. TeatroSampler](Docs/Chapters/12_TeatroSampler.md)
 - [Addendum: Apple Platform Compatibility](Docs/Chapters/Addendum.md)
 
 Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
