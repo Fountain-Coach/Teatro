@@ -57,6 +57,17 @@ final class FountainSSEReliabilityTests: XCTestCase {
         XCTAssertEqual(depths.last, 0)
         XCTAssertEqual(rtts.first ?? -1, 1.0, accuracy: 0.0001)
     }
+
+    func testReceiveWindowNacksRange() async {
+        let reliability = FountainSSEReliability(windowSize: 8)
+        let r1 = await reliability.receive(1)
+        XCTAssertEqual(r1.ack, 1)
+        XCTAssertTrue(r1.nacks.isEmpty)
+
+        let r4 = await reliability.receive(4)
+        XCTAssertEqual(r4.ack, 4)
+        XCTAssertEqual(r4.nacks, [2, 3])
+    }
 }
 
 private actor MetricsStore {
