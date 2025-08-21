@@ -17,6 +17,7 @@
 - Keep **Teatro as the only renderer**: no other GUI engines or renderers in downstream repos.
 - Support **headless** (Linux) and **desktop** (macOS) usage through the same Render API.
 - Offer an **embeddable SwiftUI preview view** (`TeatroPlayerView`) that accepts SVG (and later timeline data).
+- Expose **SSE-over-MIDI2 streams** with timing and reliability overlays in the preview player.
 
 ### Non‑Goals
 - Building product‑specific UIs; Teatro stays a rendering/runtime engine.
@@ -242,6 +243,7 @@ Tests/TeatroRenderAPITests/
 - [ ] Wire `Package.swift` products & targets.
 - [ ] Add snapshot tests and API conformance tests.
 - [ ] Add `Docs/RenderAPI.md` and README section.
+- [ ] Document SSE-over-MIDI2 streaming and include demo capture.
 - [ ] Bump version (minor) and update CHANGELOG.
 - [ ] CI green on macOS + Linux.
 - [ ] Tag release `vX.Y.0`.

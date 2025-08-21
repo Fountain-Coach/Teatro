@@ -23,6 +23,10 @@ let player = TeatroPlayerView(storyboard: storyboard, midi: melody)
 Pass `comments: [String]` when constructing frames to display semantic notes
 overlayed during playback.
 
+### Streaming overlays
+
+`TeatroPlayerView` can subscribe to **SSE envelopes** delivered over MIDI 2.0. Tokens from the stream render as live overlay views while status lights expose group activity, round‑trip time, and retransmission counts.
+
 ### Enabling audio
 
 `TeatroPlayerView` drives audio via `TeatroSampler`, a cross-platform actor-based
