@@ -62,7 +62,13 @@ public actor FountainSSEDispatcher {
                 let ordered = dict.values.sorted { ($0.frag?.i ?? 0) < ($1.frag?.i ?? 0) }
                 var merged = ordered.first!
                 merged.frag = nil
-                let combined = ordered.compactMap { $0.data }.joined()
+                var combined = Data()
+                combined.reserveCapacity(ordered.compactMap { $0.data?.count }.reduce(0, +))
+                for part in ordered {
+                    if let d = part.data {
+                        combined.append(d)
+                    }
+                }
                 merged.data = combined
                 fragmentBuffers.removeValue(forKey: env.seq)
                 ready[env.seq] = merged

@@ -4,7 +4,7 @@ import XCTest
 // Refs: teatro-root
 
 final class FountainSSETimingTests: XCTestCase {
-    func testScheduleRounding() {
+    func testScheduleClampsToMax() {
         let now = Date()
         let nowJR: UInt32 = 0
         let futureJR = FountainSSETiming.jrTimestamp(fromMilliseconds: 10.4)
@@ -16,7 +16,7 @@ final class FountainSSETimingTests: XCTestCase {
         )
         XCTAssertFalse(late)
         let deltaMs = playout.timeIntervalSince(now) * 1000
-        XCTAssertEqual(deltaMs, 11, accuracy: 0.001)
+        XCTAssertEqual(deltaMs, 5, accuracy: 0.001)
     }
 
     func testLatePacketDetection() {
@@ -36,15 +36,18 @@ final class FountainSSETimingTests: XCTestCase {
 
     func testScheduleWithoutTimestamp() {
         let now = Date()
-        let (playout, late) = FountainSSETiming.schedule(
-            jrTimestamp: nil,
-            nowJR: 0,
-            arrival: now,
-            targetPlayoutMs: 5
-        )
+        let (playout, late) = FountainSSETiming.schedule(jrTimestamp: nil, nowJR: 0, arrival: now, targetPlayoutMs: 5)
         XCTAssertFalse(late)
         let deltaMs = playout.timeIntervalSince(now) * 1000
         XCTAssertEqual(deltaMs, 5, accuracy: 0.001)
+    }
+
+    func testDefaultJitterUsedWhenNotSpecified() {
+        let now = Date()
+        let (playout, late) = FountainSSETiming.schedule(jrTimestamp: nil, nowJR: 0, arrival: now)
+        XCTAssertFalse(late)
+        let deltaMs = playout.timeIntervalSince(now) * 1000
+        XCTAssertEqual(deltaMs, FountainSSETiming.defaultLANJitterMs, accuracy: 0.001)
     }
 }
 

@@ -1,5 +1,5 @@
 import Foundation
-import SwiftCBOR
+@preconcurrency import SwiftCBOR
 
 /// Envelope for FountainAI Server-Sent Events transported over MIDI.
 ///
@@ -40,7 +40,9 @@ public struct FountainSSEEnvelope: Codable, Equatable, Sendable {
     public var seq: UInt64
     public var frag: Fragment?
     public var ts: Double?
-    public var data: String?
+    /// UTF-8 payload slice. Stored as `Data` to avoid extra string copies when
+    /// handling large envelopes.
+    public var data: Data?
 
     public init(
         v: UInt16 = 1,
@@ -50,7 +52,7 @@ public struct FountainSSEEnvelope: Codable, Equatable, Sendable {
         seq: UInt64,
         frag: Fragment? = nil,
         ts: Double? = nil,
-        data: String? = nil
+        data: Data? = nil
     ) {
         self.v = v
         self.ev = ev
@@ -83,28 +85,48 @@ public struct FountainSSEEnvelope: Codable, Equatable, Sendable {
         self.seq = try container.decode(UInt64.self, forKey: .seq)
         self.frag = try container.decodeIfPresent(Fragment.self, forKey: .frag)
         self.ts = try container.decodeIfPresent(Double.self, forKey: .ts)
-        self.data = try container.decodeIfPresent(String.self, forKey: .data)
+        if let str = try container.decodeIfPresent(String.self, forKey: .data) {
+            self.data = str.data(using: .utf8)
+        } else {
+            self.data = nil
+        }
     }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(v, forKey: .v)
+        try container.encode(ev, forKey: .ev)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(ct, forKey: .ct)
+        try container.encode(seq, forKey: .seq)
+        try container.encodeIfPresent(frag, forKey: .frag)
+        try container.encodeIfPresent(ts, forKey: .ts)
+        if let data, let str = String(data: data, encoding: .utf8) {
+            try container.encode(str, forKey: .data)
+        }
+    }
+
+    // MARK: - Cached Coders
+    private static let jsonEncoder = JSONEncoder()
+    private static let jsonDecoder = JSONDecoder()
+    private static let cborEncoder = CodableCBOREncoder()
+    private static let cborDecoder = CodableCBORDecoder()
 
     // JSON helpers
     public func encodeJSON() throws -> Data {
-        let encoder = JSONEncoder()
-        return try encoder.encode(self)
+        try FountainSSEEnvelope.jsonEncoder.encode(self)
     }
 
     public static func decodeJSON(_ data: Data) throws -> FountainSSEEnvelope {
-        let decoder = JSONDecoder()
-        return try decoder.decode(FountainSSEEnvelope.self, from: data)
+        try FountainSSEEnvelope.jsonDecoder.decode(FountainSSEEnvelope.self, from: data)
     }
 
     // CBOR helpers
     public func encodeCBOR() throws -> Data {
-        let encoder = CodableCBOREncoder()
-        return try encoder.encode(self)
+        try FountainSSEEnvelope.cborEncoder.encode(self)
     }
 
     public static func decodeCBOR(_ data: Data) throws -> FountainSSEEnvelope {
-        let decoder = CodableCBORDecoder()
-        return try decoder.decode(FountainSSEEnvelope.self, from: data)
+        try FountainSSEEnvelope.cborDecoder.decode(FountainSSEEnvelope.self, from: data)
     }
 }

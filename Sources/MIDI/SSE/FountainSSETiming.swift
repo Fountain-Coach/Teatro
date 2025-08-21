@@ -9,6 +9,8 @@ public struct FountainSSETiming {
     /// Milliseconds represented by a single JR tick.
     public static let msPerTick: Double = 1000.0 / ticksPerSecond
     public static let secondsPerTick: Double = 1.0 / ticksPerSecond
+    /// Default jitter buffer for wired LAN environments (ms).
+    public static let defaultLANJitterMs: Double = 3.0
 
     public init() {}
 
@@ -28,27 +30,32 @@ public struct FountainSSETiming {
     ///   - jrTimestamp: Optional JR timestamp of the packet relative to `nowJR`.
     ///   - nowJR: Current JR clock reading when the packet was received.
     ///   - arrival: Local arrival time for reference.
-    ///   - targetPlayoutMs: Desired playout delay in milliseconds.
+    ///   - targetPlayoutMs: Desired playout delay in milliseconds (default
+    ///     `defaultLANJitterMs`).
+    ///   - maxPlayoutMs: Upper bound to prevent overly long buffering.
     public static func schedule(
         jrTimestamp: UInt32?,
         nowJR: UInt32,
         arrival: Date = Date(),
-        targetPlayoutMs: Double
+        targetPlayoutMs: Double = defaultLANJitterMs,
+        maxPlayoutMs: Double = 5.0
     ) -> (playout: Date, late: Bool) {
         if let jr = jrTimestamp {
             let diffTicks = Int64(UInt64(jr) &- UInt64(nowJR))
-            let deltaMs = Double(diffTicks) * msPerTick
+            var deltaMs = Double(diffTicks) * msPerTick
             if deltaMs < targetPlayoutMs {
                 let rounded = ceil(targetPlayoutMs)
                 let time = arrival.addingTimeInterval(rounded / 1000)
                 return (time, true)
             } else {
+                deltaMs = min(deltaMs, maxPlayoutMs)
                 let rounded = ceil(deltaMs)
                 let time = arrival.addingTimeInterval(rounded / 1000)
                 return (time, false)
             }
         } else {
-            let rounded = ceil(targetPlayoutMs)
+            let delay = max(targetPlayoutMs, defaultLANJitterMs)
+            let rounded = ceil(delay)
             let time = arrival.addingTimeInterval(rounded / 1000)
             return (time, false)
         }
