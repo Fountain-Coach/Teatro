@@ -25,6 +25,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RenderResponse"
+  /watch:
+    post:
+      summary: Stream preview updates for a Teatro view
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenderRequest"
+      responses:
+        "200":
+          description: Preview stream delivered as Server-Sent Events
+          content:
+            text/event-stream:
+              schema:
+                type: string
 components:
   schemas:
     RenderRequest:

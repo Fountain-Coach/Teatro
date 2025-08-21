@@ -10,6 +10,7 @@ let package = Package(
             targets: ["Teatro"]
         ),
         .library(name: "TeatroRenderAPI", targets: ["TeatroRenderAPI"]),
+        .library(name: "RenderAPI", targets: ["RenderAPI"]),
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"]),
         .executable(name: "teatro-play", targets: ["TeatroPlay"])
@@ -25,7 +26,7 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2"), "SwiftCBOR"],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI"],
+            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI", "RenderAPI"],
             resources: [
                 .process("Audio/Resources")
             ],
@@ -79,11 +80,16 @@ let package = Package(
             dependencies: ["Teatro"],
             path: "Sources/TeatroRenderAPI"
         ),
+        .target(
+            name: "RenderAPI",
+            dependencies: ["Teatro", "TeatroRenderAPI"],
+            path: "Sources/RenderAPI"
+        ),
         .testTarget(
             name: "TeatroTests",
             dependencies: ["Teatro"],
             path: "Tests",
-            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI", "TeatroRenderAPITests"],
+            exclude: ["StoryboardDSLTests", "MIDITests", "RendererFileTests", "SamplerTests", "CLI", "TeatroRenderAPITests", "RenderAPITests"],
             resources: [
                 .process("Fixtures")
             ]
@@ -120,6 +126,11 @@ let package = Package(
             resources: [
                 .process("__snapshots__")
             ]
+        ),
+        .testTarget(
+            name: "RenderAPITests",
+            dependencies: ["RenderAPI"],
+            path: "Tests/RenderAPITests"
         ),
         .target(
             name: "CCsound",
