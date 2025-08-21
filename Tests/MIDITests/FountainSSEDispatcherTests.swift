@@ -40,5 +40,26 @@ final class FountainSSEDispatcherTests: XCTestCase {
         XCTAssertEqual(second?.seq, 2)
         XCTAssertEqual(second?.data, "World")
     }
+
+    func testInOrderFragmentReassembly() async throws {
+        let dispatcher = FountainSSEDispatcher()
+        let fragA = FountainSSEEnvelope(
+            ev: .message,
+            seq: 1,
+            frag: .init(i: 0, n: 2),
+            data: "Hel"
+        )
+        let fragB = FountainSSEEnvelope(
+            ev: .message,
+            seq: 1,
+            frag: .init(i: 1, n: 2),
+            data: "lo"
+        )
+        try await dispatcher.receiveSysEx8(fragA.encodeJSON())
+        try await dispatcher.receiveSysEx8(fragB.encodeJSON())
+        var iterator = dispatcher.events.makeAsyncIterator()
+        let assembled = await iterator.next()
+        XCTAssertEqual(assembled?.data, "Hello")
+    }
 }
 

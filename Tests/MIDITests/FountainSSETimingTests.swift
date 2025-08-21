@@ -33,5 +33,18 @@ final class FountainSSETimingTests: XCTestCase {
         let deltaMs = playout.timeIntervalSince(now) * 1000
         XCTAssertEqual(deltaMs, 3, accuracy: 0.001)
     }
+
+    func testScheduleWithoutTimestamp() {
+        let now = Date()
+        let (playout, late) = FountainSSETiming.schedule(
+            jrTimestamp: nil,
+            nowJR: 0,
+            arrival: now,
+            targetPlayoutMs: 5
+        )
+        XCTAssertFalse(late)
+        let deltaMs = playout.timeIntervalSince(now) * 1000
+        XCTAssertEqual(deltaMs, 5, accuracy: 0.001)
+    }
 }
 

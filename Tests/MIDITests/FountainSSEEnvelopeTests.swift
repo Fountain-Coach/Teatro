@@ -36,4 +36,11 @@ final class FountainSSEEnvelopeTests: XCTestCase {
         """.data(using: .utf8)!
         XCTAssertThrowsError(try FountainSSEEnvelope.decodeJSON(json))
     }
+
+    func testInvalidVersionRejected() throws {
+        let json = """
+        {"v":2,"ev":"message","seq":1}
+        """.data(using: .utf8)!
+        XCTAssertThrowsError(try FountainSSEEnvelope.decodeJSON(json))
+    }
 }
