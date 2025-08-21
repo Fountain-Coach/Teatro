@@ -36,6 +36,18 @@ func captureStdout(_ closure: () throws -> Void) throws -> String {
     return String(decoding: data, as: UTF8.self)
 }
 
+func captureStdoutData(_ closure: () throws -> Void) throws -> Data {
+    let pipe = Pipe()
+    let original = dup(STDOUT_FILENO)
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+    try closure()
+    fflush(nil)
+    dup2(original, STDOUT_FILENO)
+    close(original)
+    pipe.fileHandleForWriting.closeFile()
+    return pipe.fileHandleForReading.readDataToEndOfFile()
+}
+
 final class RenderCLITests: XCTestCase {
     func testHelpFlag() {
         XCTAssertHelp(RenderCLI.self, expected: "USAGE:")
@@ -47,6 +59,13 @@ final class RenderCLITests: XCTestCase {
 
     func testUnknownFlag() {
         XCTAssertExit { _ = try RenderCLI.parse(["--unknown"]) }
+    }
+
+    func testHelpListsRTPOptions() {
+        XCTAssertHelp(RenderCLI.self, expected: "--watch-rtpmidi")
+        XCTAssertHelp(RenderCLI.self, expected: "--sse-group")
+        XCTAssertHelp(RenderCLI.self, expected: "--save-ump")
+        XCTAssertHelp(RenderCLI.self, expected: "--replay-ump")
     }
 
     func testEnvironmentFallback() throws {
@@ -195,6 +214,48 @@ final class RenderCLITests: XCTestCase {
                 return
             }
         }
+    }
+
+    func testSSEGroupParses() throws {
+        let cli = try RenderCLI.parse(["--watch-rtpmidi", "--sse-group", "3"])
+        XCTAssertEqual(cli.sseGroup, 3)
+    }
+
+    func testReplayUMPBridgesToMIDI1() throws {
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let packets = UMPEncoder.encode(Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel))
+        var data = Data()
+        for word in packets {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+        }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("bridge.ump")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let outData = try captureStdoutData {
+            let cli = try RenderCLI.parse(["--replay-ump", url.path, "--midi1-bridge"])
+            try cli.run()
+        }
+        XCTAssertEqual([UInt8](outData), [0x90, 0x3C, 0x7F])
+    }
+
+    func testReplayUMPSavesFile() throws {
+        let vel = UInt16((MIDI.fromUnitFloat(1.0) >> 16) & 0xFFFF)
+        let packets = UMPEncoder.encode(Midi2NoteOn(group: Uint4(0)!, channel: Uint4(0)!, note: Uint7(60)!, velocity: vel))
+        var data = Data()
+        for word in packets {
+            var be = word.bigEndian
+            withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+        }
+        let input = FileManager.default.temporaryDirectory.appendingPathComponent("in.ump")
+        try data.write(to: input)
+        defer { try? FileManager.default.removeItem(at: input) }
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("out.ump")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let cli = try RenderCLI.parse(["--replay-ump", input.path, "--save-ump", output.path])
+        try cli.run()
+        let saved = try Data(contentsOf: output)
+        XCTAssertEqual(saved, data)
     }
 
     func testOutputExtensionMismatchThrows() throws {
