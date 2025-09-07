@@ -21,23 +21,23 @@ public struct TokenStreamView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .bottomLeading) {
+        SwiftUI.ZStack(alignment: .bottomLeading) {
             if showBeatGrid {
-                HStack(spacing: 4) {
-                    ForEach(tokens.indices, id: \.self) { _ in
-                        VStack {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
+                SwiftUI.HStack(spacing: 4) {
+                    SwiftUI.ForEach(tokens.indices, id: \.self) { _ in
+                        SwiftUI.VStack {
+                            SwiftUI.Rectangle()
+                                .fill(SwiftUI.Color.gray.opacity(0.3))
                                 .frame(width: 1, height: 20)
-                            Spacer()
+                            SwiftUI.Spacer()
                         }
                     }
                 }
             }
-            HStack(spacing: 4) {
-                ForEach(Array(tokens.enumerated()), id: \.0) { _, token in
-                    Text(token)
-                        .font(.system(size: 12, weight: .regular, design: .monospaced))
+            SwiftUI.HStack(spacing: 4) {
+                SwiftUI.ForEach(Array(tokens.enumerated()), id: \.0) { _, token in
+                    SwiftUI.Text(token)
+                        .font(SwiftUI.Font.system(size: 12, weight: .regular, design: .monospaced))
                 }
             }
         }

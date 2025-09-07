@@ -18,7 +18,7 @@ public actor FountainSSEDispatcher {
     private var ready: [UInt64: FountainSSEEnvelope] = [:]
 
     /// Next expected sequence number.
-    private var nextSeq: UInt64?
+    private var nextSeq: UInt64 = 1
 
     public init() {
         var cont: AsyncStream<FountainSSEEnvelope>.Continuation!
@@ -81,23 +81,18 @@ public actor FountainSSEDispatcher {
     }
 
     private func publishReady() {
-        if nextSeq == nil {
-            nextSeq = ready.keys.min()
-        }
-        while let seq = nextSeq, let env = ready[seq] {
+        while let env = ready[nextSeq] {
             continuation.yield(env)
-            ready.removeValue(forKey: seq)
-            nextSeq = seq &+ 1
+            ready.removeValue(forKey: nextSeq)
+            nextSeq &+= 1
         }
     }
 
     private func updateAndPublish(for seq: UInt64) {
-        if let current = nextSeq {
-            if seq < current { nextSeq = seq }
-            publishReady()
-        } else {
+        if seq < nextSeq {
             nextSeq = seq
         }
+        publishReady()
     }
 }
 
