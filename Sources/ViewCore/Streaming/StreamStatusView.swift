@@ -30,19 +30,19 @@ public struct StreamStatusView: View {
     }
 
     public var body: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(connected ? Color.green : Color.red)
+        SwiftUI.HStack(spacing: 8) {
+            SwiftUI.Circle()
+                .fill(connected ? SwiftUI.Color.green : SwiftUI.Color.red)
                 .frame(width: 10, height: 10)
-            Text("ACK \(acks)")
-            Text("NACK \(nacks)")
-            Text(String(format: "RTT %.0fms", rtt))
-            Text("WIN \(window)")
-            Text(String(format: "LOSS %.1f%%", loss))
+            SwiftUI.Text("ACK \(acks)")
+            SwiftUI.Text("NACK \(nacks)")
+            SwiftUI.Text(String(format: "RTT %.0fms", rtt))
+            SwiftUI.Text("WIN \(window)")
+            SwiftUI.Text(String(format: "LOSS %.1f%%", loss))
         }
-        .font(.caption.monospaced())
+        .font(SwiftUI.Font.caption.monospaced())
         .padding(4)
-        .background(Color.black.opacity(0.1))
+        .background(SwiftUI.Color.black.opacity(0.1))
         .cornerRadius(4)
     }
 }
