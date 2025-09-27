@@ -5,16 +5,19 @@ let package = Package(
     name: "teatro",
     platforms: [.macOS(.v14)],
     products: [
-        .library(
-            name: "Teatro",
-            targets: ["Teatro"]
-        ),
+        // Umbrella library re-exporting modular targets for backward compatibility
+        .library(name: "Teatro", targets: ["Teatro"]),
+        // New modular libraries
+        .library(name: "TeatroCore", targets: ["TeatroCore"]),
+        .library(name: "TeatroAudio", targets: ["TeatroAudio"]),
+        .library(name: "TeatroGUI", targets: ["TeatroGUI"]),
+        .library(name: "TeatroTelemetry", targets: ["TeatroTelemetry"]),
+        // Existing API layers and tools
         .library(name: "TeatroRenderAPI", targets: ["TeatroRenderAPI"]),
         .library(name: "RenderAPI", targets: ["RenderAPI"]),
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"]),
         .executable(name: "teatro-play", targets: ["TeatroPlay"]),
-        // Demo preview app for the SDL3 + MIDI2 integration (stub-enabled)
         .executable(name: "TeatroPreviewDemo", targets: ["TeatroPreviewDemo"])
     ],
     dependencies: [
@@ -24,11 +27,16 @@ let package = Package(
         .package(url: "https://github.com/unrelentingtech/SwiftCBOR", from: "0.5.0")
     ],
     targets: [
+        // MARK: - Core (single target for now; GUI/Audio/Streaming excluded)
         .target(
-            name: "Teatro",
-            dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2"), "SwiftCBOR"],
+            name: "TeatroCore",
+            dependencies: [
+                .product(name: "MIDI2", package: "MIDI2"),
+                "SwiftCBOR"
+            ],
             path: "Sources",
             exclude: [
+                "Audio",
                 "CLI",
                 "TeatroSamplerDemo",
                 "TeatroPlay",
@@ -40,10 +48,32 @@ let package = Package(
                 "CFluidSynth",
                 "MIDI/Teatro-Codex-Plan.md",
                 "TeatroRenderAPI",
-                "RenderAPI"
+                "RenderAPI",
+                "ViewCore/Streaming",
+                "TeatroGUI",
+                "TeatroTelemetry",
+                // keep Teatro/Core in Core, exclude only umbrella file
+                "Teatro/Umbrella.swift"
             ],
             resources: [
-                .process("Audio/Resources")
+                // Exclude Audio resources from core; handled by TeatroAudio
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ]
+        ),
+
+        // MARK: - Audio
+        .target(
+            name: "TeatroAudio",
+            dependencies: ["TeatroCore", "CCsound", "CFluidSynth"],
+            path: "Sources/Audio",
+            resources: [
+                .process("Resources")
             ],
             swiftSettings: [
                 .unsafeFlags([
@@ -56,7 +86,20 @@ let package = Package(
                 .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
             ]
         ),
-        // Internal SDL3 backend wrapper (currently stubbed unless SDL is available)
+
+        // MARK: - Telemetry (placeholder aggregate target)
+        .target(
+            name: "TeatroTelemetry",
+            dependencies: [],
+            path: "Sources/TeatroTelemetry"
+        ),
+
+        // MARK: - GUI (SDL backend + SwiftUI overlay stubs)
+        .target(
+            name: "TeatroGUIViews",
+            dependencies: [],
+            path: "Sources/ViewCore/Streaming"
+        ),
         .target(
             name: "TeatroSDLBackend",
             dependencies: [],
@@ -69,10 +112,9 @@ let package = Package(
                 ], .when(configuration: .debug))
             ]
         ),
-        // MIDI integration utilities that adapt MIDI2 usage for the preview
         .target(
             name: "MIDIIntegration",
-            dependencies: ["Teatro", .product(name: "MIDI2", package: "MIDI2")],
+            dependencies: ["TeatroCore", .product(name: "MIDI2", package: "MIDI2")],
             path: "Sources/MIDIIntegration",
             swiftSettings: [
                 .unsafeFlags([
@@ -82,6 +124,28 @@ let package = Package(
                 ], .when(configuration: .debug))
             ]
         ),
+        .target(
+            name: "TeatroGUI",
+            dependencies: ["TeatroSDLBackend", "MIDIIntegration", "TeatroGUIViews", "TeatroCore", "TeatroTelemetry"],
+            path: "Sources/TeatroGUI"
+        ),
+
+        // MARK: - Umbrella `Teatro` target re-exporting modules for backward compatibility
+        .target(
+            name: "Teatro",
+            dependencies: ["TeatroCore", "TeatroAudio", "TeatroGUI", "TeatroTelemetry"],
+            path: "Sources/Teatro",
+            exclude: ["Core"],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ]
+        ),
+
+        // MARK: - CLI and API layers (unchanged dependencies on umbrella)
         .executableTarget(
             name: "RenderCLI",
             dependencies: [
@@ -91,7 +155,6 @@ let package = Package(
             ],
             path: "Sources/CLI"
         ),
-        // Optional: separate CLI for preview command (kept minimal)
         .executableTarget(
             name: "FountainCLI",
             dependencies: [
@@ -138,7 +201,6 @@ let package = Package(
             dependencies: ["Teatro", "TeatroRenderAPI"],
             path: "Sources/RenderAPI"
         ),
-        // Demo preview executable used by the AGENTS.md entrypoint
         .executableTarget(
             name: "TeatroPreviewDemo",
             dependencies: [
@@ -149,6 +211,8 @@ let package = Package(
             ],
             path: "Sources/TeatroPreviewDemo"
         ),
+
+        // MARK: - Tests
         .testTarget(
             name: "TeatroTests",
             dependencies: ["Teatro"],
@@ -200,6 +264,8 @@ let package = Package(
             dependencies: ["RenderAPI"],
             path: "Tests/RenderAPITests"
         ),
+
+        // MARK: - C targets
         .target(
             name: "CCsound",
             path: "Sources/CCsound",

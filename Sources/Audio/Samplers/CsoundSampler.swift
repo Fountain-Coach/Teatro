@@ -1,4 +1,5 @@
 import Foundation
+import TeatroCore
 import CCsound
 
 extension OpaquePointer: @retroactive @unchecked Sendable {}

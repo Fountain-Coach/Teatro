@@ -1,4 +1,5 @@
 import Foundation
+import TeatroCore
 import CFluidSynth
 
 /// FluidSynth-based sampler using libfluidsynth for realtime SoundFont playback.

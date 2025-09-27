@@ -1,4 +1,5 @@
 import Foundation
+import TeatroCore
 
 /// Provides downcasting of MIDI 2.0 note events to legacy formats for
 /// Csound and LilyPond while maintaining MIDI 2.0 expressiveness.

@@ -50,3 +50,4 @@ public final class RendererRegistry: @unchecked Sendable {
         ordered.map { $0.identifier }.sorted()
     }
 }
+

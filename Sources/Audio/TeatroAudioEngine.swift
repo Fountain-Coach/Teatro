@@ -1,5 +1,6 @@
 #if canImport(AVFoundation)
 import Foundation
+import TeatroCore
 import AVFoundation
 
 /// Apple-specific audio engine backed by `AVAudioEngine` and `AVAudioUnitSampler`.

@@ -1,4 +1,5 @@
 import Foundation
+import TeatroCore
 import CFluidSynth
 
 // Refs: teatro-root

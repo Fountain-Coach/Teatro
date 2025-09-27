@@ -1,4 +1,5 @@
 import Foundation
+import TeatroCore
 
 /// Shared protocol for all sampler implementations.
 public protocol SampleSource: Sendable {
