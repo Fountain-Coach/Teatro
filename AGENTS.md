@@ -1,143 +1,139 @@
-# AGENTS.md Specification: GUI + MIDI2 Integration
+# Teatro Refactor – Modular Architecture Initiative
 
-(The following is a concrete AGENTS.md-style specification to guide and govern the development and maintenance of the SDL3 GUI integration with MIDI2 in Teatro.)
+- **Owner:** Contexter@Fountain-Coach  
+- **Version:** 0.1 (2025-09-27)  
+- **Scope:** Restructure the Teatro repository from a single monolithic package into a set of modular Swift packages. Establish clear boundaries for core rendering, audio output, GUI preview, and CLI tools, to improve maintainability and onboarding. Align Teatro’s codebase with its future role as the SDL-based rendering backend for FountainAI and related projects.
 
-⸻
-
-## Teatro GUI + MIDI2 Integration Agent (AGENTS.md)
-
-- Owner: Contexter@Fountain-Coach
-- Version: 0.1 (2025-09-26, Europe/Berlin)
-- Scope:
-  - Evolve Teatro into a cross-platform interactive GUI engine using SDL3 for rendering/input and integrating MIDI 2.0 (UMP) streams for real-time visualization and control.
-  - Deliver an interactive preview window for FountainAI scripts and storyboards that displays live-rendered content, plays timeline MIDI events, and allows user interaction (playback, scrubbing, MIDI rou[...]
-- id: teatro-gui-midi2
-- name: Teatro GUI & MIDI2 Interactive Preview
+- **ID:** teatro-modular-refactor  
+- **Name:** Teatro Modular Architecture & SDL Integration Readiness
 
 ## 1. Description
 
-Introduces an SDL3-powered GUI backend in Teatro and integrates the MIDI2 library for real-time MIDI 2.0 support.
+This refactoring breaks Teatro’s “collage” of features into well-defined modules:
+- **TeatroCore** – The core deterministic rendering engine (view DSL, Fountain parser, timeline animation, MIDI encoding, file format outputs). No GUI or audio side-effects.
+- **TeatroAudio** – MIDI 2.0 native sampler and audio backends (FluidSynth, Csound) packaged behind a clean async API.
+- **TeatroGUI** – Interactive GUI preview using SDL3 for rendering and input, plus MIDI2 real-time visualization.
+- **TeatroCLI** – Command-line tools and executables for using Teatro in scripts and pipelines.
+- **TeatroTelemetry** (optional) – Streaming SSE over MIDI2 handling and diagnostics (if not within Core).
 
-Provides a cross-platform windowing system and rendering loop for Teatro’s outputs, with live visualization of UMP streams (e.g., storyboard timelines, SSE token streams) and interactive controls to[...]
+Each module will live in `Packages/` with its own tests and documentation. External usage of Teatro is preserved via a unified API module (`TeatroRenderAPI`) that taps into these internals.
 
-Maintains backward compatibility (no changes to existing SVG/Markdown outputs) and adheres to FountainAI’s deterministic rendering and testing standards.
+By doing this, we **decouple** components and prevent unwieldy growth. New contributors can focus on one module at a time. The SDL GUI can evolve separately, and headless usage remains lightweight.
 
-⸻
+This refactor also mirrors the successful modularization of FountainKit:contentReference[oaicite:151]{index=151}, ensuring consistency across the organization.
 
-### Entrypoint
+## 2. Architectural Objectives
 
-- type: process
-- command:
+### 2.1 Modular Boundaries & Dependencies
+Define strict boundaries: 
+- TeatroCore should not depend on any C libraries or SDL – it’s pure Swift (plus `MIDI2` and utility packages). 
+- TeatroAudio depends on Core (for data types) but Core *does not* depend on Audio. 
+- TeatroGUI depends on Core (for content) and optionally Audio (for controlling playback), but core logic doesn’t depend on GUI.
+- CLI depends on whatever modules needed but no module depends on CLI.
+- Telemetry (if separate) depends on Core and MIDI2, and GUI depends on Telemetry for overlay data.
 
-```bash
-swift test && swift run TeatroPreviewDemo
-```
+This ensures, for example, we can build Core on a platform without audio or GUI, and still run all its features.
 
-Run tests and a demo preview as a basic usage check.
+### 2.2 Public API Stability
+Continue to provide a simple public interface for common use-cases. The `TeatroRenderAPI` (or just `Teatro` umbrella) will re-export core functions like `renderScript`, types like `TeatroPlayerView`, etc., so external code sees minimal changes. We avoid breaking existing integrations like HelloFountainAITeatro:contentReference[oaicite:152]{index=152} – they might just need to update import names. Mark new module boundaries with proper Swift package products and use semantic versioning to signal changes.
 
-⸻
+### 2.3 SDL3 Integration (Future-proof)
+Lay the groundwork for fully integrating SDL3:
+- The TeatroGUI module will contain all needed SDL initialization and event loop code. We will ensure it can create a window, draw text or simple shapes for frames, and handle user input (keyboard/mouse) to control playback.
+- Keep GUI rendering logic abstracted: possibly implement a basic text-based rendering first (to mirror current SVG output) and plan to expand with more graphical fidelity (fonts, colors, etc.).
+- Ensure GUI runs on macOS and Linux reliably (use feature flags or dummy devices in CI to run tests).
 
-## APIs
+### 2.4 Maintain or Improve Performance
+Splitting into modules should not degrade performance. In fact, it may improve build times (parallel builds of modules) and allow more focused optimization. We will monitor that rendering an SVG or playing audio has no regression. The GUI loop will target 60 FPS for modest content, as per requirements:contentReference[oaicite:153]{index=153}.
 
-- id: teatro-render-api
-  - path: Docs/RenderAPI.md
-  - description: Public rendering API extended with live preview capabilities (non-breaking additions)
-- id: midi2-core
-  - path: midi2 GitHub Repo
-  - description: MIDI 2.0 Swift library used for UMP encoding/decoding and device I/O (CoreMIDI on macOS)
+### 2.5 Documentation & Onboarding
+For each module, create a README or doc explaining its usage and APIs. Update the top-level documentation to include a map of the new structure (which part does what, with links to internal docs). Include an **ONBOARDING** section so that a newcomer knows to start by reading TeatroCore’s README (for example) before diving into code.
 
-⸻
+## 3. Deliverables (Planned Modules & Components)
 
-## Policies
+- **Packages/TeatroCore/** – Core library  
+  - *Content:* View DSL (`Renderable`, `ViewBuilder`, `Text`, `VStack`, etc.), layout engine (`LayoutNode`), FountainParser & FountainElement model, Storyboard DSL + Animator, MIDI DSL (MIDI2Note, MIDISequence, UMP encoding), Renderers (SVGRenderer, HTMLRenderer, MarkdownRenderer, etc.), MIDI1Bridge, and other pure logic.  
+  - *Tests:* Fountain parsing tests, rendering snapshot tests (SVG output), MIDI encoding tests, etc.  
+  - *Product:* `TeatroCore` (library)
 
-- Preserve deterministic, headless outputs: interactive mode must not alter existing render outputs or logic.
-- Encapsulate SDL3 usage behind internal APIs; do not expose SDL types to public interfaces.
-- Maintain cross-platform compatibility (macOS/Linux minimum; no hardcoded Apple-only code in core paths).
-- Ensure memory and thread safety (no leaks, no data races; pair every SDL allocation with a free; run SDL on one thread).
-- Incremental development with feature flags and thorough testing at each milestone (no big bang merge).
-- Extensive documentation and example usage for all new features; update user guides and README.
-- Automated testing for new components where possible (dummy drivers, virtual displays for GUI tests in CI).
-- No degradation in performance for non-GUI use; optimize GUI rendering to meet 60 FPS for typical content.
+- **Packages/TeatroAudio/** – Audio backend library  
+  - *Content:* `CCsound` and `CFluidSynth` C targets, `CsoundSampler` actor, `FluidSynthSampler` actor, `TeatroSampler` facade, SampleSource protocol, plus any audio-related utilities.  
+  - *Tests:* SamplerDemo or dedicated tests that initialize the sampler (perhaps using the dummy sine.orc and a small SF2) and ensure note triggers work.  
+  - *Product:* `TeatroAudio` (library)
 
-⸻
+- **Packages/TeatroGUI/** – GUI/Preview library  
+  - *Content:* SDL integration (window creation, rendering context), an event loop that coordinates with TeatroCore (to get frames) and TeatroAudio (for sound). `TeatroPreviewController` class or actor to manage a running preview. SwiftUI `TeatroPlayerView` can live here (behind `#if canImport(SwiftUI)` flag) or remain in Core if it only uses Core. SSE overlay UI components (if any, e.g., drawing token text on screen).  
+  - *Tests:* Integration tests if possible (e.g., run the preview in a headless mode for a short duration and verify that no errors occur, or use Xvfb in CI for SDL on Linux:contentReference[oaicite:154]{index=154}:contentReference[oaicite:155]{index=155}). Otherwise, reliance on manual testing for GUI aspects with automated unit tests for non-UI logic (like the data flow).  
+  - *Product:* `TeatroGUI` (library)
 
-## Architectural Objectives
+- **Packages/TeatroCLI/** – Executables  
+  - *Content:* Sources for `RenderCLI` (the ArgumentParser definitions and command implementations), `teatro-play`, `TeatroPreviewDemo` (which will now use TeatroGUI API to launch a preview). Possibly `FountainCLI` if it remains (or that may fold into RenderCLI as a subcommand).  
+  - *Note:* We might not need a separate package for CLI; we could keep CLI targets in the main repo Package.swift but segregated from libraries. However, a separate package `TeatroCLI` helps enforce that libraries don’t depend on CLI.  
+  - *Product:* Executables: `render-cli`, `teatro-play`, `teatro-preview` (if introduced), etc.
 
-### 1. Unified GUI Backend
-Implement a Swift-native SDL3 backend for Teatro, enabling window creation, GPU-accelerated drawing, and input handling in a platform-independent way.
-This should operate as a module that Teatro’s core can call into, preserving platform-neutral design. SDL integration should allow both onscreen and offscreen (headless) rendering using the same cod[...]
+- **Packages/TeatroTelemetry/** – (Optional) Streaming & Reliability  
+  - *Content:* SSE envelope structures, dispatcher (FlexData/SysEx8 parsing), reliability algorithm (ack tracking, sequence gap detection), and the `StreamPreviewController` that bridges UMP streams to high-level token events.  
+  - *Notes:* This could also be part of TeatroCore if we consider it fundamental. But isolating it is cleaner if we foresee using it in FountainKit’s telemetry. If separate, it produces a `TeatroTelemetry` library that both FountainKit and TeatroGUI can use.  
+  - *Tests:* Already there are tests like FountainSSEEnvelopeTests, etc. Those move here. Ensure end-to-end test with a sample UMP stream to tokens.
 
-### 2. Interactive Rendering Loop
-Establish a robust rendering loop that drives Teatro’s output to the screen in real time. Use SDL’s event polling and timing functions to tick at ~60 FPS. Synchronize with Teatro’s state updates[...]
+- **Top-level integration:**  
+  - Update the root `Package.swift` to either use these as local package dependencies or simply remove in favor of a workspace (in which case clients would use `.package(path: "Packages/TeatroCore")`, etc., or we publish these to git). Perhaps simpler: keep one Package.swift that defines all targets but group them logically (similar result, but using SwiftPM target dependencies rather than separate packages). Decision to be finalized, but outcome is the same modular separation.
 
-### 3. MIDI 2.0 Data Pipeline
-Integrate the MIDI2 library to receive, decode, visualize, and emit UMP streams in real time. Support common message types (Note On/Off, CC, Program Change, Channel Voice, JR Timestamp). Render visual[...]
+- **Docs & Guides:**  
+  - `AGENTS.md` (this document) updated upon completion with any changes in plan/version.  
+  - `ONBOARDING.md` or contributing guide explaining module structure.  
+  - Update README usage examples (if any new imports or initialization steps).  
+  - Possibly a migration note: “If you previously used `import TeatroRenderAPI`, continue to do so; internal modules are mostly invisible except if you import individual ones for advanced use.”
 
-### 4. Interactive Controls & Playback
-Provide GUI elements for playback control and scrubbing. Interactions map to UMP emissions. Example: play triggers Note On events; scrubbing adjusts timestamps. Map UI controls (sliders, knobs, keybin[...]
+## 4. Implementation Plan (Milestones & Tasks)
 
-### 5. Device & Routing Management
-Implement a configuration panel or overlay for MIDI devices. Allow device selection, mapping of CC numbers to UI elements, and persistent settings. Handle disconnect/reconnect gracefully.
+- **Milestone 1:** Create module scaffolds and move View/Core code  
+  - [ ] Set up `Packages/TeatroCore` with a minimal Package.swift and move core source files.  
+  - [ ] Adjust import paths in moved files, ensure `swift test` passes for TeatroCore alone.  
+  - [ ] Remove those files from the old target, run overall tests.  
 
-### 6. Non-Disruptive Integration
-Introduce GUI/MIDI functionality without breaking existing APIs. Maintain headless workflows and deterministic tests.
+- **Milestone 2:** Move Audio code to TeatroAudio  
+  - [ ] Create `Packages/TeatroAudio`, move Csound and FluidSynth wrappers and Swift sampler code.  
+  - [ ] Fix any cross-module references (Core types used in Audio, e.g., convert MIDI2Note to simpler form if needed or make MIDI2Note type public in Core).  
+  - [ ] Test that `TeatroSamplerDemo` still runs using new module (adjust its target dependencies).  
 
-### 7. Performance & Responsiveness
-Target 60 FPS rendering. Ensure real-time MIDI event processing and prompt rendering. Profile, batch draws, and optimize GPU usage.
+- **Milestone 3:** Establish TeatroCLI package  
+  - [ ] Move RenderCLI source into `Packages/TeatroCLI` (or keep in main but retarget dependencies to new modules).  
+  - [ ] Update CLI commands to use new APIs (e.g., if `TeatroCore` is separate, ensure `import TeatroCore` or via umbrella).  
+  - [ ] Test CLI commands: e.g., `swift run render-cli input.fountain --format svg` yields identical output as before.  
 
-### 8. Extensibility & Modularity
-Encapsulate SDL specifics in a backend module (Sources/TeatroSDLBackend). Keep clear interfaces for core, GUI, and MIDI layers to allow future extensions.
+- **Milestone 4:** Integrate Telemetry (if separate)  
+  - [ ] Move SSE parsing and StreamPreviewController to `Packages/TeatroTelemetry`.  
+  - [ ] Ensure TeatroGUI (or Core) uses this for SSE features (e.g., GUI calls `StreamPreviewController.ingestFlex()` on incoming MIDI bytes).  
+  - [ ] Run SSE tests to confirm no breakage.  
 
-⸻
+- **Milestone 5:** Activate SDL in TeatroGUI  
+  - [ ] Implement basic SDL window open/close in TeatroGUI (perhaps a `TeatroWindowManager` class).  
+  - [ ] Tie a render callback to TeatroCore: e.g., for each frame tick (maybe 60Hz or driven by MIDI events), get current frame’s text layout from core and blit to window.  
+  - [ ] Add user controls: e.g., Esc to close, Space to pause, etc., as a proof of concept.  
+  - [ ] Test `TeatroPreviewDemo` manually on macOS and Linux.  
 
-## 2. Deliverables (PR-ready)
+- **Milestone 6:** Finalize API and remove old structure  
+  - [ ] Eliminate the old `Sources/Teatro` monolithic target from Package.swift, instead have the new packages produce the needed products.  
+  - [ ] Ensure the umbrella `TeatroRenderAPI` either becomes part of TeatroCore or is a small target depending on Core+GUI to expose combined functionality (decide whether to keep the name or just have users import TeatroCore + TeatroGUI explicitly).  
+  - [ ] Bump package version, update documentation references from old paths to new.  
 
-### Code Modules
+Each milestone will be a pull request (if using PRs) or at least a distinct commit, to allow bisecting if needed.
 
-- Sources/TeatroSDLBackend/ – SDL wrapper module
-- SDLWindow.swift
-- SDLRenderer.swift
-- SDLEvent.swift
-- SDLRunLoop.swift
-- Platform-specific helpers (if needed)
-- Sources/Teatro/Core/TeatroPlayer.swift – orchestration of playback, scene updates, MIDI sync.
-- Sources/TeatroRenderAPI/ – expose new functionality (e.g. launchPreview(...), TeatroPreviewController).
-- Sources/FountainCLI/TeatroPreviewCommand.swift – CLI command teatro preview &lt;script.fountain&gt;.
-- Sources/MIDIIntegration/ – MIDI bridging utilities
-- MIDIOutput.swift
-- MIDIEndpointManager.swift
-- Conversion logic (timeline events → UMP).
+## 5. Testing & Quality
 
-### Visual Components
+- **Continuous Integration:** Update CI to build and test all modules. For example, add jobs for `swift test -c debug Packages/TeatroCore`, etc., in addition to the root build. Use an Xvfb headless display for SDL tests on Linux CI:contentReference[oaicite:156]{index=156} to run GUI tests without a physical GPU. 
+- **Unit & Integration Tests:** All existing tests must pass. Additional tests will be added for new module boundaries (e.g., a test that instantiating TeatroSampler in isolation doesn’t crash, a test that RenderCLI’s format registry lists expected formats from Core’s plugins). 
+- **Performance Checks:** Render a known complex Fountain script to SVG before and after refactor to ensure rendering time is not worse. Do similarly for a MIDI playback. 
+- **Documentation Checks:** Ensure that any code examples in Docs/Chapters are updated to new module imports if needed (e.g., if now one must `import TeatroCore` or if `TeatroPlayerView` moved). Possibly provide an alias in code for backward compat (like `public typealias TeatroPlayerView = TeatroGUI.TeatroPlayerView` if needed).
 
-- Sources/TeatroSDLBackend/Overlay/ (optional)
-- MIDIOverlay.swift (decoded MIDI visualization)
-- TokenStreamView.swift (SSE token streaming visualization)
-- Simple SDL-drawn config UI (menu bar, legends).
+## 6. Impact and Rollout
 
-### Testing
+- **Impact:** No runtime behavior change intended (except the new actual GUI features coming online). The main impact is on developers: a more organized codebase. 
+- **Migration for users:** Minimal. If using SPM, they might see new targets. We’ll maintain `package.name = "teatro"` so existing `.package(url: "…Teatro.git", branch: "main")` still works. If we change product names, we’ll document it. Internally, FountainAI’s next update can adopt the new imports (which should be trivial). 
+- **Timeline:** The refactor can be done incrementally over a couple of weeks, with the core split happening first (which yields immediate benefits). The SDL integration may continue beyond the refactor as its own project, but this structure allows working on it concurrently without disturbing core. 
 
-- Tests/TeatroSDLBackendTests.swift
-- Unit tests (window lifecycle, events, render loop).
-- Offscreen rendering snapshot tests.
-- Integration tests for preview lifecycle (start, run, exit).
-- CI setup for SDL (Xvfb on Linux).
+## 7. Conclusion
 
-⸻
+By modularizing Teatro, we **future-proof** its development and make it contributor-friendly. The engine’s innovative features – from screenplay rendering to synchronized music visualization – will be much easier to extend and maintain in this new architecture. This refactoring brings Teatro in line with the architectural rigor of FountainKit:contentReference[oaicite:157]{index=157}, ensuring that the Teatro engine can reliably serve as the unified rendering backend (with SDL3 support) for all FountainAI applications going forward.
 
-## 3. Quality, Docs, and Release Criteria
-
-### 1. Testing & Quality Gates
-
-- Comprehensive unit and integration tests.
-- Snapshot tests for deterministic outputs.
-- Manual GUI/headless testing on macOS & Linux.
-- CI with sanitizers enabled.
-
-### 2. Documentation & Examples
-
-- Update README.md with GUI features.
-- Add Docs/Chapters/TeatroInteractiveGUI.md.
-- Provide demo (teatro preview) for MIDI-connected workflows.
-- Document architecture and SDL backend interfaces.
-- Indicate maturity level (beta/experimental if needed).
