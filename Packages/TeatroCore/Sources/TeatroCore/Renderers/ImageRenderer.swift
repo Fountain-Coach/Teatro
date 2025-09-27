@@ -8,12 +8,12 @@ public struct ImageRenderer: RendererPlugin {
     public static let identifier = "png"
     public static let fileExtensions = ["png"]
     // Default image width in points. Override with `TEATRO_IMAGE_WIDTH`.
-    static var width: Int {
+    public static var width: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_IMAGE_WIDTH"] ?? "800") ?? 800
     }
 
     // Default image height in points. Override with `TEATRO_IMAGE_HEIGHT`.
-    static var height: Int {
+    public static var height: Int {
         Int(ProcessInfo.processInfo.environment["TEATRO_IMAGE_HEIGHT"] ?? "600") ?? 600
     }
 

@@ -2,9 +2,9 @@ import Foundation
 
 /// Represents the header of a Standard MIDI File.
 public struct MidiFileHeader {
-    let format: UInt16
-    let trackCount: UInt16
-    let division: UInt16
+    public let format: UInt16
+    public let trackCount: UInt16
+    public let division: UInt16
 }
 
 /// Errors that can occur while parsing a Standard MIDI File.

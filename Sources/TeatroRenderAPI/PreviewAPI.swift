@@ -1,6 +1,5 @@
 import Foundation
 import Teatro
-import TeatroSDLBackend
 
 /// Non-breaking preview API additions. All types avoid leaking SDL details.
 public final class TeatroPreviewController: @unchecked Sendable {
@@ -80,4 +79,3 @@ public enum TeatroPreviewAPI {
         return controller
     }
 }
-

@@ -7,11 +7,6 @@ let package = Package(
     products: [
         // Umbrella library re-exporting modular targets for backward compatibility
         .library(name: "Teatro", targets: ["Teatro"]),
-        // New modular libraries
-        .library(name: "TeatroCore", targets: ["TeatroCore"]),
-        .library(name: "TeatroAudio", targets: ["TeatroAudio"]),
-        .library(name: "TeatroGUI", targets: ["TeatroGUI"]),
-        .library(name: "TeatroTelemetry", targets: ["TeatroTelemetry"]),
         // Existing API layers and tools
         .library(name: "TeatroRenderAPI", targets: ["TeatroRenderAPI"]),
         .library(name: "RenderAPI", targets: ["RenderAPI"]),
@@ -23,117 +18,24 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/swiftlang/swift-tools-support-core", from: "0.6.0"),
-        .package(url: "https://github.com/Fountain-Coach/midi2", from: "0.3.0"),
-        .package(url: "https://github.com/unrelentingtech/SwiftCBOR", from: "0.5.0")
+        // Local modular packages
+        .package(path: "Packages/TeatroCore"),
+        .package(path: "Packages/TeatroAudio"),
+        .package(path: "Packages/TeatroGUI"),
+        .package(path: "Packages/TeatroTelemetry")
     ],
     targets: [
-        // MARK: - Core (single target for now; GUI/Audio/Streaming excluded)
-        .target(
-            name: "TeatroCore",
-            dependencies: [
-                .product(name: "MIDI2", package: "MIDI2"),
-                "SwiftCBOR"
-            ],
-            path: "Sources",
-            exclude: [
-                "Audio",
-                "CLI",
-                "TeatroSamplerDemo",
-                "TeatroPlay",
-                "TeatroPreviewDemo",
-                "FountainCLI",
-                "TeatroSDLBackend",
-                "MIDIIntegration",
-                "CCsound",
-                "CFluidSynth",
-                "MIDI/Teatro-Codex-Plan.md",
-                "TeatroRenderAPI",
-                "RenderAPI",
-                "ViewCore/Streaming",
-                "TeatroGUI",
-                "TeatroTelemetry",
-                // keep Teatro/Core in Core, exclude only umbrella file
-                "Teatro/Umbrella.swift"
-            ],
-            resources: [
-                // Exclude Audio resources from core; handled by TeatroAudio
-            ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend", "-strict-concurrency=complete",
-                    "-Xfrontend", "-enable-actor-data-race-checks",
-                    "-Xfrontend", "-warn-concurrency"
-                ], .when(configuration: .debug))
-            ]
-        ),
-
-        // MARK: - Audio
-        .target(
-            name: "TeatroAudio",
-            dependencies: ["TeatroCore", "CCsound", "CFluidSynth"],
-            path: "Sources/Audio",
-            resources: [
-                .process("Resources")
-            ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend", "-strict-concurrency=complete",
-                    "-Xfrontend", "-enable-actor-data-race-checks",
-                    "-Xfrontend", "-warn-concurrency"
-                ], .when(configuration: .debug))
-            ],
-            linkerSettings: [
-                .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
-            ]
-        ),
-
-        // MARK: - Telemetry (placeholder aggregate target)
-        .target(
-            name: "TeatroTelemetry",
-            dependencies: [],
-            path: "Sources/TeatroTelemetry"
-        ),
-
-        // MARK: - GUI (SDL backend + SwiftUI overlay stubs)
-        .target(
-            name: "TeatroGUIViews",
-            dependencies: [],
-            path: "Sources/ViewCore/Streaming"
-        ),
-        .target(
-            name: "TeatroSDLBackend",
-            dependencies: [],
-            path: "Sources/TeatroSDLBackend",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend", "-strict-concurrency=complete",
-                    "-Xfrontend", "-enable-actor-data-race-checks",
-                    "-Xfrontend", "-warn-concurrency"
-                ], .when(configuration: .debug))
-            ]
-        ),
-        .target(
-            name: "MIDIIntegration",
-            dependencies: ["TeatroCore", .product(name: "MIDI2", package: "MIDI2")],
-            path: "Sources/MIDIIntegration",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend", "-strict-concurrency=complete",
-                    "-Xfrontend", "-enable-actor-data-race-checks",
-                    "-Xfrontend", "-warn-concurrency"
-                ], .when(configuration: .debug))
-            ]
-        ),
-        .target(
-            name: "TeatroGUI",
-            dependencies: ["TeatroSDLBackend", "MIDIIntegration", "TeatroGUIViews", "TeatroCore", "TeatroTelemetry"],
-            path: "Sources/TeatroGUI"
-        ),
+        // No local Core/Audio/GUI/Telemetry targets; use local packages
 
         // MARK: - Umbrella `Teatro` target re-exporting modules for backward compatibility
         .target(
             name: "Teatro",
-            dependencies: ["TeatroCore", "TeatroAudio", "TeatroGUI", "TeatroTelemetry"],
+            dependencies: [
+                .product(name: "TeatroCore", package: "TeatroCore"),
+                .product(name: "TeatroAudio", package: "TeatroAudio"),
+                .product(name: "TeatroGUI", package: "TeatroGUI"),
+                .product(name: "TeatroTelemetry", package: "TeatroTelemetry")
+            ],
             path: "Sources/Teatro",
             exclude: ["Core"],
             swiftSettings: [
@@ -160,8 +62,6 @@ let package = Package(
             dependencies: [
                 "Teatro",
                 "TeatroRenderAPI",
-                "TeatroSDLBackend",
-                "MIDIIntegration",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             path: "Sources/FountainCLI"
@@ -193,7 +93,7 @@ let package = Package(
         ),
         .target(
             name: "TeatroRenderAPI",
-            dependencies: ["Teatro", "TeatroSDLBackend"],
+            dependencies: ["Teatro"],
             path: "Sources/TeatroRenderAPI"
         ),
         .target(
@@ -206,8 +106,7 @@ let package = Package(
             dependencies: [
                 "Teatro",
                 "TeatroRenderAPI",
-                "TeatroSDLBackend",
-                "MIDIIntegration"
+                
             ],
             path: "Sources/TeatroPreviewDemo"
         ),
@@ -263,18 +162,6 @@ let package = Package(
             name: "RenderAPITests",
             dependencies: ["RenderAPI"],
             path: "Tests/RenderAPITests"
-        ),
-
-        // MARK: - C targets
-        .target(
-            name: "CCsound",
-            path: "Sources/CCsound",
-            publicHeadersPath: "."
-        ),
-        .target(
-            name: "CFluidSynth",
-            path: "Sources/CFluidSynth",
-            publicHeadersPath: "."
         )
     ]
 )

@@ -39,8 +39,8 @@ public actor TeatroSampler: SampleSource {
         }
     }
 
-    /// Internal initializer for unit tests to provide a custom implementation.
-    init(implementation: SampleSource) {
+    /// Initializer for unit tests to provide a custom implementation.
+    public init(implementation: SampleSource) {
         self.impl = implementation
     }
 

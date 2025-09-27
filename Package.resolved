@@ -1,13 +1,13 @@
 {
-  "originHash" : "63ac13726ca1871566ae71754fab78870004ca3d59c41a05d22676003285a28c",
+  "originHash" : "61ecfc304de4ecd6af9bb0f6e92d0fc23116f6a48a338d70719aa9efc065d1ea",
   "pins" : [
     {
       "identity" : "midi2",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Fountain-Coach/midi2",
       "state" : {
-        "revision" : "8fb9904495e4e9296e86e41ac3df05addef212a1",
-        "version" : "0.3.0"
+        "revision" : "fec93dae9efbb4f1d56984eb0889983962a1dbab",
+        "version" : "0.3.1"
       }
     },
     {
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "309a47b2b1d9b5e991f36961c983ecec72275be3",
         "version" : "1.6.1"
+      }
+    },
+    {
+      "identity" : "swift-numerics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-numerics.git",
+      "state" : {
+        "revision" : "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
+        "version" : "1.1.1"
       }
     },
     {
