@@ -1,95 +1,127 @@
-# Teatro View Engine
+# Teatro
 
-![Swift](https://img.shields.io/badge/Swift-6.1-orange) ![SwiftPM](https://img.shields.io/badge/SwiftPM-compatible-brightgreen)
-*A Declarative, Codex-Controllable Rendering Framework in Swift*
+A modular, deterministic rendering engine in Swift with MIDI 2.0, screenplay (Fountain) parsing, multiple output renderers (SVG/HTML/PNG), an audio layer for real‑time playback, and an SDL‑based preview GUI. The codebase is split into focused Swift packages to keep core logic lean and headless while allowing GUI and audio to evolve independently.
 
-Teatro is centered on **MIDI 2.0** for sequencing and timing. MIDI 1.0 is supported only as a fallback for legacy export.
+Quick links
+- Onboarding: Docs/ONBOARDING.md
+- Docs index: Docs/README.md
+- Core API: Packages/TeatroCore/README.md
+- Audio: Packages/TeatroAudio/README.md
+- GUI: Packages/TeatroGUI/README.md
+- Telemetry: Packages/TeatroTelemetry/README.md
 
-### Interactive Preview (SDL3 + MIDI2)
+Status
+- Platforms: macOS 14+. Linux support is being brought up progressively (GUI runs with SDL stubs; audio backends vary by platform).
+- SDL3 preview: available with a stubbed backend; event loop and overlays are in place and ready for native SDL integration.
 
-An experimental interactive preview is available, introducing a new GUI backend and MIDI 2.0 integration. The initial implementation ships with a stubbed SDL backend to keep builds deterministic while the full SDL path is integrated.
+## Architecture
 
-- Run the demo preview:
-  - `swift test && swift run TeatroPreviewDemo`
-- Public API: `TeatroPreviewController` in `Sources/TeatroRenderAPI/PreviewAPI.swift`.
-- Internals: `Sources/TeatroSDLBackend` and `Sources/MIDIIntegration`.
+Teatro is organized as a small set of SwiftPM packages that you can use together or independently. The top‑level umbrella module `Teatro` re‑exports everything for convenient consumption.
 
-Documentation: `Docs/Chapters/TeatroInteractiveGUI.md`.
-See the documentation index at `Docs/README.md` and the onboarding guide at `Docs/ONBOARDING.md`.
+- TeatroCore: Pure Swift rendering engine, view DSL and layout, Fountain parser, storyboard DSL, renderers (SVG/HTML/PNG), MIDI/UMP encoding, and unified MIDI event types. No GUI or audio dependencies.
+- TeatroAudio: MIDI 2.0 samplers and sinks (FluidSynth, Csound, AVFoundation). Depends on TeatroCore for shared types.
+- TeatroGUI: SDL‑based preview scaffolding + SwiftUI overlays for token/timing visualization. Depends on TeatroCore.
+- TeatroTelemetry: SSE over MIDI 2.0 (Flex Data + SysEx8), reliability helpers (ACK/NACK, gap detection), and timing utilities. Depends on TeatroCore.
 
-## Render API
-
-The `TeatroRenderAPI` module exposes deterministic rendering helpers and a SwiftUI `TeatroPlayerView` for quick previews. See [Docs/RenderAPI.md](Docs/RenderAPI.md) for usage examples.
-
-## MIDI-CI Discovery
-
-Teatro includes basic support for the MIDI Capability Inquiry (MIDI-CI) protocol.
-`MIDICI` types generate SysEx packets for discovery, profile negotiation and
-property exchange. These packets can be encoded with `UMPEncoder` and parsed
-from `UMPParser` output using `MIDICIDispatcher` to obtain strongly typed
-messages for application workflows.
-
-## MIDI 1.0 Bridge
-
-`MIDI1Bridge` converts between Universal MIDI Packets and traditional MIDI 1.0
-byte streams. This makes it possible to route UMP data to legacy devices or
-perform round‑trip tests.
-
-```bash
-swift run RenderCLI song.ump --midi1-bridge > song.midi
-```
-
-The command above reads a UMP file, translates it to MIDI 1.0 bytes, and writes
-the result to standard output (or the file specified with `--output`).
-`MIDI1Bridge.midi1ToUMP(_:)` performs the inverse conversion when needed.
-
-## SSE over MIDI 2.0
-
-Teatro can ingest **Server-Sent Events** streamed inside MIDI 2.0 UMP. Flex Data carries short envelopes while SysEx8 handles larger payloads. Streams honor JR Timestamps with a small jitter buffer so live tokens stay beat‑aligned. The player shows reliability stats and tokens in real time. A minimal capture lives at `assets/sse-demo.ump`.
-
-### Command-line Playback
-
-Pipe bridged MIDI data into the `teatro-play` utility to hear it through
-FluidSynth on Linux or the Apple sampler on macOS:
-
-```bash
-swift run RenderCLI song.ump --midi1-bridge | \
-    swift run teatro-play --from-stdin --sink fluidsynth --sf2 ./GeneralUser.sf2
-```
-
-The long-form documentation lives under `Docs/Chapters`. Start with the timeline and progress through each chapter.
-
-## Documentation
-
-- [Render API](Docs/RenderAPI.md)
-- [1. Core Protocols](Docs/Chapters/01_CoreProtocols.md)
-- [2. View Types](Docs/Chapters/02_ViewTypes.md)
-- [3. Rendering Backends](Docs/Chapters/03_RenderingBackends.md)
-- [4. CLI Integration](Docs/Chapters/04_CLIIntegration.md)
-- [5. Animation System](Docs/Chapters/05_AnimationSystem.md)
-- [6. LilyPond Music Rendering](Docs/Chapters/06_LilyPondMusicRendering.md)
-- [7. MIDI 2.0 DSL](Docs/Chapters/07_MIDI20DSL.md)
-- [8. Fountain Screenplay Engine](Docs/Chapters/08_FountainScreenplayEngine.md)
-- [9. Fountain Parser Implementation](Docs/Chapters/09_FountainParserImplementationPlan.md)
-- [10. Storyboard DSL](Docs/Chapters/10_StoryboardDSL.md)
-- [11. TeatroPlayerView Usage](Docs/Chapters/11_TeatroPlayer.md)
-- [12. SSE over MIDI 2.0](Docs/Chapters/12_SSE_Over_MIDI2.md)
-- [13. TeatroSampler](Docs/Chapters/12_TeatroSampler.md)
-- [Addendum: Apple Platform Compatibility](Docs/Chapters/Addendum.md)
-
-Historical proposals live in [`Docs/Proposals`](Docs/Proposals). Legacy or superseded artifacts are in [`Docs/Legacy`](Docs/Legacy).
-
-## Continuous Integration
-
-A GitHub Actions workflow runs [SwiftLint](.swiftlint.yml) and `swift test` on every push and pull request to ensure code quality and style consistency.
+The repo also ships CLI tools and a small demo app that exercise these packages.
 
 ## Installation
-Add the package to your `Package.swift` dependencies:
+
+Add the package to your Package.swift:
+
 ```swift
 .package(url: "https://github.com/fountain-coach/teatro.git", branch: "main")
 ```
-Then include `Teatro` as a dependency in your target.
 
-````text
+Then depend on either the umbrella or the individual modules:
+
+```swift
+// Umbrella (re‑exports all submodules)
+.product(name: "Teatro", package: "teatro")
+
+// Or pick specific modules
+.product(name: "TeatroCore", package: "teatro")
+.product(name: "TeatroAudio", package: "teatro")
+.product(name: "TeatroGUI", package: "teatro")
+.product(name: "TeatroTelemetry", package: "teatro")
+```
+
+## Quick start
+
+- Render a simple view to SVG programmatically
+
+```swift
+import Teatro // or: import TeatroCore
+
+let view = VStack {
+    Text("Hello, Teatro!")
+    Text("MIDI 2.0 • Fountain • SDL3")
+}
+
+// Write SVG to disk
+try SVGRenderer.render(view: view, output: "output.svg")
+
+// Or capture as a string
+let svg = SVGRenderer.render(view)
+```
+
+- Use the CLI to render a file
+
+```bash
+# Render a Fountain script to SVG
+swift run RenderCLI script.fountain --format svg --output out.svg
+
+# Convert UMP to MIDI 1.0 bytes (example)
+swift run RenderCLI song.ump --midi1-bridge > song.midi
+```
+
+- Launch the preview GUI demo
+
+```bash
+swift run TeatroPreviewDemo
+```
+
+- Minimal playback utility
+
+```bash
+# Route UMP→MIDI1 and play (see CLI docs for sinks and flags)
+swift run RenderCLI song.ump --midi1-bridge | \
+  swift run teatro-play --from-stdin
+```
+
+## Products
+
+Libraries
+- Teatro: Umbrella re‑exporting all modules
+- TeatroCore: Core engine (no side effects)
+- TeatroAudio: Audio backends and sampler
+- TeatroGUI: SDL‑based preview scaffolding and overlays
+- TeatroTelemetry: SSE over MIDI 2.0 and reliability helpers
+
+Executables
+- RenderCLI: Batch render and conversion tool
+- teatro-play: Minimal playback helper
+- TeatroPreviewDemo: Small app that exercises the preview loop
+- FountainCLI: Convenience entry for previewing via CLI
+
+## Build and test
+
+- Build: `swift build`
+- Test: `swift test`
+
+Core and CLI tests run headless. GUI uses a stubbed SDL backend so it compiles reliably on CI and can be enabled with native SDL later.
+
+## Documentation
+
+- Docs index: Docs/README.md (PDFs with taglines, chapters, API spec)
+- Onboarding: Docs/ONBOARDING.md
+- Chapters: Docs/Chapters (view DSL, storyboard, MIDI, SSE over MIDI2, etc.)
+
+## Contributing
+
+- Start with Docs/ONBOARDING.md to understand the module layout and guidelines.
+- Use Swift 6.1 and SwiftPM.
+- Run `swift test` before submitting changes.
+
 © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-````
+
