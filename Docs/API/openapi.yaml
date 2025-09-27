@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: Teatro Render API
+  version: '0.1.0'
+  description: Minimal placeholder schema for RenderCLI alignment.
+paths:
+  /render:
+    post:
+      summary: Render a document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderRequest'
+      responses:
+        '200':
+          description: Render success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderResponse'
+components:
+  schemas:
+    RenderRequest:
+      type: object
+      properties:
+        input:
+          type: string
+          description: Input file path
+        format:
+          type: string
+          description: Output format identifier (e.g., svg, html, png)
+        output:
+          type: string
+          description: Output file path
+        forceFormat:
+          type: boolean
+          description: Override extension-based format detection
+    RenderResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        outputPath:
+          type: string
+

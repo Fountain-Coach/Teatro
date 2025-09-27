@@ -3,7 +3,11 @@ const fs = require('fs');
 const path = require('path');
 
 const docPath = path.join(__dirname, '..', 'Docs', 'CLI', 'RenderCLI.md');
-const openapiPath = path.join(__dirname, '..', 'openapi.yaml');
+let openapiPath = path.join(__dirname, '..', 'openapi.yaml');
+const relocated = path.join(__dirname, '..', 'Docs', 'API', 'openapi.yaml');
+if (fs.existsSync(relocated)) {
+  openapiPath = relocated;
+}
 
 const doc = fs.readFileSync(docPath, 'utf8');
 const openapi = fs.readFileSync(openapiPath, 'utf8');

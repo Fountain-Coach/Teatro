@@ -15,6 +15,7 @@ An experimental interactive preview is available, introducing a new GUI backend 
 - Internals: `Sources/TeatroSDLBackend` and `Sources/MIDIIntegration`.
 
 Documentation: `Docs/Chapters/TeatroInteractiveGUI.md`.
+See the documentation index at `Docs/README.md` and the onboarding guide at `Docs/ONBOARDING.md`.
 
 ## Render API
 
@@ -76,7 +77,7 @@ The long-form documentation lives under `Docs/Chapters`. Start with the timeline
 - [13. TeatroSampler](Docs/Chapters/12_TeatroSampler.md)
 - [Addendum: Apple Platform Compatibility](Docs/Chapters/Addendum.md)
 
-Historical proposals live in [`Docs/Proposals`](Docs/Proposals).
+Historical proposals live in [`Docs/Proposals`](Docs/Proposals). Legacy or superseded artifacts are in [`Docs/Legacy`](Docs/Legacy).
 
 ## Continuous Integration
 
