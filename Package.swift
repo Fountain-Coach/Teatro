@@ -13,7 +13,9 @@ let package = Package(
         .library(name: "RenderAPI", targets: ["RenderAPI"]),
         .executable(name: "RenderCLI", targets: ["RenderCLI"]),
         .executable(name: "TeatroSamplerDemo", targets: ["TeatroSamplerDemo"]),
-        .executable(name: "teatro-play", targets: ["TeatroPlay"])
+        .executable(name: "teatro-play", targets: ["TeatroPlay"]),
+        // Demo preview app for the SDL3 + MIDI2 integration (stub-enabled)
+        .executable(name: "TeatroPreviewDemo", targets: ["TeatroPreviewDemo"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
@@ -26,7 +28,20 @@ let package = Package(
             name: "Teatro",
             dependencies: ["CCsound", "CFluidSynth", .product(name: "MIDI2", package: "MIDI2"), "SwiftCBOR"],
             path: "Sources",
-            exclude: ["CLI", "TeatroSamplerDemo", "TeatroPlay", "CCsound", "CFluidSynth", "MIDI/Teatro-Codex-Plan.md", "TeatroRenderAPI", "RenderAPI"],
+            exclude: [
+                "CLI",
+                "TeatroSamplerDemo",
+                "TeatroPlay",
+                "TeatroPreviewDemo",
+                "FountainCLI",
+                "TeatroSDLBackend",
+                "MIDIIntegration",
+                "CCsound",
+                "CFluidSynth",
+                "MIDI/Teatro-Codex-Plan.md",
+                "TeatroRenderAPI",
+                "RenderAPI"
+            ],
             resources: [
                 .process("Audio/Resources")
             ],
@@ -41,6 +56,32 @@ let package = Package(
                 .linkedFramework("AVFoundation", .when(platforms: [.macOS]))
             ]
         ),
+        // Internal SDL3 backend wrapper (currently stubbed unless SDL is available)
+        .target(
+            name: "TeatroSDLBackend",
+            dependencies: [],
+            path: "Sources/TeatroSDLBackend",
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ]
+        ),
+        // MIDI integration utilities that adapt MIDI2 usage for the preview
+        .target(
+            name: "MIDIIntegration",
+            dependencies: ["Teatro", .product(name: "MIDI2", package: "MIDI2")],
+            path: "Sources/MIDIIntegration",
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-strict-concurrency=complete",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-concurrency"
+                ], .when(configuration: .debug))
+            ]
+        ),
         .executableTarget(
             name: "RenderCLI",
             dependencies: [
@@ -49,6 +90,18 @@ let package = Package(
                 .product(name: "SwiftToolsSupport", package: "swift-tools-support-core")
             ],
             path: "Sources/CLI"
+        ),
+        // Optional: separate CLI for preview command (kept minimal)
+        .executableTarget(
+            name: "FountainCLI",
+            dependencies: [
+                "Teatro",
+                "TeatroRenderAPI",
+                "TeatroSDLBackend",
+                "MIDIIntegration",
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ],
+            path: "Sources/FountainCLI"
         ),
         .executableTarget(
             name: "TeatroSamplerDemo",
@@ -77,13 +130,24 @@ let package = Package(
         ),
         .target(
             name: "TeatroRenderAPI",
-            dependencies: ["Teatro"],
+            dependencies: ["Teatro", "TeatroSDLBackend"],
             path: "Sources/TeatroRenderAPI"
         ),
         .target(
             name: "RenderAPI",
             dependencies: ["Teatro", "TeatroRenderAPI"],
             path: "Sources/RenderAPI"
+        ),
+        // Demo preview executable used by the AGENTS.md entrypoint
+        .executableTarget(
+            name: "TeatroPreviewDemo",
+            dependencies: [
+                "Teatro",
+                "TeatroRenderAPI",
+                "TeatroSDLBackend",
+                "MIDIIntegration"
+            ],
+            path: "Sources/TeatroPreviewDemo"
         ),
         .testTarget(
             name: "TeatroTests",
@@ -112,7 +176,11 @@ let package = Package(
         .testTarget(
             name: "SamplerTests",
             dependencies: ["Teatro"],
-            path: "Tests/SamplerTests"
+            path: "Tests/SamplerTests",
+            resources: [
+                .copy("../../assets/sine.orc"),
+                .copy("../../assets/example.sf2")
+            ]
         ),
         .testTarget(
             name: "CLITests",
@@ -146,4 +214,3 @@ let package = Package(
 )
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-

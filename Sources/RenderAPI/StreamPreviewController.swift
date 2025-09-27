@@ -55,15 +55,10 @@ import TeatroRenderAPI
 public extension StreamPreviewController {
     @MainActor
     func playerView(svg: Data, timeline: Data? = nil) -> some View {
+        // Avoid cross-actor access from the main actor; the standalone
+        // `TeatroPlayerView` already includes basic overlays. Streaming tokens
+        // can be fed via other bindings in a future revision.
         TeatroPlayerView(svg: svg, timeline: timeline)
-            .overlay(alignment: .topLeading) {
-                VStack {
-                    TokenStreamView(tokens: tokenBuffer)
-                    Spacer()
-                    StreamStatusView()
-                }
-                .padding()
-            }
     }
 }
 #endif

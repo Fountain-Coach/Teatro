@@ -5,6 +5,17 @@
 
 Teatro is centered on **MIDI 2.0** for sequencing and timing. MIDI 1.0 is supported only as a fallback for legacy export.
 
+### Interactive Preview (SDL3 + MIDI2)
+
+An experimental interactive preview is available, introducing a new GUI backend and MIDI 2.0 integration. The initial implementation ships with a stubbed SDL backend to keep builds deterministic while the full SDL path is integrated.
+
+- Run the demo preview:
+  - `swift test && swift run TeatroPreviewDemo`
+- Public API: `TeatroPreviewController` in `Sources/TeatroRenderAPI/PreviewAPI.swift`.
+- Internals: `Sources/TeatroSDLBackend` and `Sources/MIDIIntegration`.
+
+Documentation: `Docs/Chapters/TeatroInteractiveGUI.md`.
+
 ## Render API
 
 The `TeatroRenderAPI` module exposes deterministic rendering helpers and a SwiftUI `TeatroPlayerView` for quick previews. See [Docs/RenderAPI.md](Docs/RenderAPI.md) for usage examples.
