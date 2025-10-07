@@ -32,6 +32,7 @@ struct CompareView: View {
     @State private var showHeatmap: Bool = false
     @State private var message: String = ""
     @State private var exportingAll: Bool = false
+    @State private var showSidebar: Bool = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -49,6 +50,7 @@ struct CompareView: View {
                 Button(exportingAll ? "Exporting…" : "Render All (A4)") {
                     Task { await renderAllA4() }
                 }.disabled(fixturesDirectory == nil || exportingAll)
+                Button(showSidebar ? "Hide List" : "Show List") { withAnimation { showSidebar.toggle() } }
             }
             .padding(.horizontal, 8)
 
@@ -87,6 +89,18 @@ struct CompareView: View {
     private func currentFileName() -> String {
         guard selectedIndex < lilyFiles.count else { return "" }
         return lilyFiles[selectedIndex].lastPathComponent
+    }
+
+    @ViewBuilder
+    private func fixtureList() -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Fixtures").font(.caption).foregroundColor(.secondary)
+            List(Array(lilyFiles.enumerated()), id: \.0) { idx, url in
+                Button(action: { selectedIndex = idx; renderSelected() }) {
+                    HStack { Text(url.lastPathComponent).lineLimit(1); if idx == selectedIndex { Spacer(); Image(systemName: "checkmark") } }
+                }.buttonStyle(.plain)
+            }
+        }
     }
 
     private func pickDirectory() {
