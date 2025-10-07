@@ -16,6 +16,19 @@ public enum ScoreKitPreview {
         var layoutY: [Double] = []
         var barX: [Double] = []
 
+        func diatonicIndex(_ p: Pitch) -> Int {
+            let stepIndex: Int
+            switch p.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
+            return p.octave * 7 + stepIndex
+        }
+        func topLineDI(for clef: ClefType) -> Int { clef == .treble ? 38 : 26 }
+        func yForPitch(_ p: Pitch, clef: ClefType, originY: Double, staffSpacing: Double) -> Double {
+            let di = diatonicIndex(p)
+            let top = topLineDI(for: clef)
+            let pos = top - di
+            return originY + Double(pos) * (staffSpacing / 2.0)
+        }
+
         func computeLayout(staffSpacing: Double, paddingTop: Double, paddingLeft: Double, beatsPerBar: Int = 4, beatUnit: Int = 4) {
             layoutX = Array(repeating: 0, count: events.count)
             layoutY = Array(repeating: 0, count: events.count)
@@ -25,7 +38,7 @@ public enum ScoreKitPreview {
             for (i, e) in events.enumerated() {
                 switch e.base {
                 case let .note(p, _):
-                    let y = StaffCoords.y(for: p, clef: .treble, originY: paddingTop, staffSpacing: staffSpacing)
+                    let y = yForPitch(p, clef: ClefType.treble, originY: paddingTop, staffSpacing: staffSpacing)
                     layoutX[i] = x
                     layoutY[i] = y
                     x += quarterAdvance

@@ -6,7 +6,8 @@ import ScoreKit
 // Goal: provide a deterministic, calibrated coordinate space and draw staff + noteheads.
 public struct ScoreKitSVGRenderer: RendererPlugin {
     public static let identifier = "scorekit-svg"
-    public static let fileExtensions = ["svg"]
+    // Do not hijack the generic SVG extension; require explicit --format scorekit-svg
+    public static let fileExtensions: [String] = []
 
     public static func render(view: Renderable, output: String?) throws {
         guard let score = (view as? ScoreView) else {

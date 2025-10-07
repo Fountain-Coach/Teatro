@@ -1,5 +1,5 @@
 {
-  "originHash" : "58b0498216e3ce0375d3b38b8c95a25d3abaecb4ccc8f83c8d2ac670e87f209f",
+  "originHash" : "5ead815f3c950c6b5baa74fb84d9529b7fd5ea0e2db48fd8e3f012b5d836fe54",
   "pins" : [
     {
       "identity" : "midi2",
@@ -34,7 +34,7 @@
       "location" : "https://github.com/Fountain-Coach/ScoreKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "75211b3f2d27c06c0b652e1242ced1a58ccb69c2"
+        "revision" : "28e4e27adbdba5d278cbad0e5c7f95f1b6d126cb"
       }
     },
     {

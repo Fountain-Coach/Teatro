@@ -7,7 +7,8 @@ import ScoreKit
 
 public struct ScoreKitPNGRasterizer: RendererPlugin {
     public static let identifier = "scorekit-png"
-    public static let fileExtensions = ["png"]
+    // Do not hijack the generic PNG extension; require explicit --format scorekit-png
+    public static let fileExtensions: [String] = []
 
     public static func render(view: Renderable, output: String?) throws {
         guard let score = (view as? ScoreView) else {
