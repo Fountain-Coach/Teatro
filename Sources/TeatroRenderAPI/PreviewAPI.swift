@@ -17,6 +17,8 @@ public final class TeatroPreviewController: @unchecked Sendable {
     private let renderer: SDLRenderer
     private let runLoop: SDLRunLoop
     private let player: TeatroPlayer
+    public var onEvent: ((SDLEvent) -> Void)? = nil
+    public var draw: ((SDLRenderer, Int) -> Void)? = nil
     private var running = false
 
     public init(config: Config = .init()) {
@@ -34,19 +36,24 @@ public final class TeatroPreviewController: @unchecked Sendable {
         running = true
         player.onFrame = { [weak self] frame, _ in
             guard let self else { return }
-            self.renderer.clear(color: 0x151515FF)
-            // Simple animated demo rectangle.
-            let x = (frame % max(1, self.config.window.width - 100))
-            self.renderer.drawRect(x: x, y: 32, w: 100, h: 100, color: 0x33CC99FF)
-            self.renderer.present()
+            if let draw = self.draw {
+                draw(self.renderer, frame)
+            } else {
+                self.renderer.clear(color: 0x151515FF)
+                // Simple animated demo rectangle.
+                let x = (frame % max(1, self.config.window.width - 100))
+                self.renderer.drawRect(x: x, y: 32, w: 100, h: 100, color: 0x33CC99FF)
+                self.renderer.present()
+            }
         }
         player.play()
 
         runLoop.run(tick: { [weak self] _ in
             guard let self else { return }
-            // Pump synthetic events; in a real build we'd poll SDL here.
-            if let ev = self.window.pollEvent(), ev == .quit {
-                self.stop()
+            // Pump synthetic events; pass to handler
+            if let ev = self.window.pollEvent() {
+                if ev == .quit { self.stop() }
+                self.onEvent?(ev)
             }
         }, shouldContinue: { [weak self] in self?.running ?? false })
     }

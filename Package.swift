@@ -118,7 +118,7 @@ let package = Package(
         ),
         .target(
             name: "TeatroRenderAPI",
-            dependencies: ["Teatro"],
+            dependencies: ["Teatro", .product(name: "ScoreKit", package: "ScoreKit")],
             path: "Sources/TeatroRenderAPI"
         ),
         .target(
