@@ -33,6 +33,8 @@ struct CompareView: View {
     @State private var message: String = ""
     @State private var exportingAll: Bool = false
     @State private var showSidebar: Bool = false
+    @State private var systemsPerPage: Int = 4
+    @State private var lilyExecPath: String? = nil
 
     var body: some View {
         VStack(spacing: 8) {
@@ -43,6 +45,8 @@ struct CompareView: View {
                 Stepper(value: $targetWidth, in: 400...2000, step: 20) {
                     Text("Width: \(targetWidth) px")
                 }.frame(width: 220)
+                Stepper(value: $systemsPerPage, in: 1...12, step: 1) { Text("Systems: \(systemsPerPage)") }
+                    .frame(width: 160)
                 Toggle("Heatmap", isOn: $showHeatmap).toggleStyle(.switch)
                 Button("Prev", action: prevFile)
                 Button("Next", action: nextFile)
@@ -51,6 +55,8 @@ struct CompareView: View {
                     Task { await renderAllA4() }
                 }.disabled(fixturesDirectory == nil || exportingAll)
                 Button(showSidebar ? "Hide List" : "Show List") { withAnimation { showSidebar.toggle() } }
+                Text(lilyExecPath == nil ? "Lily: not found" : "Lily: \(lilyExecPath!)").font(.caption).foregroundColor(lilyExecPath == nil ? .red : .secondary)
+                Button("Locate…") { locateLily() }
             }
             .padding(.horizontal, 8)
 
@@ -78,7 +84,11 @@ struct CompareView: View {
             }
             .padding(.horizontal, 8)
         }
-        .onAppear(perform: bootstrapDefaultFixtures)
+        .onAppear {
+            bootstrapDefaultFixtures()
+            lilyExecPath = detectLilyPath()
+            if let p = lilyExecPath { setenv("SCOREKIT_LILYPOND", p, 1) }
+        }
     }
 
     private func lilyCaption() -> String {
@@ -144,8 +154,8 @@ struct CompareView: View {
     private func renderSelected() {
         guard selectedIndex < lilyFiles.count else { return }
         busy = true; message = "Rendering…"
-        let widthValue = targetWidth
         let filesSnapshot = lilyFiles
+        let systems = systemsPerPage
         let idxSnapshot = selectedIndex
         DispatchQueue.global(qos: .userInitiated).async {
             defer { DispatchQueue.main.async { busy = false } }
@@ -154,29 +164,10 @@ struct CompareView: View {
             do {
                 // Load lily text
                 let text = try String(contentsOf: url, encoding: .utf8)
-                // ScoreKit events
-                let events = LilyParser.parse(source: text)
-                // Render ScoreKit → PNG (via rasterizer) to temp, then load CGImage
-                let staffSpacing = 10.0
-                let height = Int(20 + staffSpacing * 5 + 40)
-                let score = ScoreView(events: events, width: widthValue, height: height)
-                let tempScorePath = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("scorekit-\(UUID().uuidString).png").path
-                try ScoreKitPNGRasterizer.renderPNG(score: score, to: tempScorePath)
-                let scoreImage = loadPNG(tempScorePath)
-
-                // Render Lily → PDF, rasterize first page to CGImage at target size
-                let session = LilySession()
-                var lilyCG: CGImage? = nil
-                do {
-                    let artifacts = try session.render(lySource: text, execute: true, formats: [.pdf])
-                    if let pdf = artifacts.pdfURL, let cg = rasterizePDF(pdfURL: pdf, width: widthValue, height: height) {
-                        lilyCG = cg
-                    }
-                } catch {
-                    // Lily not found or render failed — keep nil and set message
-                    lilyCG = nil
-                }
+                // Render A4 pages (vector → raster for view)
+                let a4W = 595, a4H = 842
+                let scoreImage = renderScoreKitA4(text: text, width: a4W, height: a4H, systems: systems, marginX: 36, marginY: 48)
+                let lilyCG = renderLilyA4(text: text, width: a4W, height: a4H)
 
                 var rmse: Double? = nil
                 var heat: CGImage? = nil
@@ -208,6 +199,7 @@ struct CompareView: View {
         try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         let files = lilyFiles
         let width = 595, height = 842 // A4 at 72 DPI
+        let systems = systemsPerPage
         for f in files {
             await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -215,7 +207,7 @@ struct CompareView: View {
                     do {
                         let text = try String(contentsOf: f, encoding: .utf8)
                         // ScoreKit A4
-                        if let img = renderScoreKitA4(text: text, width: width, height: height, systems: 4, marginX: 36, marginY: 48) {
+                        if let img = renderScoreKitA4(text: text, width: width, height: height, systems: systems, marginX: 36, marginY: 48) {
                             let outURL = out.appendingPathComponent(f.deletingPathExtension().lastPathComponent + "_scorekit_a4.png")
                             try? writePNG(img, to: outURL)
                         }
@@ -451,4 +443,28 @@ private func eventBeats(_ e: NotatedEvent, beatUnit: Int) -> Double {
     case .note(_, let d): return Double(max(1, d.num)) * Double(beatUnit) / Double(max(1, d.den))
     case .rest(let d): return Double(max(1, d.num)) * Double(beatUnit) / Double(max(1, d.den))
     }
+}
+
+
+@MainActor 
+extension CompareView {
+private func detectLilyPath() -> String? {
+        if let p = ProcessInfo.processInfo.environment["SCOREKIT_LILYPOND"], FileManager.default.isExecutableFile(atPath: p) { return p }
+        for c in ["/opt/homebrew/bin/lilypond", "/usr/local/bin/lilypond", "/usr/bin/lilypond"] { if FileManager.default.isExecutableFile(atPath: c) { return c } }
+        let task = Process(); task.executableURL = URL(fileURLWithPath: "/usr/bin/which"); task.arguments = ["lilypond"]; let pipe = Pipe(); task.standardOutput = pipe; try? task.run(); task.waitUntilExit()
+        if task.terminationStatus == 0 {
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let s = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty, FileManager.default.isExecutableFile(atPath: s) { return s }
+        }
+        return nil
+    }
+
+@MainActor private func locateLily() {
+        #if os(macOS)
+        let panel = NSOpenPanel(); panel.canChooseDirectories = false; panel.canChooseFiles = true
+        panel.message = "Select lilypond executable"
+        if panel.runModal() == .OK, let url = panel.url { lilyExecPath = url.path; setenv("SCOREKIT_LILYPOND", url.path, 1); renderSelected() }
+        #endif
+    }
+
 }
