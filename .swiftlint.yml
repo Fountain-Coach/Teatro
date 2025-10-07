@@ -13,7 +13,21 @@ line_length:
   error: 200
 
 identifier_name:
+  min_length: 3
+  max_length: 40
   allowed_symbols: ["_"]
+  excluded: [
+    id, URL,
+    x, y, i, j, k, w, h,
+    fd, ms, rmse, ev,
+    dx, dy, rx, ry,
+    dr, dg, db,
+    q, s, p, e, r, a, b, u, v, g, t, n, m,
+    idx, tmp, buf,
+    be, md, sb, r1, r2, r3, r4,
+    x1, y1, y2,
+    e1, e2, e7, e8, d, cc, pb, ch, on, cs, ts
+  ]
 
 disabled_rules:
   - todo

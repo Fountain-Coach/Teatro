@@ -53,9 +53,9 @@ struct TeatroApp {
         } else {
             let words = MIDI1Bridge.midi1ToUMP(data)
             var umpData = Data()
-            for w in words {
-                var be = w.bigEndian
-                withUnsafeBytes(of: &be) { umpData.append(contentsOf: $0) }
+            for word in words {
+                var bigEndianWord = word.bigEndian
+                withUnsafeBytes(of: &bigEndianWord) { umpData.append(contentsOf: $0) }
             }
             try MIDI1Bridge.umpToMIDI1(umpData, sink: audioSink)
         }

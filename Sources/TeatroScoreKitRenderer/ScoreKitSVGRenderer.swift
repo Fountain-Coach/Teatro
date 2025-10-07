@@ -25,30 +25,30 @@ public struct ScoreKitSVGRenderer: RendererPlugin {
         // Staff lines
         let left: Double = Double(score.paddingLeft)
         let right: Double = Double(width) - score.paddingLeft
-        for i in 0..<5 {
-            let y = Double(score.paddingTop + score.staffSpacing * Double(i))
-            body.append("<line x1=\"\(left)\" y1=\"\(y)\" x2=\"\(right)\" y2=\"\(y)\" stroke=\"black\" stroke-width=\"1\"/>")
+        for staffLineIndex in 0..<5 {
+            let yPosition = Double(score.paddingTop + score.staffSpacing * Double(staffLineIndex))
+            body.append("<line x1=\"\(left)\" y1=\"\(yPosition)\" x2=\"\(right)\" y2=\"\(yPosition)\" stroke=\"black\" stroke-width=\"1\"/>")
         }
         // Notes (ellipse heads + stems + optional dynamics)
-        for (i, ev) in score.events.enumerated() {
-            switch ev.base {
+        for (eventIndex, notatedEvent) in score.events.enumerated() {
+            switch notatedEvent.base {
             case .note:
-                let (x, y) = score.pointForIndex(i)
-                let rx = score.noteRadius * 1.2
-                let ry = score.noteRadius * 0.8
-                body.append("<ellipse cx=\"\(x)\" cy=\"\(y)\" rx=\"\(rx)\" ry=\"\(ry)\" transform=\"rotate(-20 \(x) \(y))\" fill=\"black\"/>")
+                let (xPosition, yPosition) = score.pointForIndex(eventIndex)
+                let radiusX = score.noteRadius * 1.2
+                let radiusY = score.noteRadius * 0.8
+                body.append("<ellipse cx=\"\(xPosition)\" cy=\"\(yPosition)\" rx=\"\(radiusX)\" ry=\"\(radiusY)\" transform=\"rotate(-20 \(xPosition) \(yPosition))\" fill=\"black\"/>")
                 // Stem
                 let midY = score.paddingTop + score.staffSpacing * 2.0
-                let stemUp = y >= midY
-                let stemLen = score.staffSpacing * 3.5
-                let x1 = stemUp ? (x + rx - 0.5) : (x - rx + 0.5)
-                let y1 = y
-                let x2 = x1
-                let y2 = stemUp ? (y - stemLen) : (y + stemLen)
-                body.append("<line x1=\"\(x1)\" y1=\"\(y1)\" x2=\"\(x2)\" y2=\"\(y2)\" stroke=\"black\" stroke-width=\"1\"/>")
-                if let dyn = score.events[i].dynamic?.rawValue {
-                    let dy = score.paddingTop + score.staffSpacing * 6.2
-                    body.append("<text x=\"\(x)\" y=\"\(dy)\" font-family=\"Serif\" font-size=\"12\" text-anchor=\"middle\">\(dyn)</text>")
+                let stemUp = yPosition >= midY
+                let stemLength = score.staffSpacing * 3.5
+                let xStart = stemUp ? (xPosition + radiusX - 0.5) : (xPosition - radiusX + 0.5)
+                let yStart = yPosition
+                let xEnd = xStart
+                let yEnd = stemUp ? (yPosition - stemLength) : (yPosition + stemLength)
+                body.append("<line x1=\"\(xStart)\" y1=\"\(yStart)\" x2=\"\(xEnd)\" y2=\"\(yEnd)\" stroke=\"black\" stroke-width=\"1\"/>")
+                if let dynamicText = score.events[eventIndex].dynamic?.rawValue {
+                    let dynamicY = score.paddingTop + score.staffSpacing * 6.2
+                    body.append("<text x=\"\(xPosition)\" y=\"\(dynamicY)\" font-family=\"Serif\" font-size=\"12\" text-anchor=\"middle\">\(dynamicText)</text>")
                 }
             case .rest:
                 continue
@@ -57,8 +57,8 @@ public struct ScoreKitSVGRenderer: RendererPlugin {
         // Bar lines across the staff
         let topY = Double(score.paddingTop) - score.staffSpacing * 0.5
         let bottomY = Double(score.paddingTop + score.staffSpacing * 4.0) + score.staffSpacing * 0.5
-        for bx in score.barlines() {
-            body.append("<line x1=\"\(bx)\" y1=\"\(topY)\" x2=\"\(bx)\" y2=\"\(bottomY)\" stroke=\"black\" stroke-width=\"1\"/>")
+        for barX in score.barlines() {
+            body.append("<line x1=\"\(barX)\" y1=\"\(topY)\" x2=\"\(barX)\" y2=\"\(bottomY)\" stroke=\"black\" stroke-width=\"1\"/>")
         }
 
         let svg = """
@@ -114,47 +114,47 @@ public final class ScoreView: Renderable {
 
     // Store layout positions parallel to events
     private func computeLayout() {
-        var x = paddingLeft
+        var xPosition = paddingLeft
         var barProgress = 0.0
         layoutX = Array(repeating: 0, count: events.count)
         layoutY = Array(repeating: 0, count: events.count)
         barX = []
-        for i in 0..<events.count {
-            let e = events[i]
-            switch e.base {
-            case .note(let p, _):
-                let y = ScoreKit.StaffCoords.y(for: p, clef: clef, originY: paddingTop, staffSpacing: staffSpacing)
-                layoutX[i] = x
-                layoutY[i] = y
-                x += advance(for: e)
+        for eventIndex in 0..<events.count {
+            let event = events[eventIndex]
+            switch event.base {
+            case .note(let pitch, _):
+                let yPosition = ScoreKit.StaffCoords.y(for: pitch, clef: clef, originY: paddingTop, staffSpacing: staffSpacing)
+                layoutX[eventIndex] = xPosition
+                layoutY[eventIndex] = yPosition
+                xPosition += advance(for: event)
             case .rest:
-                x += advance(for: e)
+                xPosition += advance(for: event)
             }
-            barProgress += beatFraction(for: e)
+            barProgress += beatFraction(for: event)
             if barProgress >= Double(beatsPerBar) {
                 barProgress -= Double(beatsPerBar)
-                barX.append(x)
+                barX.append(xPosition)
             }
         }
     }
 
-    private func advance(for e: NotatedEvent) -> Double {
-        switch e.base {
-        case .note(_, let d), .rest(let d):
-            return params.advanceForDenom[d.den] ?? params.defaultAdvance
+    private func advance(for event: NotatedEvent) -> Double {
+        switch event.base {
+        case .note(_, let duration), .rest(let duration):
+            return params.advanceForDenom[duration.den] ?? params.defaultAdvance
         }
     }
-    private func beatFraction(for e: NotatedEvent) -> Double {
-        switch e.base {
-        case .note(_, let d): return Double(beatUnit)/Double(max(1, d.den))
-        case .rest(let d): return Double(beatUnit)/Double(max(1, d.den))
+    private func beatFraction(for event: NotatedEvent) -> Double {
+        switch event.base {
+        case .note(_, let duration): return Double(beatUnit)/Double(max(1, duration.den))
+        case .rest(let duration): return Double(beatUnit)/Double(max(1, duration.den))
         }
     }
 
     public func layout() -> LayoutNode { .raw("") }
 
-    fileprivate func pointForIndex(_ i: Int) -> (Double, Double) {
-        if i < layoutX.count { return (layoutX[i], layoutY[i]) }
+    fileprivate func pointForIndex(_ index: Int) -> (Double, Double) {
+        if index < layoutX.count { return (layoutX[index], layoutY[index]) }
         return (0,0)
     }
     fileprivate func _barlines() -> [Double] { barX }
@@ -163,7 +163,7 @@ public final class ScoreView: Renderable {
 // no extensions
 // Expose for same-package access by rasterizer and CLI
 extension ScoreView {
-    public func layoutPoint(at i: Int) -> (Double, Double) { self.pointForIndex(i) }
+    public func layoutPoint(at index: Int) -> (Double, Double) { self.pointForIndex(index) }
     public func barlines() -> [Double] { self._barlines() }
 }
 

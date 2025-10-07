@@ -14,7 +14,7 @@ struct CompareCLI: ParsableCommand {
     )
 
     @Option(name: [.short, .long], help: "Input LilyPond .ly file (or use --fixtures-dir)")
-    var ly: String?
+    var lyPath: String?
 
     @Option(name: [.short, .long], help: "Output directory")
     var outDir: String = "compare_out"
@@ -54,8 +54,8 @@ struct CompareCLI: ParsableCommand {
                 let suggestion = URL(fileURLWithPath: cwd).appendingPathComponent("../AudioTalk/ScoreKit/Fixtures/Lily").standardized.path
                 throw ValidationError("Failed to open fixtures dir: \(dir) (cwd=\(cwd)). If you're in Github-Desktop/Teatro, try --fixtures-dir \(suggestion)")
             }
-        } else if let ly = ly {
-            lyFiles = [URL(fileURLWithPath: ly)]
+        } else if let lyPath = lyPath {
+            lyFiles = [URL(fileURLWithPath: lyPath)]
         } else {
             throw ValidationError("Provide --ly or --fixtures-dir")
         }
@@ -72,12 +72,12 @@ struct CompareCLI: ParsableCommand {
         var results: [(name: String, rmse: Double?)] = []
         for file in lyFiles {
             do {
-                let res = try processSingle(lyURL: file,
+                let resultValue = try processSingle(lyURL: file,
                                             width: width,
                                             outURL: outURL.appendingPathComponent(file.deletingPathExtension().lastPathComponent),
                                             params: params,
                                             log: !quiet)
-                results.append((file.lastPathComponent, res))
+                results.append((file.lastPathComponent, resultValue))
             } catch {
                 print("[WARN] Failed \(file.lastPathComponent): \(error)")
             }
@@ -85,12 +85,12 @@ struct CompareCLI: ParsableCommand {
         if !results.isEmpty {
             let valid = results.compactMap { $0.rmse }
             if !valid.isEmpty {
-                let avg = valid.reduce(0, +) / Double(valid.count)
-                print(String(format: "Average RMSE over %d files: %.6f", valid.count, avg))
+                let averageRmse = valid.reduce(0, +) / Double(valid.count)
+                print(String(format: "Average RMSE over %d files: %.6f", valid.count, averageRmse))
                 // Persist metrics for later analysis
                 let metricsPath = outURL.appendingPathComponent("metrics.json")
-                let dict = Dictionary(uniqueKeysWithValues: results.compactMap { name, m in m.map { (name, $0) } })
-                try? writeJSON(dict, to: metricsPath)
+                let metricsDict = Dictionary(uniqueKeysWithValues: results.compactMap { name, maybeRmse in maybeRmse.map { (name, $0) } })
+                try? writeJSON(metricsDict, to: metricsPath)
                 print("Wrote metrics to \(metricsPath.path)")
             }
         }
@@ -151,38 +151,38 @@ struct CompareCLI: ParsableCommand {
         var best: (params: ScoreView.LayoutParams, rmse: Double)? = nil
         let subset = Array(files.prefix(5))
         let total = quarters.count * eighths.count * sixteenths.count * radii.count
-        var idx = 0
-        for q in quarters {
-            for e in eighths {
-                for s in sixteenths {
-                    for r in radii {
-                        idx += 1
+        var iterationIndex = 0
+        for quartersAdvance in quarters {
+            for eighthsAdvance in eighths {
+                for sixteenthsAdvance in sixteenths {
+                    for radius in radii {
+                        iterationIndex += 1
                         var params = ScoreView.LayoutParams()
-                        params.advanceForDenom[4] = q
-                        params.advanceForDenom[8] = e
-                        params.advanceForDenom[16] = s
-                        params.noteRadius = r
-                        if !quiet { print(String(format: "[opt] %d/%d q=%.1f e=%.1f s=%.1f r=%.1f", idx, total, q, e, s, r)) }
-                        let avg = try averageRMSE(files: subset, width: width, params: params, outURL: outURL)
-                        if let cur = best {
-                            if let avg = avg, avg < cur.rmse { best = (params, avg) }
-                        } else if let avg = avg {
-                            best = (params, avg)
+                        params.advanceForDenom[4] = quartersAdvance
+                        params.advanceForDenom[8] = eighthsAdvance
+                        params.advanceForDenom[16] = sixteenthsAdvance
+                        params.noteRadius = radius
+                        if !quiet { print(String(format: "[opt] %d/%d q=%.1f e=%.1f s=%.1f r=%.1f", iterationIndex, total, quartersAdvance, eighthsAdvance, sixteenthsAdvance, radius)) }
+                        let average = try averageRMSE(files: subset, width: width, params: params, outURL: outURL)
+                        if let currentBest = best {
+                            if let average = average, average < currentBest.rmse { best = (params, average) }
+                        } else if let average = average {
+                            best = (params, average)
                         }
                     }
                 }
             }
         }
-        if let best = best {
-            print(String(format: "Best RMSE: %.6f with params: q=%.1f e=%.1f s=%.1f r=%.1f", best.rmse, best.params.advanceForDenom[4] ?? 0, best.params.advanceForDenom[8] ?? 0, best.params.advanceForDenom[16] ?? 0, best.params.noteRadius))
-            return best.params
+        if let bestResult = best {
+            print(String(format: "Best RMSE: %.6f with params: q=%.1f e=%.1f s=%.1f r=%.1f", bestResult.rmse, bestResult.params.advanceForDenom[4] ?? 0, bestResult.params.advanceForDenom[8] ?? 0, bestResult.params.advanceForDenom[16] ?? 0, bestResult.params.noteRadius))
+            return bestResult.params
         }
         return nil
     }
 
     private func averageRMSE(files: [URL], width: Int, params: ScoreView.LayoutParams, outURL: URL) throws -> Double? {
-        var acc: Double = 0
-        var n: Int = 0
+        var accumulator: Double = 0
+        var count: Int = 0
         for file in files {
             let base: URL
             if keepOptArtifacts {
@@ -190,16 +190,16 @@ struct CompareCLI: ParsableCommand {
             } else {
                 base = FileManager.default.temporaryDirectory.appendingPathComponent("teatro-opt-\(UUID().uuidString)")
             }
-            let tmp = base.appendingPathComponent(file.deletingPathExtension().lastPathComponent)
-            try? FileManager.default.removeItem(at: tmp)
-            let res = try processSingle(lyURL: file, width: width, outURL: tmp, params: params, log: false)
-            if let r = res { acc += r; n += 1 }
+            let tempDir = base.appendingPathComponent(file.deletingPathExtension().lastPathComponent)
+            try? FileManager.default.removeItem(at: tempDir)
+            let resultValue = try processSingle(lyURL: file, width: width, outURL: tempDir, params: params, log: false)
+            if let value = resultValue { accumulator += value; count += 1 }
             if !keepOptArtifacts {
                 try? FileManager.default.removeItem(at: base)
             }
         }
-        guard n > 0 else { return nil }
-        return acc / Double(n)
+        guard count > 0 else { return nil }
+        return accumulator / Double(count)
     }
 }
 
@@ -312,7 +312,7 @@ func compareRMSE(aPath: String, bPath: String) throws -> (Double, CGImage)? {
 }
 
 // MARK: - JSON helper
-private func writeJSON(_ dict: [String: Double], to url: URL) throws {
-    let data = try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys])
+private func writeJSON(_ dictionary: [String: Double], to url: URL) throws {
+    let data = try JSONSerialization.data(withJSONObject: dictionary, options: [.prettyPrinted, .sortedKeys])
     try data.write(to: url)
 }

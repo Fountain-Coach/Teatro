@@ -45,46 +45,46 @@ public struct ScoreKitPNGRasterizer: RendererPlugin {
         context.setLineWidth(1)
         let left = CGFloat(score.paddingLeft)
         let right = CGFloat(Double(width) - score.paddingLeft)
-        for i in 0..<5 {
-            let y = CGFloat(score.paddingTop + score.staffSpacing * Double(i))
-            context.move(to: CGPoint(x: left, y: y))
-            context.addLine(to: CGPoint(x: right, y: y))
+        for staffLineIndex in 0..<5 {
+            let yPosition = CGFloat(score.paddingTop + score.staffSpacing * Double(staffLineIndex))
+            context.move(to: CGPoint(x: left, y: yPosition))
+            context.addLine(to: CGPoint(x: right, y: yPosition))
             context.strokePath()
         }
 
         // Draw notes as ellipse + stems
         context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
         context.setStrokeColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
-        for i in 0..<score.events.count {
-            let (x, y) = score.layoutPoint(at: i)
-            let rx = CGFloat(score.noteRadius * 1.2)
-            let ry = CGFloat(score.noteRadius * 0.8)
-            let rect = CGRect(x: CGFloat(x) - rx, y: CGFloat(y) - ry, width: 2*rx, height: 2*ry)
+        for eventIndex in 0..<score.events.count {
+            let (xPosition, yPosition) = score.layoutPoint(at: eventIndex)
+            let radiusX = CGFloat(score.noteRadius * 1.2)
+            let radiusY = CGFloat(score.noteRadius * 0.8)
+            let rect = CGRect(x: CGFloat(xPosition) - radiusX, y: CGFloat(yPosition) - radiusY, width: 2*radiusX, height: 2*radiusY)
             context.saveGState()
-            context.translateBy(x: CGFloat(x), y: CGFloat(y))
+            context.translateBy(x: CGFloat(xPosition), y: CGFloat(yPosition))
             context.rotate(by: CGFloat(-20.0 * .pi / 180.0))
-            context.translateBy(x: -CGFloat(x), y: -CGFloat(y))
+            context.translateBy(x: -CGFloat(xPosition), y: -CGFloat(yPosition))
             context.fillEllipse(in: rect)
             context.restoreGState()
             let midY = CGFloat(score.paddingTop + score.staffSpacing * 2.0)
-            let stemUp = CGFloat(y) >= midY
-            let stemLen = CGFloat(score.staffSpacing * 3.5)
-            let x1 = stemUp ? (CGFloat(x) + rx - 0.5) : (CGFloat(x) - rx + 0.5)
-            let y1 = CGFloat(y)
-            let x2 = x1
-            let y2 = stemUp ? (CGFloat(y) - stemLen) : (CGFloat(y) + stemLen)
-            context.move(to: CGPoint(x: x1, y: y1))
-            context.addLine(to: CGPoint(x: x2, y: y2))
+            let stemUp = CGFloat(yPosition) >= midY
+            let stemLength = CGFloat(score.staffSpacing * 3.5)
+            let xStart = stemUp ? (CGFloat(xPosition) + radiusX - 0.5) : (CGFloat(xPosition) - radiusX + 0.5)
+            let yStart = CGFloat(yPosition)
+            let xEnd = xStart
+            let yEnd = stemUp ? (CGFloat(yPosition) - stemLength) : (CGFloat(yPosition) + stemLength)
+            context.move(to: CGPoint(x: xStart, y: yStart))
+            context.addLine(to: CGPoint(x: xEnd, y: yEnd))
             context.strokePath()
         }
 
         // Barlines
         let topY = CGFloat(score.paddingTop) - CGFloat(score.staffSpacing * 0.5)
         let bottomY = CGFloat(score.paddingTop + score.staffSpacing * 4.0 + score.staffSpacing * 0.5)
-        for bx in score.barlines() {
-            let x = CGFloat(bx)
-            context.move(to: CGPoint(x: x, y: topY))
-            context.addLine(to: CGPoint(x: x, y: bottomY))
+        for barX in score.barlines() {
+            let xPosition = CGFloat(barX)
+            context.move(to: CGPoint(x: xPosition, y: topY))
+            context.addLine(to: CGPoint(x: xPosition, y: bottomY))
             context.strokePath()
         }
 

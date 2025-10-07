@@ -41,8 +41,8 @@ public final class TeatroPreviewController: @unchecked Sendable {
             } else {
                 self.renderer.clear(color: 0x151515FF)
                 // Simple animated demo rectangle.
-                let x = (frame % max(1, self.config.window.width - 100))
-                self.renderer.drawRect(x: x, y: 32, w: 100, h: 100, color: 0x33CC99FF)
+                let xPosition = (frame % max(1, self.config.window.width - 100))
+                self.renderer.drawRect(x: xPosition, y: 32, w: 100, h: 100, color: 0x33CC99FF)
                 self.renderer.present()
             }
         }
@@ -51,9 +51,9 @@ public final class TeatroPreviewController: @unchecked Sendable {
         runLoop.run(tick: { [weak self] _ in
             guard let self else { return }
             // Pump synthetic events; pass to handler
-            if let ev = self.window.pollEvent() {
-                if ev == .quit { self.stop() }
-                self.onEvent?(ev)
+            if let event = self.window.pollEvent() {
+                if event == .quit { self.stop() }
+                self.onEvent?(event)
             }
         }, shouldContinue: { [weak self] in self?.running ?? false })
     }

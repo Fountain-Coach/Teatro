@@ -66,50 +66,50 @@ struct ScoreCanvas: View {
     private let beatsPerBar: Int = 4
     private let beatUnit: Int = 4
 
-    private func diatonicIndex(_ p: Pitch) -> Int {
+    private func diatonicIndex(_ pitch: Pitch) -> Int {
         let stepIndex: Int
-        switch p.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
-        return p.octave * 7 + stepIndex
+        switch pitch.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
+        return pitch.octave * 7 + stepIndex
     }
     private func topLineDI() -> Int { 38 } // treble
-    private func yForPitch(_ p: Pitch, originY: Double, staffSpacing: Double) -> Double {
-        let pos = topLineDI() - diatonicIndex(p)
-        return originY + Double(pos) * (staffSpacing / 2.0)
+    private func yForPitch(_ pitch: Pitch, originY: Double, staffSpacing: Double) -> Double {
+        let stepOffset = topLineDI() - diatonicIndex(pitch)
+        return originY + Double(stepOffset) * (staffSpacing / 2.0)
     }
 
     private func layout(size: CGSize) -> (xs: [Double], ys: [Double], bars: [Double]) {
         let paddingTop = paddingTop0 * zoom
         let paddingLeft = paddingLeft0 * zoom
         let staffSpacing = staffSpacing0 * zoom
-        var xs = Array(repeating: 0.0, count: events.count)
-        var ys = Array(repeating: 0.0, count: events.count)
-        var bars: [Double] = []
-        var x = paddingLeft
+        var xPositions = Array(repeating: 0.0, count: events.count)
+        var yPositions = Array(repeating: 0.0, count: events.count)
+        var barPositions: [Double] = []
+        var xPosition = paddingLeft
         var barProgress = 0.0
-        for (i,e) in events.enumerated() {
-            switch e.base {
-            case let .note(p, _):
-                ys[i] = yForPitch(p, originY: paddingTop, staffSpacing: staffSpacing)
-                xs[i] = x
-                x += 28 * zoom
+        for (index, event) in events.enumerated() {
+            switch event.base {
+            case let .note(pitch, _):
+                yPositions[index] = yForPitch(pitch, originY: paddingTop, staffSpacing: staffSpacing)
+                xPositions[index] = xPosition
+                xPosition += 28 * zoom
             case .rest:
-                xs[i] = x
-                x += 28 * zoom
+                xPositions[index] = xPosition
+                xPosition += 28 * zoom
             }
             let frac = Double(beatUnit)/4.0
             barProgress += frac
             if barProgress >= Double(beatsPerBar) {
                 barProgress -= Double(beatsPerBar)
-                bars.append(x)
+                barPositions.append(xPosition)
             }
         }
-        return (xs, ys, bars)
+        return (xPositions, yPositions, barPositions)
     }
 
     var body: some View {
         GeometryReader { geo in
             Canvas { ctx, size in
-                let (xs, ys, bars) = layout(size: size)
+                let (xPositions, yPositions, barPositions) = layout(size: size)
                 let paddingTop = paddingTop0 * zoom
                 let paddingLeft = paddingLeft0 * zoom
                 let staffSpacing = staffSpacing0 * zoom
@@ -117,37 +117,37 @@ struct ScoreCanvas: View {
                 let left = paddingLeft
                 let right = size.width - paddingLeft
                 var path = Path()
-                for i in 0..<5 {
-                    let y = paddingTop + staffSpacing * Double(i)
-                    path.move(to: CGPoint(x: left, y: y))
-                    path.addLine(to: CGPoint(x: right, y: y))
+                for staffLineIndex in 0..<5 {
+                    let yPosition = paddingTop + staffSpacing * Double(staffLineIndex)
+                    path.move(to: CGPoint(x: left, y: yPosition))
+                    path.addLine(to: CGPoint(x: right, y: yPosition))
                 }
                 ctx.stroke(path, with: .color(.black), lineWidth: 1)
 
                 // Notes
-                for (i, ev) in events.enumerated() {
-                    guard case .note = ev.base else { continue }
-                    let x = xs[i]; let y = ys[i]
-                    let rx = 4.8 * zoom
-                    let ry = 3.2 * zoom
-                    var head = Path(ellipseIn: CGRect(x: x - rx, y: y - ry, width: rx*2, height: ry*2))
+                for (index, notatedEvent) in events.enumerated() {
+                    guard case .note = notatedEvent.base else { continue }
+                    let xPosition = xPositions[index]; let yPosition = yPositions[index]
+                    let radiusX = 4.8 * zoom
+                    let radiusY = 3.2 * zoom
+                    var head = Path(ellipseIn: CGRect(x: xPosition - radiusX, y: yPosition - radiusY, width: radiusX*2, height: radiusY*2))
                     // Use an explicit Double for pi to avoid ambiguity across Float/Double/CGFloat
                     let angle = CGFloat(-20.0 * Double.pi / 180.0)
-                    var transform = CGAffineTransform(translationX: x, y: y)
+                    var transform = CGAffineTransform(translationX: xPosition, y: yPosition)
                         .rotated(by: angle)
-                        .translatedBy(x: -x, y: -y)
+                        .translatedBy(x: -xPosition, y: -yPosition)
                     head = head.applying(transform)
-                    ctx.fill(head, with: .color(i == selection ? .red : .black))
+                    ctx.fill(head, with: .color(index == selection ? .red : .black))
                     // Stem
                     let midY = paddingTop + staffSpacing * 2.0
-                    let stemUp = y >= midY
+                    let stemUp = yPosition >= midY
                     let stemLen = staffSpacing * 3.5
-                    let x1 = stemUp ? (x + rx - 1) : (x - rx + 1)
-                    let y1 = y
-                    let y2 = stemUp ? (y - stemLen) : (y + stemLen)
+                    let xStart = stemUp ? (xPosition + radiusX - 1) : (xPosition - radiusX + 1)
+                    let yStart = yPosition
+                    let yEnd = stemUp ? (yPosition - stemLen) : (yPosition + stemLen)
                     var stem = Path()
-                    stem.move(to: CGPoint(x: x1, y: y1))
-                    stem.addLine(to: CGPoint(x: x1, y: y2))
+                    stem.move(to: CGPoint(x: xStart, y: yStart))
+                    stem.addLine(to: CGPoint(x: xStart, y: yEnd))
                     ctx.stroke(stem, with: .color(.black), lineWidth: 1)
                 }
 
@@ -155,9 +155,9 @@ struct ScoreCanvas: View {
                 let topY = paddingTop - staffSpacing * 0.5
                 let bottomY = paddingTop + staffSpacing * 4.0 + staffSpacing * 0.5
                 var barsPath = Path()
-                for bx in bars {
-                    barsPath.move(to: CGPoint(x: bx, y: topY))
-                    barsPath.addLine(to: CGPoint(x: bx, y: bottomY))
+                for barX in barPositions {
+                    barsPath.move(to: CGPoint(x: barX, y: topY))
+                    barsPath.addLine(to: CGPoint(x: barX, y: bottomY))
                 }
                 ctx.stroke(barsPath, with: .color(.black), lineWidth: 1)
             }

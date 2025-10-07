@@ -12,53 +12,53 @@ public enum ScoreKitPreview {
         let paddingTop0: Double = 20
         let paddingLeft0: Double = 20
 
-        var layoutX: [Double] = []
-        var layoutY: [Double] = []
-        var barX: [Double] = []
+        var layoutXPositions: [Double] = []
+        var layoutYPositions: [Double] = []
+        var barXPositions: [Double] = []
 
-        func diatonicIndex(_ p: Pitch) -> Int {
+        func diatonicIndex(_ pitch: Pitch) -> Int {
             let stepIndex: Int
-            switch p.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
-            return p.octave * 7 + stepIndex
+            switch pitch.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
+            return pitch.octave * 7 + stepIndex
         }
         func topLineDI(for clef: ClefType) -> Int { clef == .treble ? 38 : 26 }
-        func yForPitch(_ p: Pitch, clef: ClefType, originY: Double, staffSpacing: Double) -> Double {
-            let di = diatonicIndex(p)
-            let top = topLineDI(for: clef)
-            let pos = top - di
-            return originY + Double(pos) * (staffSpacing / 2.0)
+        func yForPitch(_ pitch: Pitch, clef: ClefType, originY: Double, staffSpacing: Double) -> Double {
+            let diatonic = diatonicIndex(pitch)
+            let topIndex = topLineDI(for: clef)
+            let stepOffset = topIndex - diatonic
+            return originY + Double(stepOffset) * (staffSpacing / 2.0)
         }
 
         func computeLayout(staffSpacing: Double, paddingTop: Double, paddingLeft: Double, beatsPerBar: Int = 4, beatUnit: Int = 4) {
-            layoutX = Array(repeating: 0, count: events.count)
-            layoutY = Array(repeating: 0, count: events.count)
-            barX = []
-            var x = paddingLeft
+            layoutXPositions = Array(repeating: 0, count: events.count)
+            layoutYPositions = Array(repeating: 0, count: events.count)
+            barXPositions = []
+            var xPosition = paddingLeft
             var barProgress = 0.0
-            for (i, e) in events.enumerated() {
-                switch e.base {
-                case let .note(p, _):
-                    let y = yForPitch(p, clef: ClefType.treble, originY: paddingTop, staffSpacing: staffSpacing)
-                    layoutX[i] = x
-                    layoutY[i] = y
-                    x += quarterAdvance
+            for (index, event) in events.enumerated() {
+                switch event.base {
+                case let .note(pitch, _):
+                    let yPosition = yForPitch(pitch, clef: ClefType.treble, originY: paddingTop, staffSpacing: staffSpacing)
+                    layoutXPositions[index] = xPosition
+                    layoutYPositions[index] = yPosition
+                    xPosition += quarterAdvance
                 case .rest:
-                    x += quarterAdvance
+                    xPosition += quarterAdvance
                 }
                 let frac: Double = Double(beatUnit)/4.0 // crude
                 barProgress += frac
                 if barProgress >= Double(beatsPerBar) {
                     barProgress -= Double(beatsPerBar)
-                    barX.append(x)
+                    barXPositions.append(xPosition)
                 }
             }
         }
 
         computeLayout(staffSpacing: staffSpacing0, paddingTop: paddingTop0, paddingLeft: paddingLeft0)
 
-        func drawScene(_ r: SDLRenderer, _ frame: Int) {
-            let width = r.width
-            r.clear(color: 0xFFFFFFFF)
+        func drawScene(_ renderer: SDLRenderer, _ frame: Int) {
+            let width = renderer.width
+            renderer.clear(color: 0xFFFFFFFF)
             let staffSpacing = staffSpacing0 * zoom
             let paddingTop = paddingTop0 * zoom
             let paddingLeft = paddingLeft0 * zoom
@@ -66,36 +66,36 @@ public enum ScoreKitPreview {
             // Staff lines
             let left = Int(paddingLeft)
             let right = width - Int(paddingLeft)
-            for i in 0..<5 {
-                let y = Int(paddingTop + staffSpacing * Double(i))
-                r.drawLine(x0: left, y0: y, x1: right, y1: y, color: 0x000000FF)
+            for lineIndex in 0..<5 {
+                let yPosition = Int(paddingTop + staffSpacing * Double(lineIndex))
+                renderer.drawLine(x0: left, y0: yPosition, x1: right, y1: yPosition, color: 0x000000FF)
             }
             // Notes and stems
-            for (i, ev) in events.enumerated() {
-                guard case .note = ev.base else { continue }
-                let x = layoutX[i]
-                let y = layoutY[i]
-                let rx = Int(4.8 * zoom)
-                let ry = Int(3.2 * zoom)
-                r.fillEllipse(cx: Int(x), cy: Int(y), rx: rx, ry: ry, color: i == selected ? 0xFF3366FF : 0x000000FF)
+            for (index, event) in events.enumerated() {
+                guard case .note = event.base else { continue }
+                let xPosition = layoutXPositions[index]
+                let yPosition = layoutYPositions[index]
+                let radiusX = Int(4.8 * zoom)
+                let radiusY = Int(3.2 * zoom)
+                renderer.fillEllipse(cx: Int(xPosition), cy: Int(yPosition), rx: radiusX, ry: radiusY, color: index == selected ? 0xFF3366FF : 0x000000FF)
                 let midY = paddingTop + staffSpacing * 2.0
-                let stemUp = y >= midY
-                let stemLen = staffSpacing * 3.5
-                let x1 = stemUp ? (Int(x) + rx - 1) : (Int(x) - rx + 1)
-                let y1 = Int(y)
-                let y2 = stemUp ? Int(y - stemLen) : Int(y + stemLen)
-                r.drawLine(x0: x1, y0: y1, x1: x1, y1: y2, color: 0x000000FF)
+                let stemUp = yPosition >= midY
+                let stemLength = staffSpacing * 3.5
+                let xStart = stemUp ? (Int(xPosition) + radiusX - 1) : (Int(xPosition) - radiusX + 1)
+                let yStart = Int(yPosition)
+                let yEnd = stemUp ? Int(yPosition - stemLength) : Int(yPosition + stemLength)
+                renderer.drawLine(x0: xStart, y0: yStart, x1: xStart, y1: yEnd, color: 0x000000FF)
             }
             // Barlines
             let topY = Int(paddingTop - staffSpacing * 0.5)
             let bottomY = Int(paddingTop + staffSpacing * 4.0 + staffSpacing * 0.5)
-            for bx in barX { r.drawLine(x0: Int(bx), y0: topY, x1: Int(bx), y1: bottomY, color: 0x000000FF) }
-            r.present()
+            for barXPosition in barXPositions { renderer.drawLine(x0: Int(barXPosition), y0: topY, x1: Int(barXPosition), y1: bottomY, color: 0x000000FF) }
+            renderer.present()
         }
 
-        controller.draw = { r, frame in drawScene(r, frame) }
-        controller.onEvent = { ev in
-            switch ev {
+        controller.draw = { renderer, frame in drawScene(renderer, frame) }
+        controller.onEvent = { event in
+            switch event {
             case let .keyDown(keyCode: code):
                 switch code {
                 case 37: // Left

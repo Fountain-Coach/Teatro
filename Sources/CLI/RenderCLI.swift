@@ -12,7 +12,7 @@ import Darwin
 
 public struct Debounce: Sendable {
     public static let none = Debounce.milliseconds(0)
-    public static func milliseconds(_ ms: Int) -> Debounce { Debounce(interval: .milliseconds(ms)) }
+    public static func milliseconds(_ milliseconds: Int) -> Debounce { Debounce(interval: .milliseconds(milliseconds)) }
     public let interval: DispatchTimeInterval
 }
 
@@ -122,9 +122,9 @@ public struct RenderCLI: ParsableCommand {
             let envIMG = ProcessInfo.processInfo.environment["TEATRO_IMAGE_WIDTH"].flatMap(Int.init)
             effectiveWidth = envSVG ?? envIMG
         }
-        if let w = effectiveWidth {
-            setenv("TEATRO_SVG_WIDTH", String(w), 1)
-            setenv("TEATRO_IMAGE_WIDTH", String(w), 1)
+        if let widthValue = effectiveWidth {
+            setenv("TEATRO_SVG_WIDTH", String(widthValue), 1)
+            setenv("TEATRO_IMAGE_WIDTH", String(widthValue), 1)
         }
 
         var effectiveHeight = height
@@ -133,9 +133,9 @@ public struct RenderCLI: ParsableCommand {
             let envIMG = ProcessInfo.processInfo.environment["TEATRO_IMAGE_HEIGHT"].flatMap(Int.init)
             effectiveHeight = envSVG ?? envIMG
         }
-        if let h = effectiveHeight {
-            setenv("TEATRO_SVG_HEIGHT", String(h), 1)
-            setenv("TEATRO_IMAGE_HEIGHT", String(h), 1)
+        if let heightValue = effectiveHeight {
+            setenv("TEATRO_SVG_HEIGHT", String(heightValue), 1)
+            setenv("TEATRO_IMAGE_HEIGHT", String(heightValue), 1)
         }
 
         try render(view: view, target: target, outputPath: output)
@@ -270,25 +270,25 @@ public struct RenderCLI: ParsableCommand {
     @discardableResult
     func watchRTPMIDI(group: Int, savePath: String?) throws -> AnyObject {
         #if os(Linux)
-        let sock = Glibc.socket(AF_INET, Int32(SOCK_DGRAM.rawValue), 0)
+        let udpSocket = Glibc.socket(AF_INET, Int32(SOCK_DGRAM.rawValue), 0)
         #else
-        let sock = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
+        let udpSocket = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
         #endif
-        guard sock >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
+        guard udpSocket >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
 
         var addr = sockaddr_in()
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = in_port_t(UInt16(5004).bigEndian)
         addr.sin_addr = in_addr(s_addr: INADDR_ANY)
-        let bindRes = withUnsafePointer(to: &addr) {
+        let bindResult = withUnsafePointer(to: &addr) {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { ptr in
-                bind(sock, ptr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                bind(udpSocket, ptr, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        guard bindRes == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
+        guard bindResult == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
 
         let queue = DispatchQueue(label: "teatro.rtpmidi.\(UUID().uuidString)")
-        let source = DispatchSource.makeReadSource(fileDescriptor: sock, queue: queue)
+        let source = DispatchSource.makeReadSource(fileDescriptor: udpSocket, queue: queue)
         var saveHandle: FileHandle?
         if let path = savePath {
             _ = FileManager.default.createFile(atPath: path, contents: nil)
@@ -296,9 +296,9 @@ public struct RenderCLI: ParsableCommand {
         }
         source.setEventHandler { [self] in
             var buffer = [UInt8](repeating: 0, count: 2048)
-            let n = read(sock, &buffer, buffer.count)
-            if n > 0 {
-                let data = Data(buffer[0..<n])
+            let bytesRead = read(udpSocket, &buffer, buffer.count)
+            if bytesRead > 0 {
+                let data = Data(buffer[0..<bytesRead])
                 if Int(buffer[0] & 0x0F) == group {
                     if let saveHandle = saveHandle {
                         saveHandle.write(data)
@@ -314,7 +314,7 @@ public struct RenderCLI: ParsableCommand {
             }
         }
         source.setCancelHandler {
-            close(sock)
+            close(udpSocket)
             saveHandle?.closeFile()
         }
         source.resume()
@@ -343,11 +343,11 @@ public struct RenderCLI: ParsableCommand {
         #else
         let fileURL = URL(fileURLWithPath: path)
         let dirURL = fileURL.deletingLastPathComponent()
-        let fd = open(dirURL.path, O_EVTONLY)
-        guard fd >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
+        let directoryFd = open(dirURL.path, O_EVTONLY)
+        guard directoryFd >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil) }
         let queue = DispatchQueue(label: "teatro.watch.\(UUID().uuidString)")
         let mask: DispatchSource.FileSystemEvent = [.write, .rename, .delete]
-        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: mask, queue: queue)
+        let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryFd, eventMask: mask, queue: queue)
         var workItem: DispatchWorkItem?
         source.setEventHandler { [self] in
             workItem?.cancel()
@@ -361,7 +361,7 @@ public struct RenderCLI: ParsableCommand {
             queue.asyncAfter(deadline: .now() + debounce.interval, execute: item)
         }
         source.setCancelHandler {
-            close(fd)
+            close(directoryFd)
         }
         source.resume()
         return WatchToken(source: source)

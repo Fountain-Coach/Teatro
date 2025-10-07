@@ -124,8 +124,8 @@ public enum TeatroRenderer {
     private static func dataFromWords(_ words: [UInt32]) -> Data {
         var data = Data(capacity: words.count * 4)
         for word in words {
-            var be = word.bigEndian
-            withUnsafeBytes(of: &be) { buffer in
+            var bigEndianWord = word.bigEndian
+            withUnsafeBytes(of: &bigEndianWord) { buffer in
                 data.append(buffer.bindMemory(to: UInt8.self))
             }
         }
