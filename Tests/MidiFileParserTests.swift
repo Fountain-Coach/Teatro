@@ -1,4 +1,5 @@
 import Foundation
+// swiftlint:disable type_body_length
 import XCTest
 @testable import Teatro
 
@@ -518,4 +519,5 @@ final class MidiFileParserTests: XCTestCase {
         }
     }
 }
+// swiftlint:enable type_body_length
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.

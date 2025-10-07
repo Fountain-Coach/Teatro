@@ -1,3 +1,4 @@
+// swiftlint:disable large_tuple
 import XCTest
 import MIDI2
 @testable import Teatro
@@ -122,3 +123,4 @@ final class MIDI1BridgeTests: XCTestCase {
         }
     }
 }
+// swiftlint:enable large_tuple

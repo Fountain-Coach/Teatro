@@ -322,7 +322,13 @@ public struct RenderCLI: ParsableCommand {
     }
 
     @discardableResult
-    func watchFile(path: String, target: RendererPlugin.Type, outputPath: String?, debounce: Debounce = .milliseconds(300), onChange: @escaping @Sendable (URL) -> Void = { _ in }) throws -> AnyObject {
+    func watchFile(
+        path: String,
+        target: RendererPlugin.Type,
+        outputPath: String?,
+        debounce: Debounce = .milliseconds(300),
+        onChange: @escaping @Sendable (URL) -> Void = { _ in }
+    ) throws -> AnyObject {
         #if os(Linux)
         var last = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? Date.distantPast
         let queue = DispatchQueue(label: "teatro.watch.\(UUID().uuidString)")

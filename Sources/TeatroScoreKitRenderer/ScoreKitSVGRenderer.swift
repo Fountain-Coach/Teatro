@@ -98,7 +98,18 @@ public final class ScoreView: Renderable {
     private var barX: [Double] = []
     public var params: LayoutParams
 
-    public init(events: [NotatedEvent], clef: ClefType = .treble, beatsPerBar: Int = 4, beatUnit: Int = 4, staffSpacing: Double = 10, paddingTop: Double = 20, paddingLeft: Double = 20, width: Int = 800, height: Int = 200, params: LayoutParams = .init()) {
+    public init(
+        events: [NotatedEvent],
+        clef: ClefType = .treble,
+        beatsPerBar: Int = 4,
+        beatUnit: Int = 4,
+        staffSpacing: Double = 10,
+        paddingTop: Double = 20,
+        paddingLeft: Double = 20,
+        width: Int = 800,
+        height: Int = 200,
+        params: LayoutParams = .init()
+    ) {
         self.events = events
         self.clef = clef
         self.beatsPerBar = beatsPerBar
