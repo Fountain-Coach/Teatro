@@ -343,12 +343,9 @@ private func renderScoreKitA4(text: String, width: Int, height: Int, systems: In
     let printableHeight = max(100, height - 2 * marginY)
     let systemHeight = max(120, printableHeight / max(1, systems))
     let renderer = SimpleRenderer(); var opts = LayoutOptions(); opts.padding = .init(width: 16, height: 16)
-    let perSystem = max(1, events.count / max(1, systems))
-    for line in 0..<systems {
-        let lo = line * perSystem
-        let hi = min(events.count, (line + 1) * perSystem)
-        guard lo < hi else { continue }
-        let slice = Array(events[lo..<hi])
+    let ts = inferTimeSignature(from: text) ?? (4,4)
+    let slices = splitByBars(events: events, systems: systems, beatsPerBar: ts.0, beatUnit: ts.1)
+    for (line, slice) in slices.enumerated() {
         let tree = renderer.layout(events: slice, in: CGRect(x: 0, y: 0, width: printableWidth, height: systemHeight), options: opts)
         ctx.saveGState(); ctx.translateBy(x: CGFloat(marginX), y: CGFloat(marginY + line * systemHeight));
         renderer.draw(tree, in: ctx, options: opts)
@@ -370,4 +367,42 @@ private func renderLilyA4(text: String, width: Int, height: Int) -> CGImage? {
         if let pdf = artifacts.pdfURL { return rasterizePDF(pdfURL: pdf, width: width, height: height) }
     } catch { }
     return nil
+}
+
+// Shared helpers (simple copies used here to avoid cross-target deps)
+private func inferTimeSignature(from text: String) -> (Int, Int)? {
+    guard let r = text.range(of: "\\time ") else { return nil }
+    let tail = text[r.upperBound...]
+    var nums = ""; var dens = ""; var sawSlash = false
+    for ch in tail {
+        if ch.isNumber { if sawSlash { dens.append(ch) } else { nums.append(ch) } }
+        else if ch == "/" { sawSlash = true }
+        else if !ch.isWhitespace { break }
+    }
+    if let n = Int(nums), let d = Int(dens), n > 0, d > 0 { return (n, d) }
+    return nil
+}
+
+private func splitByBars(events: [NotatedEvent], systems: Int, beatsPerBar: Int, beatUnit: Int) -> [[NotatedEvent]] {
+    guard !events.isEmpty, systems > 0 else { return [] }
+    var totalBars = 0
+    var acc: Double = 0
+    for e in events { acc += eventBeats(e, beatUnit: beatUnit); while acc + 1e-9 >= Double(beatsPerBar) { totalBars += 1; acc -= Double(beatsPerBar) } }
+    if acc > 1e-9 { totalBars += 1 }
+    let barsPerSystem = max(1, Int(ceil(Double(totalBars) / Double(systems))))
+    var slices: [[NotatedEvent]] = []
+    var curr: [NotatedEvent] = []; var barsInCurr = 0; acc = 0
+    for e in events {
+        curr.append(e); acc += eventBeats(e, beatUnit: beatUnit)
+        if acc + 1e-9 >= Double(beatsPerBar) { barsInCurr += 1; acc -= Double(beatsPerBar); if barsInCurr >= barsPerSystem { slices.append(curr); curr = []; barsInCurr = 0 } }
+    }
+    if !curr.isEmpty { slices.append(curr) }
+    return slices
+}
+
+private func eventBeats(_ e: NotatedEvent, beatUnit: Int) -> Double {
+    switch e.base {
+    case .note(_, let d): return Double(max(1, d.num)) * Double(beatUnit) / Double(max(1, d.den))
+    case .rest(let d): return Double(max(1, d.num)) * Double(beatUnit) / Double(max(1, d.den))
+    }
 }
