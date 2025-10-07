@@ -6,17 +6,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - uses: actions/setup-swift@v1
+      - name: Set up Swift toolchain
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.0'
       - name: SwiftLint
         uses: norio-nomura/action-swiftlint@3.2.1
       - name: Build and test
-        run: swift test
+        run: swift test -c debug --parallel
       - name: Generate CLI reference
         run: swift package plugin generate-docc-reference
       - name: Verify committed CLI docs are current
