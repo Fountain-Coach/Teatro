@@ -13,75 +13,156 @@ struct CompareCLI: ParsableCommand {
         abstract: "Compare Lily (ground truth) vs ScoreKit renderer outputs and compute RMSE."
     )
 
-    @Option(name: [.short, .long], help: "Input LilyPond .ly file")
-    var ly: String
+    @Option(name: [.short, .long], help: "Input LilyPond .ly file (or use --fixtures-dir)")
+    var ly: String?
 
     @Option(name: [.short, .long], help: "Output directory")
     var outDir: String = "compare_out"
 
     @Option(name: [.customShort("W"), .long], help: "Target width for outputs")
     var width: Int = 800
+    
+    @Option(name: .long, help: "Directory of .ly fixtures to batch compare")
+    var fixturesDir: String?
+    
+    @Flag(name: .long, help: "Run simple parameter optimization to minimize RMSE")
+    var optimize: Bool = false
 
     func run() throws {
         let outURL = URL(fileURLWithPath: outDir)
         try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
 
-        // Load Lily source
-        let lyURL = URL(fileURLWithPath: ly)
+        let lyFiles: [URL]
+        if let dir = fixturesDir {
+            let dirURL = URL(fileURLWithPath: dir)
+            let contents = try FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil).filter { $0.pathExtension.lowercased() == "ly" }
+            guard !contents.isEmpty else { throw ValidationError("No .ly files in \(dir)") }
+            lyFiles = contents.sorted { $0.lastPathComponent < $1.lastPathComponent }
+        } else if let ly = ly {
+            lyFiles = [URL(fileURLWithPath: ly)]
+        } else {
+            throw ValidationError("Provide --ly or --fixtures-dir")
+        }
+
+        var params = ScoreView.LayoutParams()
+        if optimize {
+            if let learned = try optimizeParams(files: lyFiles, width: width, outURL: outURL) {
+                params = learned
+                try saveParams(learned, to: outURL.appendingPathComponent("params.json"))
+                print("Saved learned params to params.json")
+            }
+        }
+
+        var results: [(name: String, rmse: Double?)] = []
+        for file in lyFiles {
+            do {
+                let res = try processSingle(lyURL: file, width: width, outURL: outURL.appendingPathComponent(file.deletingPathExtension().lastPathComponent), params: params)
+                results.append((file.lastPathComponent, res))
+            } catch {
+                print("[WARN] Failed \(file.lastPathComponent): \(error)")
+            }
+        }
+        if !results.isEmpty {
+            let valid = results.compactMap { $0.rmse }
+            if !valid.isEmpty {
+                let avg = valid.reduce(0, +) / Double(valid.count)
+                print(String(format: "Average RMSE over %d files: %.6f", valid.count, avg))
+            }
+        }
+    }
+
+    private func processSingle(lyURL: URL, width: Int, outURL: URL, params: ScoreView.LayoutParams) throws -> Double? {
+        try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
         let lyText = try String(contentsOf: lyURL, encoding: .utf8)
-
-        // Parse using ScoreKit and build a ScoreView
         let events = LilyParser.parse(source: lyText)
-        let scoreView = ScoreView(events: events, width: width, height: 200)
-
-        // Produce ScoreKit SVG and PNG
+        let staffSpacing = 10.0
+        let height = Int(20 + staffSpacing * 5 + 40)
+        let scoreView = ScoreView(events: events, width: width, height: height, params: params)
         let scorekitSVG = ScoreKitSVGRenderer.renderScore(scoreView)
         let scorekitSVGPath = outURL.appendingPathComponent("scorekit.svg").path
         try scorekitSVG.write(toFile: scorekitSVGPath, atomically: true, encoding: .utf8)
-
         let scorekitPNGPath = outURL.appendingPathComponent("scorekit.png").path
         try ScoreKitPNGRasterizer.renderPNG(score: scoreView, to: scorekitPNGPath)
 
-        // Produce Lily SVG via LilySession (if lilypond available)
         var lilySVGPath: String? = nil
         do {
             let artifacts = try LilySession().render(lySource: lyText, execute: true, formats: [.svg])
             lilySVGPath = artifacts.svgURLs.first?.path
         } catch {
-            print("[WARN] LilyPond execution failed: \(error). Skipping Lily reference.")
+            print("[WARN] LilyPond execution failed: \(error). Skipping Lily reference for \(lyURL.lastPathComponent).")
         }
-
-        // If rsvg-convert available and Lily SVG exists, produce Lily PNG with matching dimensions
         var lilyPNGPath: String? = nil
         if let lilySVG = lilySVGPath, let rsvg = which("rsvg-convert") ?? which("/opt/homebrew/bin/rsvg-convert") {
             let outPNG = outURL.appendingPathComponent("lily.png").path
-            let h = 200 // crude default height; match ScoreKitPNGRasterizer's default for empty score
-            _ = shell([rsvg, "-w", String(width), "-h", String(h), "-o", outPNG, lilySVG])
-            if FileManager.default.fileExists(atPath: outPNG) {
-                lilyPNGPath = outPNG
-            }
-        } else {
-            if lilySVGPath != nil {
-                print("[INFO] rsvg-convert not found. Lily SVG available at \(lilySVGPath!). Convert to PNG manually for RMSE.")
-            }
+            _ = shell([rsvg, "-w", String(width), "-h", String(height), "-o", outPNG, lilySVG])
+            if FileManager.default.fileExists(atPath: outPNG) { lilyPNGPath = outPNG }
+        } else if lilySVGPath != nil {
+            print("[INFO] rsvg-convert not found. Lily SVG available at \(lilySVGPath!). Convert to PNG manually for RMSE.")
         }
-
-        // Compute RMSE if both PNGs are present
+        var rmse: Double? = nil
         if let lilyPNG = lilyPNGPath {
-            if let (rmse, heat) = try compareRMSE(aPath: lilyPNG, bPath: scorekitPNGPath) {
-                let heatPath = outURL.appendingPathComponent("heatmap.png").path
-                try savePNG(image: heat, to: heatPath)
-                print(String(format: "RMSE: %.6f", rmse))
-                print("Wrote heatmap to \(heatPath)")
-            } else {
-                print("[WARN] Could not load PNGs for RMSE.")
+            if let (val, heat) = try compareRMSE(aPath: lilyPNG, bPath: scorekitPNGPath) {
+                rmse = val
+                try savePNG(image: heat, to: outURL.appendingPathComponent("heatmap.png").path)
             }
-        } else {
-            print("[INFO] Skipped RMSE — Lily PNG missing.")
         }
-
         print("Outputs in \(outURL.path)")
+        if let rmse = rmse { print(String(format: "RMSE: %.6f", rmse)) }
+        return rmse
     }
+
+    private func optimizeParams(files: [URL], width: Int, outURL: URL) throws -> ScoreView.LayoutParams? {
+        let quarters: [Double] = [26, 28, 30]
+        let eighths: [Double] = [20, 22, 24]
+        let sixteenths: [Double] = [16, 18, 20]
+        let radii: [Double] = [3.5, 4.0, 4.5]
+        var best: (params: ScoreView.LayoutParams, rmse: Double)? = nil
+        let subset = Array(files.prefix(5))
+        for q in quarters {
+            for e in eighths {
+                for s in sixteenths {
+                    for r in radii {
+                        var params = ScoreView.LayoutParams()
+                        params.advanceForDenom[4] = q
+                        params.advanceForDenom[8] = e
+                        params.advanceForDenom[16] = s
+                        params.noteRadius = r
+                        let avg = try averageRMSE(files: subset, width: width, params: params, outURL: outURL)
+                        if let cur = best {
+                            if let avg = avg, avg < cur.rmse { best = (params, avg) }
+                        } else if let avg = avg {
+                            best = (params, avg)
+                        }
+                    }
+                }
+            }
+        }
+        if let best = best {
+            print(String(format: "Best RMSE: %.6f with params: q=%.1f e=%.1f s=%.1f r=%.1f", best.rmse, best.params.advanceForDenom[4] ?? 0, best.params.advanceForDenom[8] ?? 0, best.params.advanceForDenom[16] ?? 0, best.params.noteRadius))
+            return best.params
+        }
+        return nil
+    }
+
+    private func averageRMSE(files: [URL], width: Int, params: ScoreView.LayoutParams, outURL: URL) throws -> Double? {
+        var acc: Double = 0
+        var n: Int = 0
+        for file in files {
+            let tmp = outURL.appendingPathComponent("__opt__").appendingPathComponent(file.deletingPathExtension().lastPathComponent)
+            try? FileManager.default.removeItem(at: tmp)
+            let res = try processSingle(lyURL: file, width: width, outURL: tmp, params: params)
+            if let r = res { acc += r; n += 1 }
+        }
+        guard n > 0 else { return nil }
+        return acc / Double(n)
+    }
+}
+
+private func saveParams(_ params: ScoreView.LayoutParams, to url: URL) throws {
+    struct Enc: Codable { let advanceForDenom: [Int: Double]; let defaultAdvance: Double; let noteRadius: Double }
+    let e = Enc(advanceForDenom: params.advanceForDenom, defaultAdvance: params.defaultAdvance, noteRadius: params.noteRadius)
+    let data = try JSONEncoder().encode(e)
+    try data.write(to: url)
 }
 
 // MARK: - Utilities

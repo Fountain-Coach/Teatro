@@ -50,6 +50,17 @@ public struct ScoreKitSVGRenderer: RendererPlugin {
 
 // Renderable wrapper for ScoreKit events with calibrated layout positions.
 public final class ScoreView: Renderable {
+    // Tunable layout parameters for optimization/learning.
+    public struct LayoutParams: Sendable {
+        public var advanceForDenom: [Int: Double]
+        public var defaultAdvance: Double
+        public var noteRadius: Double
+        public init(advanceForDenom: [Int: Double] = [1: 60, 2: 40, 4: 28, 8: 22, 16: 18], defaultAdvance: Double = 20, noteRadius: Double = 4.0) {
+            self.advanceForDenom = advanceForDenom
+            self.defaultAdvance = defaultAdvance
+            self.noteRadius = noteRadius
+        }
+    }
     public let events: [NotatedEvent]
     public let clef: ClefType
     public let beatsPerBar: Int
@@ -59,11 +70,12 @@ public final class ScoreView: Renderable {
     public let paddingLeft: Double
     public let width: Int
     public let height: Int
-    public let noteRadius: Double = 4.0
+    public var noteRadius: Double { params.noteRadius }
     private var layoutX: [Double] = []
     private var layoutY: [Double] = []
+    public var params: LayoutParams
 
-    public init(events: [NotatedEvent], clef: ClefType = .treble, beatsPerBar: Int = 4, beatUnit: Int = 4, staffSpacing: Double = 10, paddingTop: Double = 20, paddingLeft: Double = 20, width: Int = 800, height: Int = 200) {
+    public init(events: [NotatedEvent], clef: ClefType = .treble, beatsPerBar: Int = 4, beatUnit: Int = 4, staffSpacing: Double = 10, paddingTop: Double = 20, paddingLeft: Double = 20, width: Int = 800, height: Int = 200, params: LayoutParams = .init()) {
         self.events = events
         self.clef = clef
         self.beatsPerBar = beatsPerBar
@@ -73,6 +85,7 @@ public final class ScoreView: Renderable {
         self.paddingLeft = paddingLeft
         self.width = width
         self.height = height
+        self.params = params
         computeLayout()
     }
 
@@ -86,7 +99,7 @@ public final class ScoreView: Renderable {
             let e = events[i]
             switch e.base {
             case .note(let p, _):
-                let y = yForPitch(p, clef: clef, originY: paddingTop, staffSpacing: staffSpacing)
+                let y = ScoreKit.StaffCoords.y(for: p, clef: clef, originY: paddingTop, staffSpacing: staffSpacing)
                 layoutX[i] = x
                 layoutY[i] = y
                 x += advance(for: e)
@@ -103,7 +116,7 @@ public final class ScoreView: Renderable {
     private func advance(for e: NotatedEvent) -> Double {
         switch e.base {
         case .note(_, let d), .rest(let d):
-            switch d.den { case 1: return 60; case 2: return 40; case 4: return 28; case 8: return 22; case 16: return 18; default: return 20 }
+            return params.advanceForDenom[d.den] ?? params.defaultAdvance
         }
     }
     private func beatFraction(for e: NotatedEvent) -> Double {
@@ -127,35 +140,4 @@ extension ScoreView {
     public func layoutPoint(at i: Int) -> (Double, Double) { self.pointForIndex(i) }
 }
 
-// MARK: - Minimal staff coordinate mapping (duplicate of ScoreKitUI/Rendering/Coords.swift semantics)
-extension ScoreView {
-    private func diatonicIndex(_ p: Pitch) -> Int {
-        let stepIndex: Int
-        switch p.step {
-        case .C: stepIndex = 0
-        case .D: stepIndex = 1
-        case .E: stepIndex = 2
-        case .F: stepIndex = 3
-        case .G: stepIndex = 4
-        case .A: stepIndex = 5
-        case .B: stepIndex = 6
-        }
-        return p.octave * 7 + stepIndex
-    }
-
-    private func topLineDI(for clef: ClefType) -> Int {
-        switch clef {
-        case .treble:
-            return 38 // F5
-        case .bass:
-            return 26 // A3
-        }
-    }
-
-    private func yForPitch(_ p: Pitch, clef: ClefType, originY: Double, staffSpacing: Double) -> Double {
-        let di = diatonicIndex(p)
-        let top = topLineDI(for: clef)
-        let pos = top - di // diatonic steps from top line
-        return originY + Double(pos) * (staffSpacing / 2.0)
-    }
-}
+// (StaffCoords now provided by ScoreKit.core)
