@@ -135,6 +135,14 @@ let package = Package(
             ],
             path: "Sources/TeatroPreviewDemo"
         ),
+        // macOS SwiftUI app for interactive ScoreKit preview
+        .executableTarget(
+            name: "ScoreKitPreviewApp",
+            dependencies: [
+                .product(name: "ScoreKit", package: "ScoreKit")
+            ],
+            path: "Sources/ScoreKitPreviewApp"
+        ),
 
         // MARK: - Tests
         .testTarget(
