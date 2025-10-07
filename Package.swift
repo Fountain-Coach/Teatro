@@ -22,7 +22,9 @@ let package = Package(
         .package(path: "Packages/TeatroCore"),
         .package(path: "Packages/TeatroAudio"),
         .package(path: "Packages/TeatroGUI"),
-        .package(path: "Packages/TeatroTelemetry")
+        .package(path: "Packages/TeatroTelemetry"),
+        // ScoreKit for music model + utilities
+        .package(url: "https://github.com/Fountain-Coach/ScoreKit.git", branch: "main")
     ],
     targets: [
         // No local Core/Audio/GUI/Telemetry targets; use local packages
@@ -45,6 +47,15 @@ let package = Package(
                     "-Xfrontend", "-warn-concurrency"
                 ], .when(configuration: .debug))
             ]
+        ),
+        // MARK: - ScoreKit renderer plugin (SVG)
+        .target(
+            name: "TeatroScoreKitRenderer",
+            dependencies: [
+                .product(name: "TeatroCore", package: "TeatroCore"),
+                .product(name: "ScoreKit", package: "ScoreKit")
+            ],
+            path: "Sources/TeatroScoreKitRenderer"
         ),
 
         // MARK: - CLI and API layers (unchanged dependencies on umbrella)
