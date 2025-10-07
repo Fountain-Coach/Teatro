@@ -18,9 +18,9 @@ final class FountainSSEReliabilityTests: XCTestCase {
 
         let receiver = FountainSSEReliability(windowSize: 8)
 
-        let env1 = FountainSSEEnvelope(ev: .message, seq: 1, data: "one".data(using: .utf8))
-        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: "two".data(using: .utf8))
-        let env3 = FountainSSEEnvelope(ev: .message, seq: 3, data: "three".data(using: .utf8))
+        let env1 = FountainSSEEnvelope(ev: .message, seq: 1, data: Data("one".utf8))
+        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: Data("two".utf8))
+        let env3 = FountainSSEEnvelope(ev: .message, seq: 3, data: Data("three".utf8))
 
         await sender.sent(env1, at: Date(timeIntervalSince1970: 0))
         await sender.sent(env2, at: Date(timeIntervalSince1970: 0))
@@ -79,4 +79,3 @@ private actor MetricsStore {
     func addLoss(_ v: UInt64) { losses.append(v) }
     func addDepth(_ v: Int) { depths.append(v) }
 }
-

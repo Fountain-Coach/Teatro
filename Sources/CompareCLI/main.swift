@@ -114,14 +114,14 @@ struct CompareCLI: ParsableCommand {
         let scorekitPNGPath = outURL.appendingPathComponent("scorekit.png").path
         try ScoreKitPNGRasterizer.renderPNG(score: scoreView, to: scorekitPNGPath)
 
-        var lilySVGPath: String? = nil
+        var lilySVGPath: String?
         do {
             let artifacts = try LilySession().render(lySource: lyText, execute: true, formats: [.svg])
             lilySVGPath = artifacts.svgURLs.first?.path
         } catch {
             if !quiet { print("[WARN] LilyPond execution failed: \(error). Skipping Lily reference for \(lyURL.lastPathComponent).") }
         }
-        var lilyPNGPath: String? = nil
+        var lilyPNGPath: String?
         if let lilySVG = lilySVGPath, let rsvg = which("rsvg-convert") ?? which("/opt/homebrew/bin/rsvg-convert") {
             let outPNG = outURL.appendingPathComponent("lily.png").path
             _ = shell([rsvg, "-w", String(width), "-h", String(height), "-o", outPNG, lilySVG])
@@ -129,7 +129,7 @@ struct CompareCLI: ParsableCommand {
         } else if lilySVGPath != nil {
             if log { print("[INFO] rsvg-convert not found. Lily SVG available at \(lilySVGPath!). Convert to PNG manually for RMSE.") }
         }
-        var rmse: Double? = nil
+        var rmse: Double?
         if let lilyPNG = lilyPNGPath {
             if let (val, heat) = try compareRMSE(aPath: lilyPNG, bPath: scorekitPNGPath) {
                 rmse = val

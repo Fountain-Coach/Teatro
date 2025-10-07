@@ -3,6 +3,7 @@ import Teatro
 import TeatroGUI
 import ScoreKit
 
+// swiftlint:disable function_body_length
 public enum ScoreKitPreview {
     public static func attach(to controller: TeatroPreviewController, events: [NotatedEvent]) {
         var zoom: Double = 1.0
@@ -18,7 +19,15 @@ public enum ScoreKitPreview {
 
         func diatonicIndex(_ pitch: Pitch) -> Int {
             let stepIndex: Int
-            switch pitch.step { case .C: stepIndex = 0; case .D: stepIndex = 1; case .E: stepIndex = 2; case .F: stepIndex = 3; case .G: stepIndex = 4; case .A: stepIndex = 5; case .B: stepIndex = 6 }
+            switch pitch.step {
+            case .C: stepIndex = 0
+            case .D: stepIndex = 1
+            case .E: stepIndex = 2
+            case .F: stepIndex = 3
+            case .G: stepIndex = 4
+            case .A: stepIndex = 5
+            case .B: stepIndex = 6
+            }
             return pitch.octave * 7 + stepIndex
         }
         func topLineDI(for clef: ClefType) -> Int { clef == .treble ? 38 : 26 }
@@ -115,3 +124,4 @@ public enum ScoreKitPreview {
         }
     }
 }
+// swiftlint:enable function_body_length

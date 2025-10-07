@@ -8,7 +8,7 @@ final class FountainSSEDispatcherTests: XCTestCase {
         let dispatcher = FountainSSEDispatcher()
 
         // Sequence 2 arrives first as a complete Flex packet.
-        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: "World".data(using: .utf8))
+        let env2 = FountainSSEEnvelope(ev: .message, seq: 2, data: Data("World".utf8))
         let seq2Data = try env2.encodeJSON()
 
         // Sequence 1 is fragmented across two SysEx8 packets delivered out of order.
@@ -16,13 +16,13 @@ final class FountainSSEDispatcherTests: XCTestCase {
             ev: .message,
             seq: 1,
             frag: .init(i: 1, n: 2),
-            data: "lo".data(using: .utf8)
+            data: Data("lo".utf8)
         )
         let fragA = FountainSSEEnvelope(
             ev: .message,
             seq: 1,
             frag: .init(i: 0, n: 2),
-            data: "Hel".data(using: .utf8)
+            data: Data("Hel".utf8)
         )
         let fragBData = try fragB.encodeJSON()
         let fragAData = try fragA.encodeJSON()
@@ -55,13 +55,13 @@ final class FountainSSEDispatcherTests: XCTestCase {
             ev: .message,
             seq: 1,
             frag: .init(i: 0, n: 2),
-            data: "Hel".data(using: .utf8)
+            data: Data("Hel".utf8)
         )
         let fragB = FountainSSEEnvelope(
             ev: .message,
             seq: 1,
             frag: .init(i: 1, n: 2),
-            data: "lo".data(using: .utf8)
+            data: Data("lo".utf8)
         )
         try await dispatcher.receiveSysEx8(fragA.encodeJSON())
         try await dispatcher.receiveSysEx8(fragB.encodeJSON())
@@ -74,4 +74,3 @@ final class FountainSSEDispatcherTests: XCTestCase {
         }
     }
 }
-
