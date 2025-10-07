@@ -63,10 +63,24 @@ let package = Package(
             name: "RenderCLI",
             dependencies: [
                 "Teatro",
+                // Register ScoreKit renderers via module import
+                "TeatroScoreKitRenderer",
+                .product(name: "ScoreKit", package: "ScoreKit"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SwiftToolsSupport", package: "swift-tools-support-core")
             ],
             path: "Sources/CLI"
+        ),
+        // Simple A/B compare CLI for lily ↔︎ ScoreKit outputs with RMSE
+        .executableTarget(
+            name: "CompareCLI",
+            dependencies: [
+                "Teatro",
+                "TeatroScoreKitRenderer",
+                .product(name: "ScoreKit", package: "ScoreKit"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ],
+            path: "Sources/CompareCLI"
         ),
         .executableTarget(
             name: "FountainCLI",

@@ -1,6 +1,8 @@
 import Foundation
 import ArgumentParser
 import Teatro
+import ScoreKit
+import TeatroScoreKitRenderer
 import Dispatch
 #if os(Linux)
 import Glibc
@@ -62,6 +64,10 @@ public struct RenderCLI: ParsableCommand {
     public init() {}
 
     public func run() throws {
+        // Ensure ScoreKit renderers are registered when this CLI is used
+        RendererRegistry.register(ScoreKitSVGRenderer.self)
+        RendererRegistry.register(ScoreKitPNGRasterizer.self)
+
         let inputPath = input ?? positionalInput
 
         if let replay = replayUMP {
@@ -102,9 +108,12 @@ public struct RenderCLI: ParsableCommand {
             return
         }
 
+        // Determine the target first so we can tailor input loading (e.g. ScoreKit views)
+        let target = try determineTarget()
+
         var view: Renderable = defaultView()
         if let path = inputPath {
-            view = try loadInput(path: path)
+            view = try loadInput(path: path, target: target)
         }
 
         var effectiveWidth = width
@@ -129,7 +138,6 @@ public struct RenderCLI: ParsableCommand {
             setenv("TEATRO_IMAGE_HEIGHT", String(h), 1)
         }
 
-        let target = try determineTarget()
         try render(view: view, target: target, outputPath: output)
 
         if watch, let path = inputPath {
@@ -178,7 +186,7 @@ public struct RenderCLI: ParsableCommand {
         }
     }
 
-    private func loadInput(path: String) throws -> Renderable {
+    private func loadInput(path: String, target: RendererPlugin.Type) throws -> Renderable {
         let url = URL(fileURLWithPath: path)
         let ext = url.pathExtension.lowercased()
         let fileData = try Data(contentsOf: url)
@@ -189,6 +197,11 @@ public struct RenderCLI: ParsableCommand {
             return FountainSceneView(fountainText: text)
         case "ly":
             let text = String(decoding: fileData, as: UTF8.self)
+            // If ScoreKit-based renderer requested, convert to ScoreView
+            if target.identifier == ScoreKitSVGRenderer.identifier || target.identifier == ScoreKitPNGRasterizer.identifier {
+                let events = LilyParser.parse(source: text)
+                return ScoreView(events: events)
+            }
             return LilyScore(text)
         case "csd":
             let text = String(decoding: fileData, as: UTF8.self)
@@ -319,7 +332,7 @@ public struct RenderCLI: ParsableCommand {
             let mod = (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date) ?? last
             if mod > last {
                 last = mod
-                if let view = try? loadInput(path: path) {
+                if let view = try? loadInput(path: path, target: target) {
                     try? render(view: view, target: target, outputPath: outputPath)
                 }
                 onChange(URL(fileURLWithPath: path))
@@ -339,7 +352,7 @@ public struct RenderCLI: ParsableCommand {
         source.setEventHandler { [self] in
             workItem?.cancel()
             let item = DispatchWorkItem { [self] in
-                if let view = try? loadInput(path: path) {
+                if let view = try? loadInput(path: path, target: target) {
                     try? render(view: view, target: target, outputPath: outputPath)
                 }
                 onChange(fileURL)
@@ -383,4 +396,3 @@ final class WatchToken {
 #endif
 
 // © 2025 Contexter alias Benedikt Eickhoff 🛡️ All rights reserved.
-

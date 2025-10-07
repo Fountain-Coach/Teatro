@@ -122,6 +122,10 @@ public final class ScoreView: Renderable {
 }
 
 // no extensions
+// Expose for same-package access by rasterizer and CLI
+extension ScoreView {
+    public func layoutPoint(at i: Int) -> (Double, Double) { self.pointForIndex(i) }
+}
 
 // MARK: - Minimal staff coordinate mapping (duplicate of ScoreKitUI/Rendering/Coords.swift semantics)
 extension ScoreView {
