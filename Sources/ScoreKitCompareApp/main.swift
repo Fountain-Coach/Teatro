@@ -59,14 +59,11 @@ struct CompareView: View {
             HStack(alignment: .top, spacing: 12) {
                 VStack {
                     Text("ScoreKit (\(scorekitImage == nil ? "no image" : "rendered"))").font(.caption)
-                    ZStack {
-                        ImageView(image: scorekitImage)
-                        if busy { ProgressView().controlSize(.large) }
-                    }
+                    PaperPage(image: scorekitImage)
                 }
                 VStack {
-                    Text("LilyPond (\(lilyImage == nil ? "no image" : "rendered"))").font(.caption)
-                    ImageView(image: showHeatmap ? heatmapImage : lilyImage)
+                    Text(lilyCaption()).font(.caption)
+                    PaperPage(image: showHeatmap ? heatmapImage : lilyImage)
                 }
             }
             .background(Color(nsColor: .textBackgroundColor))
@@ -80,6 +77,11 @@ struct CompareView: View {
             .padding(.horizontal, 8)
         }
         .onAppear(perform: bootstrapDefaultFixtures)
+    }
+
+    private func lilyCaption() -> String {
+        if lilyImage == nil { return "LilyPond (unavailable)" }
+        return "LilyPond (rendered)"
     }
 
     private func currentFileName() -> String {
@@ -228,6 +230,36 @@ private struct ImageView: NSViewRepresentable {
             nsView.image = nil
         }
         nsView.imageScaling = .scaleProportionallyUpOrDown
+    }
+}
+
+// A4 paper view that draws a page with aspect ratio sqrt(2) and fits the CGImage inside.
+private struct PaperPage: View {
+    let image: CGImage?
+    private let aspect: CGFloat = 1.41421356237
+    var body: some View {
+        GeometryReader { geo in
+            let avail = geo.size
+            let pageWidth = min(avail.width, avail.height / aspect)
+            let pageHeight = pageWidth * aspect
+            let pageSize = CGSize(width: pageWidth, height: pageHeight)
+            ZStack {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.white)
+                    .shadow(color: Color.black.opacity(0.06), radius: 1, x: 0, y: 1)
+                    .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.black.opacity(0.12), lineWidth: 1))
+                    .frame(width: pageSize.width, height: pageSize.height)
+                if let image {
+                    let ns = NSImage(cgImage: image, size: .init(width: image.width, height: image.height))
+                    Image(nsImage: ns)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: pageSize.width - 4, height: pageSize.height - 4)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .frame(minHeight: 200)
     }
 }
 
