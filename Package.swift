@@ -146,6 +146,16 @@ let package = Package(
             ],
             path: "Sources/ScoreKitCompareApp"
         ),
+        // Headless A4 page generator for fixtures (ScoreKit vs Lily)
+        .executableTarget(
+            name: "ScoreKitA4",
+            dependencies: [
+                .product(name: "ScoreKit", package: "ScoreKit"),
+                .product(name: "ScoreKitUI", package: "ScoreKit"),
+                "TeatroScoreKitRenderer"
+            ],
+            path: "Sources/ScoreKitA4"
+        ),
         // macOS SwiftUI app for interactive ScoreKit preview
         .executableTarget(
             name: "ScoreKitPreviewApp",

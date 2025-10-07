@@ -23,13 +23,20 @@ public struct ScoreKitPNGRasterizer: RendererPlugin {
         let width = max(score.width, 200)
         let height = max(score.height, Int(score.paddingTop + score.staffSpacing * 5 + 40))
 
+        // Layout first with a generous height to let renderer decide its own canvas size
+        var options = LayoutOptions()
+        let layoutRect = CGRect(x: 0, y: 0, width: width, height: height * 3)
+        let renderer = SimpleRenderer()
+        let tree = renderer.layout(events: score.events, in: layoutRect, options: options)
+        let outHeight = max(height, Int(ceil(tree.size.height)))
+
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.union(CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue))
         guard let context = CGContext(data: nil,
                                       width: width,
-                                      height: height,
+                                      height: outHeight,
                                       bitsPerComponent: 8,
                                       bytesPerRow: bytesPerRow,
                                       space: colorSpace,
@@ -39,12 +46,8 @@ public struct ScoreKitPNGRasterizer: RendererPlugin {
 
         // White background
         context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        // Use ScoreKitUI SimpleRenderer for higher-fidelity drawing (SMuFL glyphs, stems, ties, etc.)
-        var options = LayoutOptions()
-        let rect = CGRect(x: 0, y: 0, width: width, height: height)
-        let renderer = SimpleRenderer()
-        let tree = renderer.layout(events: score.events, in: rect, options: options)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: outHeight))
+        // Draw using SimpleRenderer if we have elements, otherwise fallback
         if tree.elements.isEmpty {
             // Fallback: very simple manual drawing so comparison isn't empty if fonts/features are missing
             context.setStrokeColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
