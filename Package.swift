@@ -152,7 +152,8 @@ let package = Package(
             dependencies: [
                 .product(name: "ScoreKit", package: "ScoreKit"),
                 .product(name: "ScoreKitUI", package: "ScoreKit"),
-                "TeatroScoreKitRenderer"
+                "TeatroScoreKitRenderer",
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             path: "Sources/ScoreKitA4"
         ),

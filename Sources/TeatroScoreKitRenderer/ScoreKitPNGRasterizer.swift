@@ -24,7 +24,7 @@ public struct ScoreKitPNGRasterizer: RendererPlugin {
         let height = max(score.height, Int(score.paddingTop + score.staffSpacing * 5 + 40))
 
         // Layout first with a generous height to let renderer decide its own canvas size
-        var options = LayoutOptions()
+        let options = LayoutOptions()
         let layoutRect = CGRect(x: 0, y: 0, width: width, height: height * 3)
         let renderer = SimpleRenderer()
         let tree = renderer.layout(events: score.events, in: layoutRect, options: options)
