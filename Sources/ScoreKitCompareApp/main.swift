@@ -114,6 +114,7 @@ struct CompareView: View {
         lilyFiles = files.filter { $0.pathExtension.lowercased() == "ly" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         selectedIndex = 0
+        renderSelected()
     }
 
     private func prevFile() { guard !lilyFiles.isEmpty else { return }; selectedIndex = max(0, selectedIndex - 1); renderSelected() }

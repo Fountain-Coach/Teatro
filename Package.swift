@@ -53,7 +53,8 @@ let package = Package(
             name: "TeatroScoreKitRenderer",
             dependencies: [
                 .product(name: "TeatroCore", package: "TeatroCore"),
-                .product(name: "ScoreKit", package: "ScoreKit")
+                .product(name: "ScoreKit", package: "ScoreKit"),
+                .product(name: "ScoreKitUI", package: "ScoreKit")
             ],
             path: "Sources/TeatroScoreKitRenderer"
         ),
