@@ -21,7 +21,7 @@ jobs:
       - name: Build and test
         run: swift test -c debug --parallel
       - name: Generate CLI reference
-        run: swift package plugin generate-docc-reference
+        run: swift package plugin generate-docc-reference --allow-writing-to-package-directory
       - name: Verify committed CLI docs are current
         run: diff -q Sources/CLI/RenderCLI.docc/render-cli.md Docs/CLI/RenderCLI.md
       - name: Validate CLI docs against OpenAPI
