@@ -135,6 +135,16 @@ let package = Package(
             ],
             path: "Sources/TeatroPreviewDemo"
         ),
+        // macOS SwiftUI app for interactive ScoreKit vs Lily comparison (RMSE/heatmap)
+        .executableTarget(
+            name: "ScoreKitCompareApp",
+            dependencies: [
+                .product(name: "ScoreKit", package: "ScoreKit"),
+                "TeatroRenderAPI",
+                "TeatroScoreKitRenderer"
+            ],
+            path: "Sources/ScoreKitCompareApp"
+        ),
         // macOS SwiftUI app for interactive ScoreKit preview
         .executableTarget(
             name: "ScoreKitPreviewApp",
