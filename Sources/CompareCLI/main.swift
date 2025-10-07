@@ -35,9 +35,16 @@ struct CompareCLI: ParsableCommand {
         let lyFiles: [URL]
         if let dir = fixturesDir {
             let dirURL = URL(fileURLWithPath: dir)
-            let contents = try FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil).filter { $0.pathExtension.lowercased() == "ly" }
-            guard !contents.isEmpty else { throw ValidationError("No .ly files in \(dir)") }
-            lyFiles = contents.sorted { $0.lastPathComponent < $1.lastPathComponent }
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil).filter { $0.pathExtension.lowercased() == "ly" }
+                guard !contents.isEmpty else { throw ValidationError("No .ly files in \(dir)") }
+                lyFiles = contents.sorted { $0.lastPathComponent < $1.lastPathComponent }
+            } catch {
+                // Helpful guidance when launched from a different CWD
+                let cwd = FileManager.default.currentDirectoryPath
+                let suggestion = URL(fileURLWithPath: cwd).appendingPathComponent("../AudioTalk/ScoreKit/Fixtures/Lily").standardized.path
+                throw ValidationError("Failed to open fixtures dir: \(dir) (cwd=\(cwd)). If you're in Github-Desktop/Teatro, try --fixtures-dir \(suggestion)")
+            }
         } else if let ly = ly {
             lyFiles = [URL(fileURLWithPath: ly)]
         } else {

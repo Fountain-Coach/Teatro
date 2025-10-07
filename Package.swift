@@ -39,7 +39,7 @@ let package = Package(
                 .product(name: "TeatroTelemetry", package: "TeatroTelemetry")
             ],
             path: "Sources/Teatro",
-            exclude: ["Core"],
+            exclude: [],
             swiftSettings: [
                 .unsafeFlags([
                     "-Xfrontend", "-strict-concurrency=complete",
