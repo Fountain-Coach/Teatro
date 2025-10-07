@@ -174,7 +174,14 @@ struct CompareCLI: ParsableCommand {
             }
         }
         if let bestResult = best {
-            print(String(format: "Best RMSE: %.6f with params: q=%.1f e=%.1f s=%.1f r=%.1f", bestResult.rmse, bestResult.params.advanceForDenom[4] ?? 0, bestResult.params.advanceForDenom[8] ?? 0, bestResult.params.advanceForDenom[16] ?? 0, bestResult.params.noteRadius))
+            print(String(
+                format: "Best RMSE: %.6f with params: q=%.1f e=%.1f s=%.1f r=%.1f",
+                bestResult.rmse,
+                bestResult.params.advanceForDenom[4] ?? 0,
+                bestResult.params.advanceForDenom[8] ?? 0,
+                bestResult.params.advanceForDenom[16] ?? 0,
+                bestResult.params.noteRadius
+            ))
             return bestResult.params
         }
         return nil
