@@ -28,6 +28,12 @@ struct CompareCLI: ParsableCommand {
     @Flag(name: .long, help: "Run simple parameter optimization to minimize RMSE")
     var optimize: Bool = false
 
+    @Flag(name: .long, help: "Reduce logging; only print summaries")
+    var quiet: Bool = false
+
+    @Flag(name: .long, help: "Keep artifacts produced during optimization grid search")
+    var keepOptArtifacts: Bool = false
+
     func run() throws {
         let outURL = URL(fileURLWithPath: outDir)
         try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
@@ -63,7 +69,11 @@ struct CompareCLI: ParsableCommand {
         var results: [(name: String, rmse: Double?)] = []
         for file in lyFiles {
             do {
-                let res = try processSingle(lyURL: file, width: width, outURL: outURL.appendingPathComponent(file.deletingPathExtension().lastPathComponent), params: params)
+                let res = try processSingle(lyURL: file,
+                                            width: width,
+                                            outURL: outURL.appendingPathComponent(file.deletingPathExtension().lastPathComponent),
+                                            params: params,
+                                            log: !quiet)
                 results.append((file.lastPathComponent, res))
             } catch {
                 print("[WARN] Failed \(file.lastPathComponent): \(error)")
@@ -74,11 +84,16 @@ struct CompareCLI: ParsableCommand {
             if !valid.isEmpty {
                 let avg = valid.reduce(0, +) / Double(valid.count)
                 print(String(format: "Average RMSE over %d files: %.6f", valid.count, avg))
+                // Persist metrics for later analysis
+                let metricsPath = outURL.appendingPathComponent("metrics.json")
+                let dict = Dictionary(uniqueKeysWithValues: results.compactMap { name, m in m.map { (name, $0) } })
+                try? writeJSON(dict, to: metricsPath)
+                print("Wrote metrics to \(metricsPath.path)")
             }
         }
     }
 
-    private func processSingle(lyURL: URL, width: Int, outURL: URL, params: ScoreView.LayoutParams) throws -> Double? {
+    private func processSingle(lyURL: URL, width: Int, outURL: URL, params: ScoreView.LayoutParams, log: Bool) throws -> Double? {
         try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
         let lyText = try String(contentsOf: lyURL, encoding: .utf8)
         let events = LilyParser.parse(source: lyText)
@@ -96,7 +111,7 @@ struct CompareCLI: ParsableCommand {
             let artifacts = try LilySession().render(lySource: lyText, execute: true, formats: [.svg])
             lilySVGPath = artifacts.svgURLs.first?.path
         } catch {
-            print("[WARN] LilyPond execution failed: \(error). Skipping Lily reference for \(lyURL.lastPathComponent).")
+            if !quiet { print("[WARN] LilyPond execution failed: \(error). Skipping Lily reference for \(lyURL.lastPathComponent).") }
         }
         var lilyPNGPath: String? = nil
         if let lilySVG = lilySVGPath, let rsvg = which("rsvg-convert") ?? which("/opt/homebrew/bin/rsvg-convert") {
@@ -104,7 +119,7 @@ struct CompareCLI: ParsableCommand {
             _ = shell([rsvg, "-w", String(width), "-h", String(height), "-o", outPNG, lilySVG])
             if FileManager.default.fileExists(atPath: outPNG) { lilyPNGPath = outPNG }
         } else if lilySVGPath != nil {
-            print("[INFO] rsvg-convert not found. Lily SVG available at \(lilySVGPath!). Convert to PNG manually for RMSE.")
+            if log { print("[INFO] rsvg-convert not found. Lily SVG available at \(lilySVGPath!). Convert to PNG manually for RMSE.") }
         }
         var rmse: Double? = nil
         if let lilyPNG = lilyPNGPath {
@@ -113,8 +128,10 @@ struct CompareCLI: ParsableCommand {
                 try savePNG(image: heat, to: outURL.appendingPathComponent("heatmap.png").path)
             }
         }
-        print("Outputs in \(outURL.path)")
-        if let rmse = rmse { print(String(format: "RMSE: %.6f", rmse)) }
+        if log {
+            print("Outputs in \(outURL.path)")
+            if let rmse = rmse { print(String(format: "RMSE: %.6f", rmse)) }
+        }
         return rmse
     }
 
@@ -125,15 +142,19 @@ struct CompareCLI: ParsableCommand {
         let radii: [Double] = [3.5, 4.0, 4.5]
         var best: (params: ScoreView.LayoutParams, rmse: Double)? = nil
         let subset = Array(files.prefix(5))
+        let total = quarters.count * eighths.count * sixteenths.count * radii.count
+        var idx = 0
         for q in quarters {
             for e in eighths {
                 for s in sixteenths {
                     for r in radii {
+                        idx += 1
                         var params = ScoreView.LayoutParams()
                         params.advanceForDenom[4] = q
                         params.advanceForDenom[8] = e
                         params.advanceForDenom[16] = s
                         params.noteRadius = r
+                        if !quiet { print(String(format: "[opt] %d/%d q=%.1f e=%.1f s=%.1f r=%.1f", idx, total, q, e, s, r)) }
                         let avg = try averageRMSE(files: subset, width: width, params: params, outURL: outURL)
                         if let cur = best {
                             if let avg = avg, avg < cur.rmse { best = (params, avg) }
@@ -155,10 +176,19 @@ struct CompareCLI: ParsableCommand {
         var acc: Double = 0
         var n: Int = 0
         for file in files {
-            let tmp = outURL.appendingPathComponent("__opt__").appendingPathComponent(file.deletingPathExtension().lastPathComponent)
+            let base: URL
+            if keepOptArtifacts {
+                base = outURL.appendingPathComponent("__opt__")
+            } else {
+                base = FileManager.default.temporaryDirectory.appendingPathComponent("teatro-opt-\(UUID().uuidString)")
+            }
+            let tmp = base.appendingPathComponent(file.deletingPathExtension().lastPathComponent)
             try? FileManager.default.removeItem(at: tmp)
-            let res = try processSingle(lyURL: file, width: width, outURL: tmp, params: params)
+            let res = try processSingle(lyURL: file, width: width, outURL: tmp, params: params, log: false)
             if let r = res { acc += r; n += 1 }
+            if !keepOptArtifacts {
+                try? FileManager.default.removeItem(at: base)
+            }
         }
         guard n > 0 else { return nil }
         return acc / Double(n)
@@ -271,4 +301,10 @@ func compareRMSE(aPath: String, bPath: String) throws -> (Double, CGImage)? {
                             intent: .defaultIntent)!
 
     return (rmse, heatImage)
+}
+
+// MARK: - JSON helper
+private func writeJSON(_ dict: [String: Double], to url: URL) throws {
+    let data = try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys])
+    try data.write(to: url)
 }
