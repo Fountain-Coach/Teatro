@@ -5,6 +5,7 @@ import ImageIO
 import PDFKit
 import UniformTypeIdentifiers
 import ScoreKit
+import ScoreKitUI
 import TeatroRenderAPI
 import TeatroScoreKitRenderer
 
@@ -30,6 +31,7 @@ struct CompareView: View {
     @State private var busy: Bool = false
     @State private var showHeatmap: Bool = false
     @State private var message: String = ""
+    @State private var exportingAll: Bool = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -44,6 +46,9 @@ struct CompareView: View {
                 Button("Prev", action: prevFile)
                 Button("Next", action: nextFile)
                 Button("Render", action: renderSelected)
+                Button(exportingAll ? "Exporting…" : "Render All (A4)") {
+                    Task { await renderAllA4() }
+                }.disabled(fixturesDirectory == nil || exportingAll)
             }
             .padding(.horizontal, 8)
 
@@ -177,6 +182,40 @@ struct CompareView: View {
             }
         }
     }
+
+    // MARK: - Export all fixtures to A4 PNGs beside the fixtures folder
+    @MainActor
+    private func renderAllA4() async {
+        guard let dir = fixturesDirectory else { return }
+        exportingAll = true; message = "Exporting all (A4)…"
+        let out = dir.appendingPathComponent("A4", isDirectory: true)
+        try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        let files = lilyFiles
+        let width = 595, height = 842 // A4 at 72 DPI
+        for f in files {
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    defer { cont.resume() }
+                    do {
+                        let text = try String(contentsOf: f, encoding: .utf8)
+                        // ScoreKit A4
+                        if let img = renderScoreKitA4(text: text, width: width, height: height, systems: 4, marginX: 36, marginY: 48) {
+                            let outURL = out.appendingPathComponent(f.deletingPathExtension().lastPathComponent + "_scorekit_a4.png")
+                            try? writePNG(img, to: outURL)
+                        }
+                        // Lily A4
+                        if let lily = renderLilyA4(text: text, width: width, height: height) {
+                            let outURL = out.appendingPathComponent(f.deletingPathExtension().lastPathComponent + "_lily_a4.png")
+                            try? writePNG(lily, to: outURL)
+                        }
+                    } catch {
+                        // ignore and continue
+                    }
+                }
+            }
+        }
+        exportingAll = false; message = "Exported A4 PNGs to \(out.path)"
+    }
 }
 
 private struct ImageView: NSViewRepresentable {
@@ -198,6 +237,13 @@ private func loadPNG(_ path: String) -> CGImage? {
     let url = URL(fileURLWithPath: path)
     guard let src = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
     return CGImageSourceCreateImageAtIndex(src, 0, nil)
+}
+
+private func writePNG(_ image: CGImage, to url: URL) throws {
+    let uti: CFString = UTType.png.identifier as CFString
+    guard let dest = CGImageDestinationCreateWithURL(url as CFURL, uti, 1, nil) else { return }
+    CGImageDestinationAddImage(dest, image, nil)
+    _ = CGImageDestinationFinalize(dest)
 }
 
 private func rasterizePDF(pdfURL: URL, width: Int, height: Int) -> CGImage? {
@@ -281,4 +327,47 @@ private func compareRMSE(lhs: CGImage, rhs: CGImage) -> (value: Double, heatmap:
                             intent: .defaultIntent)!
 
     return (rmse, heatImage)
+}
+
+// MARK: - A4 helpers (in-app)
+private func renderScoreKitA4(text: String, width: Int, height: Int, systems: Int, marginX: Int, marginY: Int) -> CGImage? {
+    let events = LilyParser.parse(source: text)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bytesPerPixel = 4
+    let bytesPerRow = width * bytesPerPixel
+    let bitmapInfo = CGBitmapInfo.byteOrder32Big.union(CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue))
+    guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo.rawValue) else { return nil }
+    ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    let printableWidth = max(100, width - 2 * marginX)
+    let printableHeight = max(100, height - 2 * marginY)
+    let systemHeight = max(120, printableHeight / max(1, systems))
+    let renderer = SimpleRenderer(); var opts = LayoutOptions(); opts.padding = .init(width: 16, height: 16)
+    let perSystem = max(1, events.count / max(1, systems))
+    for line in 0..<systems {
+        let lo = line * perSystem
+        let hi = min(events.count, (line + 1) * perSystem)
+        guard lo < hi else { continue }
+        let slice = Array(events[lo..<hi])
+        let tree = renderer.layout(events: slice, in: CGRect(x: 0, y: 0, width: printableWidth, height: systemHeight), options: opts)
+        ctx.saveGState(); ctx.translateBy(x: CGFloat(marginX), y: CGFloat(marginY + line * systemHeight));
+        renderer.draw(tree, in: ctx, options: opts)
+        ctx.restoreGState()
+    }
+    return ctx.makeImage()
+}
+
+private func renderLilyA4(text: String, width: Int, height: Int) -> CGImage? {
+    let lyA4 = """
+    \\version \"2.24.0\"
+    \\paper { #(set-paper-size \"a4\") }
+    { 
+    \(text)
+    }
+    """
+    do {
+        let artifacts = try LilySession().render(lySource: lyA4, execute: true, formats: [.pdf])
+        if let pdf = artifacts.pdfURL { return rasterizePDF(pdfURL: pdf, width: width, height: height) }
+    } catch { }
+    return nil
 }
