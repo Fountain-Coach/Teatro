@@ -51,13 +51,40 @@ public struct ScoreKitPNGRasterizer: RendererPlugin {
             context.strokePath()
         }
 
-        // Draw notes as filled circles
+        // Draw notes as ellipse + stems
         context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
+        context.setStrokeColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
         for i in 0..<score.events.count {
             let (x, y) = score.layoutPoint(at: i)
-            let r = CGFloat(score.noteRadius)
-            let rect = CGRect(x: CGFloat(x) - r, y: CGFloat(y) - r, width: 2*r, height: 2*r)
+            let rx = CGFloat(score.noteRadius * 1.2)
+            let ry = CGFloat(score.noteRadius * 0.8)
+            let rect = CGRect(x: CGFloat(x) - rx, y: CGFloat(y) - ry, width: 2*rx, height: 2*ry)
+            context.saveGState()
+            context.translateBy(x: CGFloat(x), y: CGFloat(y))
+            context.rotate(by: CGFloat(-20.0 * .pi / 180.0))
+            context.translateBy(x: -CGFloat(x), y: -CGFloat(y))
             context.fillEllipse(in: rect)
+            context.restoreGState()
+            let midY = CGFloat(score.paddingTop + score.staffSpacing * 2.0)
+            let stemUp = CGFloat(y) >= midY
+            let stemLen = CGFloat(score.staffSpacing * 3.5)
+            let x1 = stemUp ? (CGFloat(x) + rx - 0.5) : (CGFloat(x) - rx + 0.5)
+            let y1 = CGFloat(y)
+            let x2 = x1
+            let y2 = stemUp ? (CGFloat(y) - stemLen) : (CGFloat(y) + stemLen)
+            context.move(to: CGPoint(x: x1, y: y1))
+            context.addLine(to: CGPoint(x: x2, y: y2))
+            context.strokePath()
+        }
+
+        // Barlines
+        let topY = CGFloat(score.paddingTop) - CGFloat(score.staffSpacing * 0.5)
+        let bottomY = CGFloat(score.paddingTop + score.staffSpacing * 4.0 + score.staffSpacing * 0.5)
+        for bx in score.barlines() {
+            let x = CGFloat(bx)
+            context.move(to: CGPoint(x: x, y: topY))
+            context.addLine(to: CGPoint(x: x, y: bottomY))
+            context.strokePath()
         }
 
         guard let image = context.makeImage() else {

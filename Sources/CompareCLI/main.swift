@@ -34,6 +34,9 @@ struct CompareCLI: ParsableCommand {
     @Flag(name: .long, help: "Keep artifacts produced during optimization grid search")
     var keepOptArtifacts: Bool = false
 
+    @Flag(name: .long, help: "Open output directory in Finder when done")
+    var open: Bool = false
+
     func run() throws {
         let outURL = URL(fileURLWithPath: outDir)
         try FileManager.default.createDirectory(at: outURL, withIntermediateDirectories: true)
@@ -91,6 +94,11 @@ struct CompareCLI: ParsableCommand {
                 print("Wrote metrics to \(metricsPath.path)")
             }
         }
+        #if os(macOS)
+        if open {
+            _ = shell(["/usr/bin/open", outURL.path])
+        }
+        #endif
     }
 
     private func processSingle(lyURL: URL, width: Int, outURL: URL, params: ScoreView.LayoutParams, log: Bool) throws -> Double? {

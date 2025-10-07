@@ -28,15 +28,36 @@ public struct ScoreKitSVGRenderer: RendererPlugin {
             let y = Double(score.paddingTop + score.staffSpacing * Double(i))
             body.append("<line x1=\"\(left)\" y1=\"\(y)\" x2=\"\(right)\" y2=\"\(y)\" stroke=\"black\" stroke-width=\"1\"/>")
         }
-        // Notes (simple circles for now)
+        // Notes (ellipse heads + stems + optional dynamics)
         for (i, ev) in score.events.enumerated() {
             switch ev.base {
             case .note:
                 let (x, y) = score.pointForIndex(i)
-                body.append("<circle cx=\"\(x)\" cy=\"\(y)\" r=\"\(score.noteRadius)\" fill=\"black\"/>")
+                let rx = score.noteRadius * 1.2
+                let ry = score.noteRadius * 0.8
+                body.append("<ellipse cx=\"\(x)\" cy=\"\(y)\" rx=\"\(rx)\" ry=\"\(ry)\" transform=\"rotate(-20 \(x) \(y))\" fill=\"black\"/>")
+                // Stem
+                let midY = score.paddingTop + score.staffSpacing * 2.0
+                let stemUp = y >= midY
+                let stemLen = score.staffSpacing * 3.5
+                let x1 = stemUp ? (x + rx - 0.5) : (x - rx + 0.5)
+                let y1 = y
+                let x2 = x1
+                let y2 = stemUp ? (y - stemLen) : (y + stemLen)
+                body.append("<line x1=\"\(x1)\" y1=\"\(y1)\" x2=\"\(x2)\" y2=\"\(y2)\" stroke=\"black\" stroke-width=\"1\"/>")
+                if let dyn = score.events[i].dynamic?.rawValue {
+                    let dy = score.paddingTop + score.staffSpacing * 6.2
+                    body.append("<text x=\"\(x)\" y=\"\(dy)\" font-family=\"Serif\" font-size=\"12\" text-anchor=\"middle\">\(dyn)</text>")
+                }
             case .rest:
                 continue
             }
+        }
+        // Bar lines across the staff
+        let topY = Double(score.paddingTop) - score.staffSpacing * 0.5
+        let bottomY = Double(score.paddingTop + score.staffSpacing * 4.0) + score.staffSpacing * 0.5
+        for bx in score.barlines() {
+            body.append("<line x1=\"\(bx)\" y1=\"\(topY)\" x2=\"\(bx)\" y2=\"\(bottomY)\" stroke=\"black\" stroke-width=\"1\"/>")
         }
 
         let svg = """
@@ -73,6 +94,7 @@ public final class ScoreView: Renderable {
     public var noteRadius: Double { params.noteRadius }
     private var layoutX: [Double] = []
     private var layoutY: [Double] = []
+    private var barX: [Double] = []
     public var params: LayoutParams
 
     public init(events: [NotatedEvent], clef: ClefType = .treble, beatsPerBar: Int = 4, beatUnit: Int = 4, staffSpacing: Double = 10, paddingTop: Double = 20, paddingLeft: Double = 20, width: Int = 800, height: Int = 200, params: LayoutParams = .init()) {
@@ -95,6 +117,7 @@ public final class ScoreView: Renderable {
         var barProgress = 0.0
         layoutX = Array(repeating: 0, count: events.count)
         layoutY = Array(repeating: 0, count: events.count)
+        barX = []
         for i in 0..<events.count {
             let e = events[i]
             switch e.base {
@@ -109,6 +132,7 @@ public final class ScoreView: Renderable {
             barProgress += beatFraction(for: e)
             if barProgress >= Double(beatsPerBar) {
                 barProgress -= Double(beatsPerBar)
+                barX.append(x)
             }
         }
     }
@@ -132,12 +156,14 @@ public final class ScoreView: Renderable {
         if i < layoutX.count { return (layoutX[i], layoutY[i]) }
         return (0,0)
     }
+    fileprivate func _barlines() -> [Double] { barX }
 }
 
 // no extensions
 // Expose for same-package access by rasterizer and CLI
 extension ScoreView {
     public func layoutPoint(at i: Int) -> (Double, Double) { self.pointForIndex(i) }
+    public func barlines() -> [Double] { self._barlines() }
 }
 
 // (StaffCoords now provided by ScoreKit.core)
