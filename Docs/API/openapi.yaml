@@ -37,6 +37,30 @@ components:
         forceFormat:
           type: boolean
           description: Override extension-based format detection
+        watch:
+          type: boolean
+          description: Watch the input file for changes
+        midi1Bridge:
+          type: boolean
+          description: Bridge UMP input to MIDI 1.0 byte stream for legacy devices
+        watchRtpmidi:
+          type: boolean
+          description: Subscribe to RTP-MIDI UMP packets and forward them to stdout
+        sseGroup:
+          type: integer
+          description: Filter incoming UMP stream by group
+        saveUmp:
+          type: string
+          description: Persist received UMP packets to the given file
+        replayUmp:
+          type: string
+          description: Replay UMP packets from file
+        width:
+          type: integer
+          description: Override output width
+        height:
+          type: integer
+          description: Override output height
     RenderResponse:
       type: object
       properties:
@@ -44,4 +68,3 @@ components:
           type: boolean
         outputPath:
           type: string
-
